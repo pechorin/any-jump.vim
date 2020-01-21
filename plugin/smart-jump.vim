@@ -29,7 +29,7 @@ let s:lang_map.ruby = []
 call add(s:lang_map.ruby, {
       \"type": "variable",
       \"regexp": '^\s*\(\(\w\+[.]\)*\w\+,\s*\)*KEYWORD\(,\s*\(\w\+[.]\)*\w\+\)*\s*=\([^=>~]\|$\)',
-      \"emacs_regexp": "^\\s*((\\w+[.])*\\w+,\\s*)*JJJ(,\\s*(\\w+[.])*\\w+)*\\s*=([^=>~]|$)",
+      \"emacs_regexp": '^\\s*((\\w+[.])*\\w+,\\s*)*JJJ(,\\s*(\\w+[.])*\\w+)*\\s*=([^=>~]|$)',
       \"spec_success": ["test = 1234", "self.foo, test, bar = args"],
       \"spec_failed": ["if test == 1234", "foo_test = 1234"],
       \})
@@ -101,15 +101,15 @@ function! g:SmartJumpDebug()
   endif
 endfunction
 
-function! s:Log(message)
+function! s:log(message)
   if s:debug == 1
-    echo "[smart-jump] " . message
+    echo "[smart-jump] " . a:message
   endif
 endfunction
 
 function! g:SmartJumpTests()
   call s:regexp_tests()
-  echo "Tests finished"
+  call s:log("Tests finished")
 endfunction
 
 function! s:regexp_tests()
@@ -121,9 +121,8 @@ function! s:regexp_tests()
         let test_re = substitute(re, 'KEYWORD', '\\w\\+', 'g')
 
         for spec_string in entry["spec_success"]
-
           if !(spec_string =~ test_re)
-            echo "FAILED: " . spec_string
+            call s:log("FAILED: " . spec_string)
           endif
         endfor
       endif
@@ -144,4 +143,3 @@ function! g:Current_filetype_lang_map()
     return 0
   endif
 endfunction
-
