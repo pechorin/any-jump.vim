@@ -107,11 +107,6 @@ function! s:log(message)
   endif
 endfunction
 
-function! g:SmartJumpTests()
-  call s:regexp_tests()
-  call s:log("Tests finished")
-endfunction
-
 function! s:regexp_tests()
   for lang in keys(s:lang_map)
     for entry in s:lang_map[lang]
@@ -130,16 +125,24 @@ function! s:regexp_tests()
   endfor
 endfunction
 
+function! g:SmartJumpTests()
+  call s:regexp_tests()
+  call s:log("Tests finished")
+endfunction
+
 " ----------------------------------------------
 " Functions
 
-function! g:Current_filetype_lang_map()
+function! s:current_filetype_lang_map()
   let ft = &l:filetype
 
   if ft
     return s:langmap[ft]
   else
-    echo "not found map definition for " . ft
-    return 0
+    call s:log("not found map definition for " . ft)
+    return
   endif
+endfunction
+
+function! g:SmartJump()
 endfunction
