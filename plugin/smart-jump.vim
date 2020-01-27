@@ -85,7 +85,7 @@ call add(s:lang_map.ruby, {
 
 call add(s:lang_map.ruby, {
       \"type": "type",
-      \"regexp": '\(^\|[^\w.\])class\s\+\(\w*::\)*KEYWORD\($\|[^\w\|:]\)',
+      \"regexp": '\(^\|[^\w.]\)class\s\+\(\w*::\)*KEYWORD\($\|[^\w\|:]\)',
       \"emacs_regexp": '(^|[^\\w.])class\\s+(\\w*::)*JJJ($|[^\\w|:])',
       \"spec_success": [ "class test", "class Foo::test" ],
       \"spec_failed": [],
@@ -170,61 +170,104 @@ function! s:current_filetype_lang_map()
   return get(s:lang_map, ft)
 endfunction
 
-" Rg options
-" -w (word boundaries)
+function! s:new_grep_result()
+  let dict = { "line_number": 0, "path": 0, "text": 0 }
+  return dict
+endfunction
+
 function! s:search_rg(lang, keyword)
-  let patterns = ""
+  let patterns = []
 
   for rule in s:lang_map[a:lang]
     " insert real keyword insted of placeholder
     let regexp = substitute(rule.regexp, "KEYWORD", a:keyword, "g")
 
-    " replace vim regexp escaping \
-    let patterns = patterns . " -e '" . regexp . "'"
+    " remove vim escapings
+    let regexp = substitute(regexp, '\\(', '(', 'g')
+    let regexp = substitute(regexp, '\\)', ')', 'g')
+    let regexp = substitute(regexp, '\\+', '+', 'g')
+    let regexp = substitute(regexp, '\\|', '|', 'g')
+    let regexp = substitute(regexp, '\\?', '?', 'g')
+
+    call add(patterns, regexp)
   endfor
 
-  " echo "PATTERN -> " . patterns
+  let regexp = map(patterns, { _, pattern -> '(' . pattern . ')' })
+  let regexp = join(regexp, '|')
+  let regexp = "'(" . regexp . ")'"
 
-  let cmd = "rg"
-  let cmd = cmd . " -t " . a:lang
-  let cmd = cmd . patterns
+  let cmd          = "rg -n --json -t " . a:lang . ' ' . regexp
+  let raw_results  = system(cmd)
+  let grep_results = []
 
-  echo "CMD: " . cmd
+  if len(raw_results) > 0
+    let matches = []
 
-  let result = system(cmd)
+    for res in split(raw_results, "\n")
+      let match = json_decode(res)
+      call add(matches, match)
+    endfor
 
-  echo "RESULT -> " . result
+    for match in matches
+      if get(match, 'type') == 'match'
+        let data = get(match, 'data')
+
+        if type(data) == v:t_dict
+          let text = data.lines.text
+          let text = substitute(text, '^\s*', '', 'g')
+          let text = substitute(text, '\n', '', 'g')
+
+          let grep_result             = s:new_grep_result()
+          let grep_result.line_number = data.line_number
+          let grep_result.path        = data.path.text
+          let grep_result.text        = text
+
+          call add(grep_results, grep_result)
+          " call s:log_debug(string(grep_result))
+        endif
+      end
+    endfor
+  endif
+
+  return grep_results
 endfunction
 
 function! s:SmartJump()
-  let lang_map = s:current_filetype_lang_map()
-
-  if (type(lang_map) == v:t_list) == v:false
+  " check current language
+  if (type(s:current_filetype_lang_map()) == v:t_list) == v:false
     call s:log("not found map definition for filetype " . string(&l:filetype))
     return
   endif
 
-  " echo "SmartJump result: " . string(lang_map)
-
-  " echo getcurpos()
-
+  " fetch lookup keyword
+  let keyword  = ''
   let cur_mode = mode()
-  let keyword  = ""
 
   if cur_mode == 'n'
     let keyword = expand('<cword>')
-  " THINK: implement visual mode selection?
-  " https://stackoverflow.com/a/6271254/190454
   else
+    " THINK: implement visual mode selection?
+    " https://stackoverflow.com/a/6271254/190454
     call s:log_debug("not implemented for mode " . cur_mode)
+    return
   endif
 
+  " start basic search
   if len(keyword) > 0
-    call s:search_rg(&l:filetype, keyword)
-    " echo "lookup for " . keyword
+    let grep_results = s:search_rg(&l:filetype, keyword)
+
+    echo "resuts count -> " . len(grep_results)
+    echo "first result -> " . string(grep_results[0])
+  else
+    return
   endif
 endfunction
 
+function! s:init()
+  call s:SmartJumpTests()
+endfunction
+
 command! AnyJumpToggleDebug call s:SmartJumpToggleDebug()
-command! AnyJumpRunTests call s:SmartJumpTests()
 command! AnyJump call s:SmartJump()
+
+call s:init()
