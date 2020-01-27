@@ -4,10 +4,19 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	Development	//
-Current_filetype_lang_map	plugin/smart-jump.vim	/^function! g:Current_filetype_lang_map()$/;"	f
-Log	plugin/smart-jump.vim	/^function! s:Log(message)$/;"	f
-SmartJumpDebug	plugin/smart-jump.vim	/^function! g:SmartJumpDebug()$/;"	f
-g:smart_jump_loaded	plugin/smart-jump.vim	/^let g:smart_jump_loaded = 1$/;"	v
+SmartJump	plugin/smart-jump.vim	/^function! s:SmartJump()$/;"	f
+SmartJumpTests	plugin/smart-jump.vim	/^function! s:SmartJumpTests()$/;"	f
+SmartJumpToggleDebug	plugin/smart-jump.vim	/^function! s:SmartJumpToggleDebug()$/;"	f
+current_filetype_lang_map	plugin/smart-jump.vim	/^function! s:current_filetype_lang_map()$/;"	f
+g:any_jump_keyword_match_cursor_mode	plugin/smart-jump.vim	/^let g:any_jump_keyword_match_cursor_mode = 'word'$/;"	v
+g:any_jump_loaded	plugin/smart-jump.vim	/^let g:any_jump_loaded = 1$/;"	v
+log	plugin/smart-jump.vim	/^function! s:log(message)$/;"	f
+log_debug	plugin/smart-jump.vim	/^function! s:log_debug(message)$/;"	f
+nyJump	plugin/smart-jump.vim	/^command! AnyJump call s:SmartJump()$/;"	c
+nyJumpRunTests	plugin/smart-jump.vim	/^command! AnyJumpRunTests call s:SmartJumpTests()$/;"	c
+nyJumpToggleDebug	plugin/smart-jump.vim	/^command! AnyJumpToggleDebug call s:SmartJumpToggleDebug()$/;"	c
+regexp_tests	plugin/smart-jump.vim	/^function! s:regexp_tests()$/;"	f
 s:debug	plugin/smart-jump.vim	/^let s:debug = 1$/;"	v
 s:lang_map	plugin/smart-jump.vim	/^let s:lang_map = {}$/;"	v
 s:lang_map	plugin/smart-jump.vim	/^let s:lang_map.ruby = []$/;"	v
+search_rg	plugin/smart-jump.vim	/^function! s:search_rg(lang, keyword)$/;"	f

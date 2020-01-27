@@ -6,7 +6,18 @@
 " - all language regexps ported from https://github.com/jacktasia/dumb-jump/blob/master/dumb-jump.el
 " - async guide: https://andrewvos.com/writing-async-jobs-in-vim-8/
 
-let g:smart_jump_loaded = 1
+let g:any_jump_loaded = 1
+
+" THINK:
+"
+" in line:
+" "MyNamespace::MyClass"
+"
+" then cursor is on MyClass word
+"
+" 'word' - will match MyClass
+" 'full' - will match MyNamespace::MyClass
+let g:any_jump_keyword_match_cursor_mode = 'word'
 
 " ----------------------------------------------
 " Languages definitions
@@ -90,24 +101,33 @@ call add(s:lang_map.ruby, {
 
 " ----------------------------------------------
 " Service functions
+" ----------------------------------------------
 
 let s:debug = 1
 
-function! g:SmartJumpDebug()
+function! s:SmartJumpToggleDebug()
   if s:debug == 0
     let s:debug = 1
   else
     let s:debug = 0
   endif
+
+  echo "debug enabled: " . s:debug
 endfunction
 
 function! s:log(message)
+  echo "[smart-jump] " . a:message
+endfunction
+
+function! s:log_debug(message)
   if s:debug == 1
     echo "[smart-jump] " . a:message
   endif
 endfunction
 
 function! s:regexp_tests()
+  let errors = []
+
   for lang in keys(s:lang_map)
     for entry in s:lang_map[lang]
       let re = entry["regexp"]
@@ -117,32 +137,94 @@ function! s:regexp_tests()
 
         for spec_string in entry["spec_success"]
           if !(spec_string =~ test_re)
-            call s:log("FAILED: " . spec_string)
+            call add(errors, "FAILED: " . spec_string)
+            " call s:log("FAILED: " . spec_string)
           endif
         endfor
       endif
     endfor
   endfor
+
+  return errors
 endfunction
 
-function! g:SmartJumpTests()
-  call s:regexp_tests()
+function! s:SmartJumpTests()
+  let errors = []
+  let errors += s:regexp_tests()
+
+  if len(errors) > 0
+    for error in errors
+      echo error
+    endfor
+  endif
+
   call s:log("Tests finished")
 endfunction
 
 " ----------------------------------------------
 " Functions
+" ----------------------------------------------
 
 function! s:current_filetype_lang_map()
   let ft = &l:filetype
+  return get(s:lang_map, ft)
+endfunction
 
-  if ft
-    return s:langmap[ft]
-  else
-    call s:log("not found map definition for " . ft)
+" Rg options
+" -w (word boundaries)
+function! s:search_rg(lang, keyword)
+  let patterns = ""
+
+  for rule in s:lang_map[a:lang]
+    " insert real keyword insted of placeholder
+    let regexp = substitute(rule.regexp, "KEYWORD", a:keyword, "g")
+
+    " replace vim regexp escaping \
+    let patterns = patterns . " -e '" . regexp . "'"
+  endfor
+
+  " echo "PATTERN -> " . patterns
+
+  let cmd = "rg"
+  let cmd = cmd . " -t " . a:lang
+  let cmd = cmd . patterns
+
+  echo "CMD: " . cmd
+
+  let result = system(cmd)
+
+  echo "RESULT -> " . result
+endfunction
+
+function! s:SmartJump()
+  let lang_map = s:current_filetype_lang_map()
+
+  if (type(lang_map) == v:t_list) == v:false
+    call s:log("not found map definition for filetype " . string(&l:filetype))
     return
+  endif
+
+  " echo "SmartJump result: " . string(lang_map)
+
+  " echo getcurpos()
+
+  let cur_mode = mode()
+  let keyword  = ""
+
+  if cur_mode == 'n'
+    let keyword = expand('<cword>')
+  " THINK: implement visual mode selection?
+  " https://stackoverflow.com/a/6271254/190454
+  else
+    call s:log_debug("not implemented for mode " . cur_mode)
+  endif
+
+  if len(keyword) > 0
+    call s:search_rg(&l:filetype, keyword)
+    " echo "lookup for " . keyword
   endif
 endfunction
 
-function! g:SmartJump()
-endfunction
+command! AnyJumpToggleDebug call s:SmartJumpToggleDebug()
+command! AnyJumpRunTests call s:SmartJumpTests()
+command! AnyJump call s:SmartJump()
