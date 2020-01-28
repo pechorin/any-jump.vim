@@ -2,6 +2,10 @@
 " - async load of additional searches
 "   start async requests after some timeout of main rg request
 
+" TODO:
+" - [ ] add "save search" button
+" - [ ] add save jumps lists inside popup window
+
 " NOTES:
 " - all language regexps ported from https://github.com/jacktasia/dumb-jump/blob/master/dumb-jump.el
 " - async guide: https://andrewvos.com/writing-async-jobs-in-vim-8/
@@ -280,7 +284,7 @@ function! s:draw_results(grep_results)
 
   " draw grep results
   for gr in a:grep_results
-    let text = "- " . gr.text . ' (' .  gr.path .  ":" . gr.line_number . ")"
+    let text = gr.text . ' (' .  gr.path .  ":" . gr.line_number . ")"
 
     call Append(text)
     call nvim_buf_add_highlight(buf, -1, 'Statement', cl - 1, 0, -1)
@@ -297,15 +301,23 @@ function! s:draw_results(grep_results)
 
   call Append("---------------")
   call nvim_buf_add_highlight(buf, -1, 'Comment', cl - 1, 0, -1)
+
   call Append("")
+
   call Append("[o] open file   [p] preview file   [j] open best match")
   call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
+
   call Append("")
+
   call Append("[u] + search usages")
   call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
   call Append("[f] + search file names")
   call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
   call Append("[c] + search cross projects")
+  call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
+
+  call Append("")
+  call Append("[s] save search   [S] clean search   [N] next saved   [P] previous saved")
   call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
 
 endfunction
