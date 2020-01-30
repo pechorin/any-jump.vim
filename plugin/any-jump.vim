@@ -185,9 +185,11 @@ let s:RenderBuffer = {}
 "
 
 let s:RenderBuffer.MethodsList = [
-      \'RenderLine', 'AddLine', 'CreateItem',
-      \'len', 'GetItemByPos',
-      \'HandleClickEvent',
+      \'RenderLine',
+      \'AddLine',
+      \'CreateItem',
+      \'len',
+      \'GetItemByPos',
       \]
 
 function! s:RenderBuffer.New(buf_id)
@@ -249,25 +251,19 @@ function! s:RenderBuffer.CreateItem(type, text, start_col, end_col, hl_group) di
   return item
 endfunction
 
-function! s:RenderBuffer.GetItemByPos(line_number, column) dict
-  let line   = self.items[a:line_number - 1]
+
+function! s:RenderBuffer.GetItemByPos() dict
+  let line_number = line('.')
+  let column      = col('.')
+  let line        = self.items[line_number - 1]
 
   for item in line
-    if item.start_col <= a:column && (item.end_col >= a:column || item.end_col == -1 )
+    if item.start_col <= column && (item.end_col >= column || item.end_col == -1 )
       return item
     endif
   endfor
 
-  return
-endfunction
-
-function! s:RenderBuffer.HandleClickEvent(line_number, column, text) dict
-  let ln   = self.items[a:line_number - 1]
-  let item = self.GetItemByPos(a:line_number, a:column)
-
-  if type(item) == v:t_dict
-    echo "item -> " . string(item)
-  endif
+  return 0
 endfunction
 
 " ----------------------------------------------
@@ -461,11 +457,23 @@ function! g:AnyJumpHandleOpen()
     return
   endif
 
-  let line_number = line('.')
-  let column      = col('.')
-  let text        = getline(line_number)
+  let item = b:render.GetItemByPos()
 
-  call b:render.HandleClickEvent(line_number, column, text)
+  if type(item) == v:t_dict
+    echo "open -> " . string(item)
+  endif
+endfunction
+
+function! g:AnyJumpHandlePreview()
+  if type(b:render) != v:t_dict
+    return
+  endif
+
+  let item = b:render.GetItemByPos()
+
+  if type(item) == v:t_dict
+    echo "preview -> " . string(item)
+  endif
 endfunction
 
 " Commands
@@ -474,5 +482,7 @@ command! AnyJump call s:jump()
 
 " Bindings
 au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
+au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
+" au FileType any-jump nnoremap <buffer> q :call g:AnyJumpCloseCurrent()<cr>
 
 call s:init()
