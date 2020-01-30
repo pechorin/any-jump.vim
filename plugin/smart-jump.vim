@@ -5,6 +5,7 @@
 " TODO:
 " - [ ] add "save search" button
 " - [ ] add save jumps lists inside popup window
+" - [ ] add grouping for results?
 
 " NOTES:
 " - all language regexps ported from https://github.com/jacktasia/dumb-jump/blob/master/dumb-jump.el
@@ -166,6 +167,80 @@ function! s:run_tests()
 endfunction
 
 " ----------------------------------------------
+" Render buffer
+" ----------------------------------------------
+let s:RenderBuffer = {}
+
+" Produce new Render Buffer
+"
+" abstract: structure of internal render representation
+"
+" buffer = { items: [] }
+" line   = [{ type, strat_col, finish_col, text, hl_group }, { ... }, ...]
+"
+" add(buffer, line)
+"
+function! s:RenderBuffer.New(buf_id)
+  let object = { "items": [], "buf_id": a:buf_id }
+
+  let object.RenderLine = s:RenderBuffer.RenderLine
+  let object.AddLine    = s:RenderBuffer.AddLine
+  let object.CreateItem = s:RenderBuffer.CreateItem
+  let object.len        = s:RenderBuffer.len
+
+  return object
+endfunction
+
+function! s:RenderBuffer.len() dict
+  return len(self.items)
+endfunction
+
+function! s:RenderBuffer.RenderLine(items, current_len) dict
+  for item in a:items
+    call appendbufline(self.buf_id, a:current_len, "\t" . item.text)
+
+    if len(item.hl_group) > 0
+      " TODO add namespace instead of anon namespace?
+      call nvim_buf_add_highlight(
+            \self.buf_id,
+            \-1,
+            \item.hl_group,
+            \a:current_len,
+            \item.start_col,
+            \item.end_col)
+    endif
+  endfor
+endfunction
+
+function! s:RenderBuffer.AddLine(items) dict
+  if type(a:items) == v:t_list
+    let current_len = self.len()
+
+    call self.RenderLine(a:items, current_len)
+    call add(self.items, a:items)
+
+    return v:true
+  else
+    echoe "array required, got invalid type: " . string(a:items)
+
+    return v:false
+  endif
+endfunction
+
+" type:
+"   'text' / 'link' / 'button' / 'preview_text'
+function! s:RenderBuffer.CreateItem(type, text, start_col, end_col, hl_group) dict
+  let item = {
+        \"type":      a:type,
+        \"text":      a:text,
+        \"start_col": a:start_col,
+        \"end_col":   a:end_col,
+        \"hl_group":  a:hl_group,
+        \}
+  return item
+endfunction
+
+" ----------------------------------------------
 " Functions
 " ----------------------------------------------
 
@@ -236,7 +311,7 @@ function! s:search_rg(lang, keyword)
   return grep_results
 endfunction
 
-function! s:draw_results(grep_results)
+function! s:create_window(grep_results)
   if len(a:grep_results) == 0
     return 0
   endif
@@ -244,6 +319,9 @@ function! s:draw_results(grep_results)
   " creates a scratch, unlisted, new, empty, unnamed buffer
   " to be used in the floating window
   let buf = nvim_create_buf(v:false, v:true)
+
+  " nvim_buf_set_keymap(buf, 'n' ...)
+  call nvim_buf_set_option(buf, 'filetype',  'any-jump')
 
   " 90% of the height
   let height = float2nr(&lines * 0.7)
@@ -265,61 +343,46 @@ function! s:draw_results(grep_results)
   " open the new window, floating, and enter to it
   call nvim_open_win(buf, v:true, opts)
 
-  let cl = 0
+  let b:grep_results = a:grep_results
 
-  function! Append(text) closure
-    call appendbufline(buf, cl, "\t" . a:text)
-    let cl += 1
-  endfunction
+  let b:render = s:RenderBuffer.New(buf)
 
-  let cl += 1
-  call Append("Definitions")
-  call nvim_buf_add_highlight(buf, -1, 'Comment', cl - 1, 0, -1)
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  call Append("-----------")
-  call nvim_buf_add_highlight(buf, -1, 'Comment', cl - 1, 0, -1)
-  call Append("")
+  call b:render.AddLine([ b:render.CreateItem("text", "Definitions", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "-----------", 0, -1, "Comment") ])
 
-  let cursor_ln = cl + 1 " line number of first match
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
   " draw grep results
   for gr in a:grep_results
-    let text = gr.text . ' (' .  gr.path .  ":" . gr.line_number . ")"
+    let text = gr.text . ' (path:' .  gr.path .  ":" . gr.line_number . ")"
 
-    call Append(text)
-    call nvim_buf_add_highlight(buf, -1, 'Statement', cl - 1, 0, -1)
+    call b:render.AddLine([ b:render.CreateItem("link", text, 0, -1, "Statement") ])
   endfor
 
-  call cursor(cursor_ln, 2)
+  " call cursor(cursor_ln, 2)
 
-  call Append("")
-  call Append("")
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  " draw help
-  call Append("Help & Controls")
-  call nvim_buf_add_highlight(buf, -1, 'Comment', cl - 1, 0, -1)
+  call b:render.AddLine([ b:render.CreateItem("text", "Help", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "----", 0, -1, "Comment") ])
 
-  call Append("---------------")
-  call nvim_buf_add_highlight(buf, -1, 'Comment', cl - 1, 0, -1)
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "[o] open file   [p] preview file   [j] open best match", 0, -1, "Identifier") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  call Append("")
+  call b:render.AddLine([ b:render.CreateItem("button", "[u] + search usages", 0, -1, "Identifier") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  call Append("[o] open file   [p] preview file   [j] open best match")
-  call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
+  call b:render.AddLine([ b:render.CreateItem("button", "[f] + search file names", 0, -1, "Identifier") ])
 
-  call Append("")
 
-  call Append("[u] + search usages")
-  call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
-  call Append("[f] + search file names")
-  call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
-  call Append("[c] + search cross projects")
-  call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
+  call b:render.AddLine([ b:render.CreateItem("button", "[c] + search cross projects", 0, -1, "Identifier") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  call Append("")
-  call Append("[s] save search   [S] clean search   [N] next saved   [P] previous saved")
-  call nvim_buf_add_highlight(buf, -1, 'Identifier', cl - 1, 0, -1)
-
+  call b:render.AddLine([ b:render.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
 endfunction
 
 function! s:jump()
@@ -349,21 +412,36 @@ function! s:jump()
   let grep_results = s:search_rg(&l:filetype, keyword)
 
   if len(grep_results) == 0
-    call s:log('No results foubd for ' . keyword)
+    call s:log('no results found for ' . keyword)
     return
   endif
 
   " echo "resuts count -> " . len(grep_results)
   " echo "first result -> " . string(grep_results[0])
 
-  call s:draw_results(grep_results)
+  call s:create_window(grep_results)
 endfunction
 
 function! s:init()
   call s:run_tests()
 endfunction
 
+function! g:AnyJumpHandleOpen()
+  " getline()
+  let cl = line('.')
+  let content = getline(cl)
+
+  " let file = match(content, '(.+:[0-9]+)')
+
+  echo string(b:grep_results)
+  echo content
+endfunction
+
+" Commands
 command! AnyJumpToggleDebug call s:toggle_debug()
 command! AnyJump call s:jump()
+
+" Bindings
+au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
 
 call s:init()
