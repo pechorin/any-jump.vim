@@ -6,6 +6,9 @@
 " - [ ] add "save search" button
 " - [ ] add save jumps lists inside popup window
 " - [ ] add grouping for results?
+" - [ ] add cache
+" - [ ] add back commands
+" - [ ] optimize regexps processing (do most job once)
 
 " NOTES:
 " - all language regexps ported from https://github.com/jacktasia/dumb-jump/blob/master/dumb-jump.el
@@ -180,13 +183,19 @@ let s:RenderBuffer = {}
 "
 " add(buffer, line)
 "
+
+let s:RenderBuffer.MethodsList = [
+      \'RenderLine', 'AddLine', 'CreateItem',
+      \'len', 'GetItemByPos',
+      \'HandleClickEvent',
+      \]
+
 function! s:RenderBuffer.New(buf_id)
   let object = { "items": [], "buf_id": a:buf_id }
 
-  let object.RenderLine = s:RenderBuffer.RenderLine
-  let object.AddLine    = s:RenderBuffer.AddLine
-  let object.CreateItem = s:RenderBuffer.CreateItem
-  let object.len        = s:RenderBuffer.len
+  for method in self.MethodsList
+    let object[method] = s:RenderBuffer[method]
+  endfor
 
   return object
 endfunction
@@ -238,6 +247,27 @@ function! s:RenderBuffer.CreateItem(type, text, start_col, end_col, hl_group) di
         \"hl_group":  a:hl_group,
         \}
   return item
+endfunction
+
+function! s:RenderBuffer.GetItemByPos(line_number, column) dict
+  let line   = self.items[a:line_number - 1]
+
+  for item in line
+    if item.start_col <= a:column && (item.end_col >= a:column || item.end_col == -1 )
+      return item
+    endif
+  endfor
+
+  return
+endfunction
+
+function! s:RenderBuffer.HandleClickEvent(line_number, column, text) dict
+  let ln   = self.items[a:line_number - 1]
+  let item = self.GetItemByPos(a:line_number, a:column)
+
+  if type(item) == v:t_dict
+    echo "item -> " . string(item)
+  endif
 endfunction
 
 " ----------------------------------------------
@@ -427,14 +457,15 @@ function! s:init()
 endfunction
 
 function! g:AnyJumpHandleOpen()
-  " getline()
-  let cl = line('.')
-  let content = getline(cl)
+  if type(b:render) != v:t_dict
+    return
+  endif
 
-  " let file = match(content, '(.+:[0-9]+)')
+  let line_number = line('.')
+  let column      = col('.')
+  let text        = getline(line_number)
 
-  echo string(b:grep_results)
-  echo content
+  call b:render.HandleClickEvent(line_number, column, text)
 endfunction
 
 " Commands
