@@ -9,6 +9,8 @@
 " - [ ] add cache
 " - [ ] add back commands
 " - [ ] optimize regexps processing (do most job once)
+" - [ ] compact/full ui mode
+" - [ ] hl keyword line in preview
 
 " NOTES:
 " - all language regexps ported from https://github.com/jacktasia/dumb-jump/blob/master/dumb-jump.el
@@ -26,6 +28,8 @@ let g:any_jump_loaded = 1
 " 'word' - will match MyClass
 " 'full' - will match MyNamespace::MyClass
 let g:any_jump_keyword_match_cursor_mode = 'word'
+
+let g:any_jump_preview_lines = 5
 
 " ----------------------------------------------
 " Languages definitions
@@ -170,9 +174,9 @@ function! s:run_tests()
 endfunction
 
 " ----------------------------------------------
-" Render buffer
+" Render buffer definition
 " ----------------------------------------------
-let s:RenderBuffer = {}
+let s:RenderBuffer = {} " prototype dict
 
 " Produce new Render Buffer
 "
@@ -187,13 +191,15 @@ let s:RenderBuffer = {}
 let s:RenderBuffer.MethodsList = [
       \'RenderLine',
       \'AddLine',
+      \'AddLineAt',
       \'CreateItem',
       \'len',
       \'GetItemByPos',
+      \'GetItemLineNumber',
       \]
 
-function! s:RenderBuffer.New(buf_id)
-  let object = { "items": [], "buf_id": a:buf_id }
+function! s:RenderBuffer.New(buf_id) abort
+  let object = { "items": [], "buf_id": a:buf_id, "preview_opened": 0 }
 
   for method in self.MethodsList
     let object[method] = s:RenderBuffer[method]
@@ -202,13 +208,13 @@ function! s:RenderBuffer.New(buf_id)
   return object
 endfunction
 
-function! s:RenderBuffer.len() dict
+function! s:RenderBuffer.len() dict abort
   return len(self.items)
 endfunction
 
-function! s:RenderBuffer.RenderLine(items, current_len) dict
+function! s:RenderBuffer.RenderLine(items, line) dict abort
   for item in a:items
-    call appendbufline(self.buf_id, a:current_len, "\t" . item.text)
+    call appendbufline(self.buf_id, a:line, "\t" . item.text)
 
     if len(item.hl_group) > 0
       " TODO add namespace instead of anon namespace?
@@ -216,14 +222,14 @@ function! s:RenderBuffer.RenderLine(items, current_len) dict
             \self.buf_id,
             \-1,
             \item.hl_group,
-            \a:current_len,
+            \a:line,
             \item.start_col,
             \item.end_col)
     endif
   endfor
 endfunction
 
-function! s:RenderBuffer.AddLine(items) dict
+function! s:RenderBuffer.AddLine(items) dict abort
   if type(a:items) == v:t_list
     let current_len = self.len()
 
@@ -238,21 +244,42 @@ function! s:RenderBuffer.AddLine(items) dict
   endif
 endfunction
 
+function! s:RenderBuffer.AddLineAt(items, line_number) dict abort
+  if type(a:items) == v:t_list
+    call self.RenderLine(a:items, a:line_number)
+    call insert(self.items, a:items, a:line_number)
+
+    return v:true
+  else
+    echoe "array required, got invalid type: " . string(a:items)
+
+    return v:false
+  endif
+endfunction
+
 " type:
 "   'text' / 'link' / 'button' / 'preview_text'
-function! s:RenderBuffer.CreateItem(type, text, start_col, end_col, hl_group) dict
+function! s:RenderBuffer.CreateItem(type, text, start_col, end_col, hl_group, ...) dict abort
+  let data = 0
+
+  if a:0 > 0
+    let data = a:1
+  endif
+
   let item = {
         \"type":      a:type,
         \"text":      a:text,
         \"start_col": a:start_col,
         \"end_col":   a:end_col,
         \"hl_group":  a:hl_group,
+        \"gc":        0,
+        \"data":      data
         \}
   return item
 endfunction
 
 
-function! s:RenderBuffer.GetItemByPos() dict
+function! s:RenderBuffer.GetItemByPos() dict abort
   let line_number = line('.')
   let column      = col('.')
   let line        = self.items[line_number - 1]
@@ -266,21 +293,39 @@ function! s:RenderBuffer.GetItemByPos() dict
   return 0
 endfunction
 
+" not optimal, but ok for current ui with around ~100/200 lines
+" COMPLEXITY: N+1
+" TODO: add index like structure
+function! s:RenderBuffer.GetItemLineNumber(item) dict abort
+  let i = 1
+  for line in self.items
+    for item in line
+      if item == a:item
+        return i
+      endif
+    endfor
+
+    let i += 1
+  endfor
+
+  return 0
+endfunction
+
 " ----------------------------------------------
 " Functions
 " ----------------------------------------------
 
-function! s:current_filetype_lang_map()
+function! s:current_filetype_lang_map() abort
   let ft = &l:filetype
   return get(s:lang_map, ft)
 endfunction
 
-function! s:new_grep_result()
+function! s:new_grep_result() abort
   let dict = { "line_number": 0, "path": 0, "text": 0 }
   return dict
 endfunction
 
-function! s:search_rg(lang, keyword)
+function! s:search_rg(lang, keyword) abort
   let patterns = []
 
   for rule in s:lang_map[a:lang]
@@ -337,7 +382,7 @@ function! s:search_rg(lang, keyword)
   return grep_results
 endfunction
 
-function! s:create_window(grep_results)
+function! s:create_window(grep_results) abort
   if len(a:grep_results) == 0
     return 0
   endif
@@ -367,7 +412,8 @@ function! s:create_window(grep_results)
         \ }
 
   " open the new window, floating, and enter to it
-  call nvim_open_win(buf, v:true, opts)
+  let win_id = nvim_open_win(buf, v:true, opts)
+  echo win_id
 
   let b:grep_results = a:grep_results
 
@@ -382,9 +428,10 @@ function! s:create_window(grep_results)
 
   " draw grep results
   for gr in a:grep_results
-    let text = gr.text . ' (path:' .  gr.path .  ":" . gr.line_number . ")"
+    let text = gr.text . ' (' .  gr.path .  ":" . gr.line_number . ")"
 
-    call b:render.AddLine([ b:render.CreateItem("link", text, 0, -1, "Statement") ])
+    call b:render.AddLine([ b:render.CreateItem("link", text, 0, -1, "Statement",
+          \{"path": gr.path, "line_number": gr.line_number}) ])
   endfor
 
   " call cursor(cursor_ln, 2)
@@ -411,7 +458,7 @@ function! s:create_window(grep_results)
   call b:render.AddLine([ b:render.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
 endfunction
 
-function! s:jump()
+function! s:jump() abort
   " check current language
   if (type(s:current_filetype_lang_map()) == v:t_list) == v:false
     call s:log("not found map definition for filetype " . string(&l:filetype))
@@ -448,37 +495,107 @@ function! s:jump()
   call s:create_window(grep_results)
 endfunction
 
-function! s:init()
+function! s:init() abort
   call s:run_tests()
 endfunction
 
-function! g:AnyJumpHandleOpen()
+function! g:AnyJumpHandleOpen() abort
   if type(b:render) != v:t_dict
     return
   endif
 
   let item = b:render.GetItemByPos()
 
-  if type(item) == v:t_dict
+  if type(item) == v:t_dict && item.type == 'link'
     echo "open -> " . string(item)
   endif
 endfunction
 
-function! g:AnyJumpHandlePreview()
+function! g:AnyJumpHandlePreview() abort
   if type(b:render) != v:t_dict
     return
   endif
 
+  " remove all previews
+  if b:render.preview_opened
+
+    let start_preview_ln = 0
+    let idx = 1
+
+    for line in b:render.items
+
+      if line[0].type == 'preview_text'
+        let line[0].gc = v:true " mark for destroy
+
+        if start_preview_ln == 0
+          let start_preview_ln = idx
+        endif
+
+        " remove from ui
+        call deletebufline(b:render.buf_id, start_preview_ln)
+      else
+        let start_preview_ln = 0
+      endif
+
+      let idx += 1
+    endfor
+
+    " remove marked for garbage collection lines
+    let new_items = []
+
+    for line in b:render.items
+      if line[0].gc != v:true
+        call add(new_items, line)
+      endif
+    endfor
+
+    let b:render.items = new_items
+
+    " reset state
+    let b:render.preview_opened = v:false
+
+    return
+  end
+
   let item = b:render.GetItemByPos()
 
   if type(item) == v:t_dict
-    echo "preview -> " . string(item)
+    if item.type == 'link'
+      let file_ln               = item.data.line_number
+      let preview_before_offset = 2
+      let preview_after_offset  = 5
+      let preview_end_ln        = file_ln + preview_after_offset
+
+      let path = join([getcwd(), item.data.path], '/')
+      let cmd  = 'head -n ' . string(preview_end_ln) . ' ' . path
+            \ . ' | tail -n ' . string(preview_after_offset + 1 + preview_before_offset)
+
+      let preview = split(system(cmd), "\n")
+
+      " insert
+      let render_ln = b:render.GetItemLineNumber(item)
+      for line in preview
+        let new_item = b:render.CreateItem("preview_text", line, 0, -1, "String")
+        call b:render.AddLineAt([ new_item ], render_ln)
+
+        let render_ln += 1
+      endfor
+
+      let b:render.preview_opened = v:true
+    endif
   endif
 endfunction
+
+fu! s:dump_state() abort
+  if exists('b:render')
+    echo "items -> " . b:render.len()
+  endif
+endfu
 
 " Commands
 command! AnyJumpToggleDebug call s:toggle_debug()
 command! AnyJump call s:jump()
+command! AnyJumpDumpState call s:dump_state()
 
 " Bindings
 au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
