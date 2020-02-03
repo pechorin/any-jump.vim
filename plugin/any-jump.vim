@@ -16,7 +16,7 @@
 " - all language regexps ported from https://github.com/jacktasia/dumb-jump/blob/master/dumb-jump.el
 " - async guide: https://andrewvos.com/writing-async-jobs-in-vim-8/
 
-let g:any_jump_loaded = 1
+let g:any_jump_loaded = v:true
 
 " THINK:
 "
@@ -29,7 +29,7 @@ let g:any_jump_loaded = 1
 " 'full' - will match MyNamespace::MyClass
 let g:any_jump_keyword_match_cursor_mode = 'word'
 
-let g:any_jump_preview_lines = 5
+let g:any_jump_win_id_before_jump = v:false
 
 " ----------------------------------------------
 " Languages definitions
@@ -42,7 +42,7 @@ let g:any_jump_preview_lines = 5
 "       \"emacs_regexp": '',
 "       \"spec_success": [],
 "       \"spec_failed": [],
-"       \})
+       \})
 
 let s:lang_map = {}
 
@@ -382,7 +382,7 @@ function! s:search_rg(lang, keyword) abort
   return grep_results
 endfunction
 
-function! s:create_window(grep_results) abort
+function! s:create_ui(grep_results, source_win_id) abort
   if len(a:grep_results) == 0
     return 0
   endif
@@ -412,13 +412,15 @@ function! s:create_window(grep_results) abort
         \ }
 
   " open the new window, floating, and enter to it
-  let win_id = nvim_open_win(buf, v:true, opts)
-  echo win_id
+  call nvim_open_win(buf, v:true, opts)
 
+  " TODO: remove
   let b:grep_results = a:grep_results
 
-  let b:render = s:RenderBuffer.New(buf)
+  let b:render        = s:RenderBuffer.New(buf)
+  let b:source_win_id = a:source_win_id
 
+  " move ui drawing to method?
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
   call b:render.AddLine([ b:render.CreateItem("text", "Definitions", 0, -1, "Comment") ])
@@ -426,15 +428,27 @@ function! s:create_window(grep_results) abort
 
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
+
   " draw grep results
+  let idx = 0
+  let first_item = 0
   for gr in a:grep_results
     let text = gr.text . ' (' .  gr.path .  ":" . gr.line_number . ")"
 
-    call b:render.AddLine([ b:render.CreateItem("link", text, 0, -1, "Statement",
-          \{"path": gr.path, "line_number": gr.line_number}) ])
+    let item = b:render.CreateItem("link", text, 0, -1, "Statement",
+          \{"path": gr.path, "line_number": gr.line_number})
+
+    call b:render.AddLine([ item ])
+
+    if idx == 0
+      let first_item = item
+    endif
+
+    let idx += 1
   endfor
 
-  " call cursor(cursor_ln, 2)
+  let first_item_ln = b:render.GetItemLineNumber(first_item)
+  call cursor(first_item_ln, 2)
 
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
@@ -458,16 +472,17 @@ function! s:create_window(grep_results) abort
   call b:render.AddLine([ b:render.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
 endfunction
 
-function! s:jump() abort
+fu! s:jump() abort
   " check current language
   if (type(s:current_filetype_lang_map()) == v:t_list) == v:false
     call s:log("not found map definition for filetype " . string(&l:filetype))
     return
   endif
 
-  " fetch lookup keyword
   let keyword  = ''
-  let cur_mode = mode()
+
+  let cur_mode   = mode()
+  let cur_win_id = win_findbuf(bufnr())[0]
 
   if cur_mode == 'n'
     let keyword = expand('<cword>')
@@ -489,36 +504,60 @@ function! s:jump() abort
     return
   endif
 
-  " echo "resuts count -> " . len(grep_results)
-  " echo "first result -> " . string(grep_results[0])
+  call s:create_ui(grep_results, cur_win_id)
+endfu
 
-  call s:create_window(grep_results)
-endfunction
+fu! s:jump_back() abort
+  if exists('w:any_jump_prev_buf_id')
+    let new_prev_buf_id = bufnr()
 
-function! s:init() abort
+    execute ":buf " . w:any_jump_prev_buf_id
+    let w:any_jump_prev_buf_id = new_prev_buf_id
+  endif
+endfu
+
+fu! s:init() abort
   call s:run_tests()
-endfunction
+endfu
 
-function! g:AnyJumpHandleOpen() abort
+fu! g:AnyJumpHandleOpen() abort
+  if exists('b:render') && type(b:render) != v:t_dict
+    return
+  endif
+
+  let action_item = b:render.GetItemByPos()
+
+  if type(action_item) == v:t_dict && action_item.type == 'link'
+    if exists('b:source_win_id') && type(b:source_win_id) == v:t_number
+      let win_id = b:source_win_id
+
+      " close ui
+      close!
+
+      " jump to definition
+      call win_gotoid(win_id)
+
+      let buf_id = bufnr()
+      let w:any_jump_prev_buf_id = buf_id
+
+      execute "edit " . action_item.data.path . '|:' . string(action_item.data.line_number)
+    endif
+  endif
+endfu
+
+fu! g:AnyJumpHandleClose() abort
+  if exists('b:render')
+    close!
+  endif
+endfu
+
+fu! g:AnyJumpHandlePreview() abort
   if type(b:render) != v:t_dict
     return
   endif
 
-  let item = b:render.GetItemByPos()
-
-  if type(item) == v:t_dict && item.type == 'link'
-    echo "open -> " . string(item)
-  endif
-endfunction
-
-function! g:AnyJumpHandlePreview() abort
-  if type(b:render) != v:t_dict
-    return
-  endif
-
-  let previewed_links  = []
-
-  let item = b:render.GetItemByPos()
+  let current_previewed_links = []
+  let action_item             = b:render.GetItemByPos()
 
   " remove all previews
   if b:render.preview_opened
@@ -535,7 +574,7 @@ function! g:AnyJumpHandlePreview() abort
 
         if type(prev_line[0]) == v:t_dict && prev_line[0].type == 'link'
           echo "add prev"
-          call add(previewed_links, prev_line[0])
+          call add(current_previewed_links, prev_line[0])
         endif
 
         if start_preview_ln == 0
@@ -564,31 +603,29 @@ function! g:AnyJumpHandlePreview() abort
 
     " reset state
     let b:render.preview_opened = v:false
-
-    " return
   end
 
   " if clicked on just opened preview
   " then just close, not open again
-  if index(previewed_links, item) >= 0
+  if index(current_previewed_links, action_item) >= 0
     return
   endif
 
-  if type(item) == v:t_dict
-    if item.type == 'link'
-      let file_ln               = item.data.line_number
+  if type(action_item) == v:t_dict
+    if action_item.type == 'link'
+      let file_ln               = action_item.data.line_number
       let preview_before_offset = 2
       let preview_after_offset  = 5
       let preview_end_ln        = file_ln + preview_after_offset
 
-      let path = join([getcwd(), item.data.path], '/')
+      let path = join([getcwd(), action_item.data.path], '/')
       let cmd  = 'head -n ' . string(preview_end_ln) . ' ' . path
             \ . ' | tail -n ' . string(preview_after_offset + 1 + preview_before_offset)
 
       let preview = split(system(cmd), "\n")
 
       " insert
-      let render_ln = b:render.GetItemLineNumber(item)
+      let render_ln = b:render.GetItemLineNumber(action_item)
       for line in preview
         let new_item = b:render.CreateItem("preview_text", line, 0, -1, "String")
         call b:render.AddLineAt([ new_item ], render_ln)
@@ -599,7 +636,7 @@ function! g:AnyJumpHandlePreview() abort
       let b:render.preview_opened = v:true
     endif
   endif
-endfunction
+endfu
 
 fu! s:dump_state() abort
   if exists('b:render')
@@ -610,11 +647,16 @@ endfu
 " Commands
 command! AnyJumpToggleDebug call s:toggle_debug()
 command! AnyJump call s:jump()
+command! AnyJumpBack call s:jump_back()
 command! AnyJumpDumpState call s:dump_state()
 
 " Bindings
 au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
+au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
 au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
-" au FileType any-jump nnoremap <buffer> q :call g:AnyJumpCloseCurrent()<cr>
+au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
+
+nnoremap <leader>aj :AnyJump<CR>
+nnoremap <leader>ab :AnyJumpBack<CR>
 
 call s:init()
