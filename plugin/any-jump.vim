@@ -516,19 +516,28 @@ function! g:AnyJumpHandlePreview() abort
     return
   endif
 
+  let previewed_links  = []
+
   " remove all previews
   if b:render.preview_opened
 
+    let idx              = 0
     let start_preview_ln = 0
-    let idx = 1
 
     for line in b:render.items
 
       if line[0].type == 'preview_text'
         let line[0].gc = v:true " mark for destroy
 
+        let prev_line = b:render.items[idx - 1]
+
+        if type(prev_line[0]) == v:t_dict && prev_line[0].type == 'link'
+          echo "add prev"
+          call add(previewed_links, prev_line[0])
+        endif
+
         if start_preview_ln == 0
-          let start_preview_ln = idx
+          let start_preview_ln = idx + 1
         endif
 
         " remove from ui
@@ -554,10 +563,16 @@ function! g:AnyJumpHandlePreview() abort
     " reset state
     let b:render.preview_opened = v:false
 
-    return
+    " return
   end
 
   let item = b:render.GetItemByPos()
+
+  " if clicked on just opened preview
+  " then just close, not open again
+  if index(previewed_links, item) >= 0
+    return
+  endif
 
   if type(item) == v:t_dict
     if item.type == 'link'
