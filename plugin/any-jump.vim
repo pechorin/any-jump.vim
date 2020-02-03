@@ -504,6 +504,7 @@ fu! s:jump() abort
     return
   endif
 
+  let w:any_jump_last_results = grep_results
   call s:create_ui(grep_results, cur_win_id)
 endfu
 
@@ -513,6 +514,17 @@ fu! s:jump_back() abort
 
     execute ":buf " . w:any_jump_prev_buf_id
     let w:any_jump_prev_buf_id = new_prev_buf_id
+  endif
+endfu
+
+fu! s:jump_last_results() abort
+  if exists('w:any_jump_last_results')
+    if type(w:any_jump_last_results) != v:t_list
+      return
+    endif
+
+    let cur_win_id = win_findbuf(bufnr())[0]
+    call s:create_ui(w:any_jump_last_results, cur_win_id)
   endif
 endfu
 
@@ -648,6 +660,7 @@ endfu
 command! AnyJumpToggleDebug call s:toggle_debug()
 command! AnyJump call s:jump()
 command! AnyJumpBack call s:jump_back()
+command! AnyJumpLastResults call s:jump_last_results()
 command! AnyJumpDumpState call s:dump_state()
 
 " Bindings
@@ -658,5 +671,6 @@ au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
 
 nnoremap <leader>aj :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
+nnoremap <leader>al :AnyJumpLastResults<CR>
 
 call s:init()
