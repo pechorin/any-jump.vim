@@ -518,6 +518,8 @@ function! g:AnyJumpHandlePreview() abort
 
   let previewed_links  = []
 
+  let item = b:render.GetItemByPos()
+
   " remove all previews
   if b:render.preview_opened
 
@@ -565,8 +567,6 @@ function! g:AnyJumpHandlePreview() abort
 
     " return
   end
-
-  let item = b:render.GetItemByPos()
 
   " if clicked on just opened preview
   " then just close, not open again
