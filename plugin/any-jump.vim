@@ -392,7 +392,10 @@ function! s:create_ui(grep_results, source_win_id) abort
   let buf = nvim_create_buf(v:false, v:true)
 
   " nvim_buf_set_keymap(buf, 'n' ...)
-  call nvim_buf_set_option(buf, 'filetype',  'any-jump')
+  call nvim_buf_set_option(buf, 'filetype', 'any-jump')
+  call nvim_buf_set_option(buf, 'bufhidden', 'delete')
+  call nvim_buf_set_option(buf, 'buftype', 'nofile')
+  call nvim_buf_set_option(buf, 'modifiable', v:true)
 
   " 90% of the height
   let height = float2nr(&lines * 0.7)
@@ -426,8 +429,7 @@ function! s:create_ui(grep_results, source_win_id) abort
   call b:render.AddLine([ b:render.CreateItem("text", "Definitions", 0, -1, "Comment") ])
   call b:render.AddLine([ b:render.CreateItem("text", "-----------", 0, -1, "Comment") ])
 
-  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
-
+  " call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
   " draw grep results
   let idx = 0
@@ -451,12 +453,12 @@ function! s:create_ui(grep_results, source_win_id) abort
   call cursor(first_item_ln, 2)
 
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+  " call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
   call b:render.AddLine([ b:render.CreateItem("text", "Help", 0, -1, "Comment") ])
   call b:render.AddLine([ b:render.CreateItem("text", "----", 0, -1, "Comment") ])
 
-  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+  " call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
   call b:render.AddLine([ b:render.CreateItem("text", "[o] open file   [p] preview file   [j] open best match", 0, -1, "Identifier") ])
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
@@ -470,6 +472,8 @@ function! s:create_ui(grep_results, source_win_id) abort
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
   call b:render.AddLine([ b:render.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
+
+  call nvim_buf_set_option(buf, 'modifiable', v:false)
 endfunction
 
 fu! s:jump() abort
@@ -568,6 +572,8 @@ fu! g:AnyJumpHandlePreview() abort
     return
   endif
 
+  call nvim_buf_set_option(bufnr(), 'modifiable', v:true)
+
   let current_previewed_links = []
   let action_item             = b:render.GetItemByPos()
 
@@ -648,6 +654,8 @@ fu! g:AnyJumpHandlePreview() abort
       let b:render.preview_opened = v:true
     endif
   endif
+
+  call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
 endfu
 
 fu! s:dump_state() abort
