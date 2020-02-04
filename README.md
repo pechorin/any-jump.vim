@@ -30,6 +30,8 @@ IDEA:
 
 - original idea comes from dumb-jump.el
 
-SCREENSHOTS:
+## SCREENSHOTS
+
+### search results with opened preview:
 
 ![screenshot](/image.png)
