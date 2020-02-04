@@ -20,7 +20,7 @@ Uses fast and simple syntax lookup with **repgrep** (required to be installed).
 - back to previous opened file via `<leader>ab`
 - open last any-jump search via `<leader>al`
 
-![screenshot](/image.png)
+![screenshot](/preview_wide.gif)
 
 TODO:
 
@@ -29,3 +29,7 @@ TODO:
 IDEA:
 
 - original idea comes from dumb-jump.el
+
+SCREENSHOTS:
+
+![screenshot](/image.png)
