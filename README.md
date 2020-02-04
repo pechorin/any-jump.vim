@@ -1,1 +1,5 @@
-in heavy development
+# AnyJump
+
+for nvim only
+
+![screenshot](/image.png)
