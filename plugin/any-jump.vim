@@ -3,11 +3,12 @@
 "   start async requests after some timeout of main rg request
 
 " TODO:
+" - [ ] сбивается на большом кол-ве сплитов
 " - [ ] add "save search" button
 " - [ ] add save jumps lists inside popup window
 " - [ ] add grouping for results?
 " - [ ] add cache
-" - [ ] add back commands
+" - [*] add back commands
 " - [ ] optimize regexps processing (do most job once)
 " - [ ] compact/full ui mode
 " - [ ] hl keyword line in preview
@@ -29,7 +30,8 @@ let g:any_jump_loaded = v:true
 " 'full' - will match MyNamespace::MyClass
 let g:any_jump_keyword_match_cursor_mode = 'word'
 
-let g:any_jump_win_id_before_jump = v:false
+" available variants: 1/2
+let g:any_jump_definitions_results_list_style = 1
 
 " ----------------------------------------------
 " Languages definitions
@@ -117,7 +119,7 @@ call add(s:lang_map.ruby, {
 
 let s:debug = 1
 
-function! s:toggle_debug()
+fu! s:toggle_debug()
   if s:debug == 0
     let s:debug = 1
   else
@@ -125,19 +127,19 @@ function! s:toggle_debug()
   endif
 
   echo "debug enabled: " . s:debug
-endfunction
+endfu
 
-function! s:log(message)
+fu! s:log(message)
   echo "[smart-jump] " . a:message
-endfunction
+endfu
 
-function! s:log_debug(message)
+fu! s:log_debug(message)
   if s:debug == 1
     echo "[smart-jump] " . a:message
   endif
-endfunction
+endfu
 
-function! s:regexp_tests()
+fu! s:regexp_tests()
   let errors = []
 
   for lang in keys(s:lang_map)
@@ -158,9 +160,9 @@ function! s:regexp_tests()
   endfor
 
   return errors
-endfunction
+endfu
 
-function! s:run_tests()
+fu! s:run_tests()
   let errors = []
   let errors += s:regexp_tests()
 
@@ -171,7 +173,7 @@ function! s:run_tests()
   endif
 
   call s:log("Tests finished")
-endfunction
+endfu
 
 " ----------------------------------------------
 " Render buffer definition
@@ -198,7 +200,7 @@ let s:RenderBuffer.MethodsList = [
       \'GetItemLineNumber',
       \]
 
-function! s:RenderBuffer.New(buf_id) abort
+fu! s:RenderBuffer.New(buf_id) abort
   let object = { "items": [], "buf_id": a:buf_id, "preview_opened": 0 }
 
   for method in self.MethodsList
@@ -206,30 +208,62 @@ function! s:RenderBuffer.New(buf_id) abort
   endfor
 
   return object
-endfunction
+endfu
 
-function! s:RenderBuffer.len() dict abort
+fu! s:RenderBuffer.len() dict abort
   return len(self.items)
-endfunction
+endfu
 
-function! s:RenderBuffer.RenderLine(items, line) dict abort
+fu! s:RenderBuffer.RenderLine(items, line) dict abort
+  let base_prefix = "\t"
+  let text        = base_prefix
+  let hl_regions  = []
+
   for item in a:items
-    call appendbufline(self.buf_id, a:line, "\t" . item.text)
+    let prefix = ""
 
-    if len(item.hl_group) > 0
-      " TODO add namespace instead of anon namespace?
-      call nvim_buf_add_highlight(
-            \self.buf_id,
-            \-1,
-            \item.hl_group,
-            \a:line,
-            \item.start_col,
-            \item.end_col)
+    if item.start_col > 0
+      let prefix = repeat(" ", item.start_col)
     endif
-  endfor
-endfunction
 
-function! s:RenderBuffer.AddLine(items) dict abort
+    let hl_from = item.start_col + len(text)
+    let hl_to   = hl_from + len(prefix . item.text)
+    let text    = text . prefix . item.text
+
+    " echo "from-to " . hl_from . " " . hl_to . " -> " . item.text . ' ' . item.hl_group
+
+    call add(hl_regions, [item.hl_group, hl_from, hl_to])
+  endfor
+
+  call appendbufline(self.buf_id, a:line, text)
+
+  for region in hl_regions
+    call nvim_buf_add_highlight(
+          \self.buf_id,
+          \-1,
+          \region[0],
+          \a:line,
+          \region[1],
+          \region[2])
+  endfor
+
+  " append hl
+  " for item in a:items
+  "   if len(item.hl_group) > 0
+  "     " TODO add namespace instead of anon namespace?
+
+  "     call nvim_buf_add_highlight(
+  "           \self.buf_id,
+  "           \-1,
+  "           \item.hl_group,
+  "           \a:line,
+  "           \item.start_col,
+  "           \item.end_col)
+  "   endif
+  " endfor
+endfu
+
+fu! s:RenderBuffer.AddLine(items) dict abort
   if type(a:items) == v:t_list
     let current_len = self.len()
 
@@ -242,9 +276,9 @@ function! s:RenderBuffer.AddLine(items) dict abort
 
     return v:false
   endif
-endfunction
+endfu
 
-function! s:RenderBuffer.AddLineAt(items, line_number) dict abort
+fu! s:RenderBuffer.AddLineAt(items, line_number) dict abort
   if type(a:items) == v:t_list
     call self.RenderLine(a:items, a:line_number)
     call insert(self.items, a:items, a:line_number)
@@ -255,11 +289,11 @@ function! s:RenderBuffer.AddLineAt(items, line_number) dict abort
 
     return v:false
   endif
-endfunction
+endfu
 
 " type:
 "   'text' / 'link' / 'button' / 'preview_text'
-function! s:RenderBuffer.CreateItem(type, text, start_col, end_col, hl_group, ...) dict abort
+fu! s:RenderBuffer.CreateItem(type, text, start_col, end_col, hl_group, ...) dict abort
   let data = 0
 
   if a:0 > 0
@@ -276,13 +310,18 @@ function! s:RenderBuffer.CreateItem(type, text, start_col, end_col, hl_group, ..
         \"data":      data
         \}
   return item
-endfunction
+endfu
 
 
-function! s:RenderBuffer.GetItemByPos() dict abort
-  let line_number = line('.')
-  let column      = col('.')
-  let line        = self.items[line_number - 1]
+fu! s:RenderBuffer.GetItemByPos() dict abort
+  let idx = line('.') - 1
+
+  if len(self.items) == idx
+    return 0
+  endif
+
+  let column = col('.')
+  let line   = self.items[idx]
 
   for item in line
     if item.start_col <= column && (item.end_col >= column || item.end_col == -1 )
@@ -291,12 +330,12 @@ function! s:RenderBuffer.GetItemByPos() dict abort
   endfor
 
   return 0
-endfunction
+endfu
 
 " not optimal, but ok for current ui with around ~100/200 lines
 " COMPLEXITY: N+1
 " TODO: add index like structure
-function! s:RenderBuffer.GetItemLineNumber(item) dict abort
+fu! s:RenderBuffer.GetItemLineNumber(item) dict abort
   let i = 1
   for line in self.items
     for item in line
@@ -309,23 +348,23 @@ function! s:RenderBuffer.GetItemLineNumber(item) dict abort
   endfor
 
   return 0
-endfunction
+endfu
 
 " ----------------------------------------------
 " Functions
 " ----------------------------------------------
 
-function! s:current_filetype_lang_map() abort
+fu! s:current_filetype_lang_map() abort
   let ft = &l:filetype
   return get(s:lang_map, ft)
-endfunction
+endfu
 
-function! s:new_grep_result() abort
+fu! s:new_grep_result() abort
   let dict = { "line_number": 0, "path": 0, "text": 0 }
   return dict
-endfunction
+endfu
 
-function! s:search_rg(lang, keyword) abort
+fu! s:search_rg(lang, keyword) abort
   let patterns = []
 
   for rule in s:lang_map[a:lang]
@@ -380,9 +419,9 @@ function! s:search_rg(lang, keyword) abort
   endif
 
   return grep_results
-endfunction
+endfu
 
-function! s:create_ui(grep_results, source_win_id) abort
+fu! s:create_ui(grep_results, source_win_id, keyword) abort
   if len(a:grep_results) == 0
     return 0
   endif
@@ -397,10 +436,8 @@ function! s:create_ui(grep_results, source_win_id) abort
   call nvim_buf_set_option(buf, 'buftype', 'nofile')
   call nvim_buf_set_option(buf, 'modifiable', v:true)
 
-  " 90% of the height
-  let height = float2nr(&lines * 0.7)
-  " 60% of the height
-  let width = float2nr(&columns * 0.5)
+  let height = float2nr(&lines * 0.6)
+  let width = float2nr(&columns * 0.6)
   " horizontal position (centralized)
   let horizontal = float2nr((&columns - width) / 2)
   " vertical position (one line down of the top)
@@ -426,24 +463,42 @@ function! s:create_ui(grep_results, source_win_id) abort
   " move ui drawing to method?
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  call b:render.AddLine([ b:render.CreateItem("text", "Definitions", 0, -1, "Comment") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "-----------", 0, -1, "Comment") ])
+  call b:render.AddLine([
+    \b:render.CreateItem("text", ">", 0, 2, "Comment"),
+    \b:render.CreateItem("text", a:keyword, 1, -1, "Identifier"),
+    \b:render.CreateItem("text", "definitions", 1, -1, "Comment"),
+    \])
 
-  " call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
   " draw grep results
   let idx = 0
   let first_item = 0
   for gr in a:grep_results
-    let text = gr.text . ' (' .  gr.path .  ":" . gr.line_number . ")"
+    if g:any_jump_definitions_results_list_style == 1
+      let path_text = ' ' .  gr.path .  ":" . gr.line_number
 
-    let item = b:render.CreateItem("link", text, 0, -1, "Statement",
-          \{"path": gr.path, "line_number": gr.line_number})
+      let matched_text = b:render.CreateItem("link", gr.text, 0, -1, "Statement",
+            \{"path": gr.path, "line_number": gr.line_number})
 
-    call b:render.AddLine([ item ])
+      let file_path = b:render.CreateItem("link", path_text, 0, -1, "String",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      call b:render.AddLine([ matched_text, file_path ])
+    elseif g:any_jump_definitions_results_list_style == 2
+      let path_text = gr.path .  ":" . gr.line_number
+
+      let matched_text = b:render.CreateItem("link", " " . gr.text, 0, -1, "Statement",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      let file_path = b:render.CreateItem("link", path_text, 0, -1, "String",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      call b:render.AddLine([ file_path, matched_text ])
+    endif
 
     if idx == 0
-      let first_item = item
+      let first_item = matched_text
     endif
 
     let idx += 1
@@ -453,28 +508,26 @@ function! s:create_ui(grep_results, source_win_id) abort
   call cursor(first_item_ln, 2)
 
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+
+  call b:render.AddLine([ b:render.CreateItem("text", "> Help", 0, -1, "Comment") ])
+
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "[o/enter] open file   [tab/p] preview file", 0, -1, "String") ])
+  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+
+  " call b:render.AddLine([ b:render.CreateItem("button", "[u] + search usages", 0, -1, "Identifier") ])
   " call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  call b:render.AddLine([ b:render.CreateItem("text", "Help", 0, -1, "Comment") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "----", 0, -1, "Comment") ])
+  " call b:render.AddLine([ b:render.CreateItem("button", "[f] + search file names", 0, -1, "Identifier") ])
 
+
+  " call b:render.AddLine([ b:render.CreateItem("button", "[c] + search cross projects", 0, -1, "Identifier") ])
   " call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "[o] open file   [p] preview file   [j] open best match", 0, -1, "Identifier") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  call b:render.AddLine([ b:render.CreateItem("button", "[u] + search usages", 0, -1, "Identifier") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
-
-  call b:render.AddLine([ b:render.CreateItem("button", "[f] + search file names", 0, -1, "Identifier") ])
-
-
-  call b:render.AddLine([ b:render.CreateItem("button", "[c] + search cross projects", 0, -1, "Identifier") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
-
-  call b:render.AddLine([ b:render.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
+  " call b:render.AddLine([ b:render.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
 
   call nvim_buf_set_option(buf, 'modifiable', v:false)
-endfunction
+endfu
 
 fu! s:jump() abort
   " check current language
@@ -509,7 +562,9 @@ fu! s:jump() abort
   endif
 
   let w:any_jump_last_results = grep_results
-  call s:create_ui(grep_results, cur_win_id)
+  let w:any_jump_last_keyword = keyword
+
+  call s:create_ui(grep_results, cur_win_id, keyword)
 endfu
 
 fu! s:jump_back() abort
@@ -522,13 +577,13 @@ fu! s:jump_back() abort
 endfu
 
 fu! s:jump_last_results() abort
-  if exists('w:any_jump_last_results')
+  if exists('w:any_jump_last_results') && exists('w:any_jump_last_keyword')
     if type(w:any_jump_last_results) != v:t_list
       return
     endif
 
     let cur_win_id = win_findbuf(bufnr())[0]
-    call s:create_ui(w:any_jump_last_results, cur_win_id)
+    call s:create_ui(w:any_jump_last_results, cur_win_id, w:any_jump_last_keyword)
   endif
 endfu
 
@@ -542,8 +597,16 @@ fu! g:AnyJumpHandleOpen() abort
   endif
 
   let action_item = b:render.GetItemByPos()
+  if type(action_item) != v:t_dict
+    return 0
+  endif
 
-  if type(action_item) == v:t_dict && action_item.type == 'link'
+  " extract link from preview data
+  if action_item.type == 'preview_text' && type(action_item.data.link) == v:t_dict
+    let action_item = action_item.data.link
+  endif
+
+  if action_item.type == 'link'
     if exists('b:source_win_id') && type(b:source_win_id) == v:t_number
       let win_id = b:source_win_id
 
@@ -645,7 +708,7 @@ fu! g:AnyJumpHandlePreview() abort
       " insert
       let render_ln = b:render.GetItemLineNumber(action_item)
       for line in preview
-        let new_item = b:render.CreateItem("preview_text", line, 0, -1, "String")
+        let new_item = b:render.CreateItem("preview_text", line, 0, -1, "Comment", { "link": action_item })
         call b:render.AddLineAt([ new_item ], render_ln)
 
         let render_ln += 1
@@ -675,6 +738,7 @@ command! AnyJumpDumpState call s:dump_state()
 au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
 au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
 au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
+au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
 au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
 
 nnoremap <leader>aj :AnyJump<CR>
