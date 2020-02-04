@@ -230,8 +230,6 @@ fu! s:RenderBuffer.RenderLine(items, line) dict abort
     let hl_to   = hl_from + len(prefix . item.text)
     let text    = text . prefix . item.text
 
-    " echo "from-to " . hl_from . " " . hl_to . " -> " . item.text . ' ' . item.hl_group
-
     call add(hl_regions, [item.hl_group, hl_from, hl_to])
   endfor
 
@@ -246,21 +244,6 @@ fu! s:RenderBuffer.RenderLine(items, line) dict abort
           \region[1],
           \region[2])
   endfor
-
-  " append hl
-  " for item in a:items
-  "   if len(item.hl_group) > 0
-  "     " TODO add namespace instead of anon namespace?
-
-  "     call nvim_buf_add_highlight(
-  "           \self.buf_id,
-  "           \-1,
-  "           \item.hl_group,
-  "           \a:line,
-  "           \item.start_col,
-  "           \item.end_col)
-  "   endif
-  " endfor
 endfu
 
 fu! s:RenderBuffer.AddLine(items) dict abort
@@ -654,7 +637,6 @@ fu! g:AnyJumpHandlePreview() abort
         let prev_line = b:render.items[idx - 1]
 
         if type(prev_line[0]) == v:t_dict && prev_line[0].type == 'link'
-          echo "add prev"
           call add(current_previewed_links, prev_line[0])
         endif
 
