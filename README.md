@@ -32,6 +32,6 @@ IDEA:
 
 ## SCREENSHOTS
 
-### search results with opened preview:
+### search results for keyword "Base" with opened preview:
 
 ![screenshot](/image.png)
