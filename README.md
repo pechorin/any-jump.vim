@@ -2,17 +2,17 @@
 
 **Jump to any definition — IDE madness without overhead**
 
+_Tool for large codebases inspection_
+
 Uses fast and simple syntax lookup with **repgrep** (required to be installed).
 
-Goal: tool for large codebases inspection
-
-Keyword search sources:
+**Keyword search sources**
 
 - definitions
 - usages (todo)
 - ctags (todo)
 
-You can (any-jump flow):
+**You can (any-jump flow)**
 
 - jump to definition via `<leader>aj`
 - open definition preview via `p` or `tab`
