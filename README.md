@@ -4,7 +4,7 @@
 
 _Tool for large codebases inspection_
 
-Uses fast and simple syntax lookup with **repgrep** (required to be installed).
+Uses fast and simple syntax lookup with **ripgrep** (required to be installed).
 
 **Keyword search sources**
 
