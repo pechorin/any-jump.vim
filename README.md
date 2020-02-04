@@ -2,7 +2,7 @@
 
 **Jump to any definition — IDE madness without overhead**
 
-Uses fast and simple syntax lookup with repgrep (required to be installed).
+Uses fast and simple syntax lookup with **repgrep** (required to be installed).
 
 Goal: tool for large codebases inspection
 
