@@ -11,6 +11,14 @@ Keyword search sources:
 - usages (todo)
 - ctags (todo)
 
+You can (any-jump flow):
+
+- jump to definition via `<leader>aj`
+- open definition preview via `p` or `tab`
+- jump to definition via `o` or `enter`
+- back to previous opened file via `<leader>ab`
+- open last any-jump search via `<leader>al`
+
 ![screenshot](/image.png)
 
 TODO:
