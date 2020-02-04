@@ -24,3 +24,7 @@ You can (any-jump flow):
 TODO:
 
 - save search results
+
+IDEA:
+
+- original idea comes from dumb-jump.el
