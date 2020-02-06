@@ -3,7 +3,9 @@
 "   start async requests after some timeout of main rg request
 
 " TODO:
+" - [ ] При не сохраненном файле вылетает ошибка на jump'е
 " - [ ] AnyJumpFirst
+" - [ ] add failed tests run & move test load to separate command
 " - [ ] save winid, not bufid for correct focus change
 " - [ ] add "save search" button
 " - [ ] add save jumps lists inside popup window
@@ -119,7 +121,7 @@ let s:lang_map.elixir = []
 
 call add(s:lang_map.elixir, {
       \"type": "function",
-      \"regexp": '\<def\(\p\)\?\s\+KEYWORD\s*[ ,\\\(]',
+      \"regexp": '\<def\(p\)\?\s\+KEYWORD\s*[ ,\\\(]',
       \"emacs_regexp": '\\bdef(p)?\\s+JJJ\\s*[ ,\\\(]',
       \"spec_success": ['def test do', 'def test, do:', 'def test() do', 'def test(), do:', 'def test(foo, bar) do', 'def test(foo, bar), do:', 'defp test do', 'defp test(), do:'],
       \"spec_failed": [],
@@ -397,6 +399,10 @@ fu! s:search_rg(lang, keyword) abort
     let regexp = substitute(regexp, '\\+', '+', 'g')
     let regexp = substitute(regexp, '\\|', '|', 'g')
     let regexp = substitute(regexp, '\\?', '?', 'g')
+
+    " change word boundaries
+    let regexp = substitute(regexp, '\\<', '\\b', 'g')
+    let regexp = substitute(regexp, '\\>', '\\b', 'g')
 
     call add(patterns, regexp)
   endfor
