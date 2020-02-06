@@ -3,7 +3,8 @@
 "   start async requests after some timeout of main rg request
 
 " TODO:
-" - [ ] сбивается на большом кол-ве сплитов
+" - [ ] AnyJumpFirst
+" - [ ] save winid, not bufid for correct focus change
 " - [ ] add "save search" button
 " - [ ] add save jumps lists inside popup window
 " - [ ] add grouping for results?
@@ -113,6 +114,42 @@ call add(s:lang_map.ruby, {
       \"spec_failed": [],
       \})
 
+" Elixir
+let s:lang_map.elixir = []
+
+call add(s:lang_map.elixir, {
+      \"type": "function",
+      \"regexp": '\<def\(\p\)\?\s\+KEYWORD\s*[ ,\\\(]',
+      \"emacs_regexp": '\\bdef(p)?\\s+JJJ\\s*[ ,\\\(]',
+      \"spec_success": ['def test do', 'def test, do:', 'def test() do', 'def test(), do:', 'def test(foo, bar) do', 'def test(foo, bar), do:', 'defp test do', 'defp test(), do:'],
+      \"spec_failed": [],
+      \})
+
+call add(s:lang_map.elixir, {
+      \"type": "variable",
+      \"regexp": '\s*KEYWORD\s*=[^=\\n]\+',
+      \"emacs_regexp": '\\s*JJJ\\s*=[^=\\n]+',
+      \"spec_success": ['test = 1234'],
+      \"spec_failed": ['if test == 1234'],
+      \})
+
+
+call add(s:lang_map.elixir, {
+      \"type": "module",
+      \"regexp": 'defmodule\s\+\(\w\+\.\)*KEYWORD\s\+',
+      \"emacs_regexp": 'defmodule\\s+(\\w+\\.)*JJJ\\s+',
+      \"spec_success": ['defmodule test do', 'defmodule Foo.Bar.test do'],
+      \"spec_failed": [],
+      \})
+
+call add(s:lang_map.elixir, {
+      \"type": "module",
+      \"regexp": 'defprotocol\s\+\(\w\+\.\)*KEYWORD\s\+',
+      \"emacs_regexp": 'defprotocol\\s+(\\w+\\.)*JJJ\\s+',
+      \"spec_success": ['defprotocol test do', 'defprotocol Foo.Bar.test do'],
+      \"spec_failed": [],
+      \})
+
 " ----------------------------------------------
 " Service functions
 " ----------------------------------------------
@@ -151,7 +188,7 @@ fu! s:regexp_tests()
 
         for spec_string in entry["spec_success"]
           if !(spec_string =~ test_re)
-            call add(errors, "FAILED: " . spec_string)
+            call add(errors, "FAILED " . lang  . ": " . spec_string)
             " call s:log("FAILED: " . spec_string)
           endif
         endfor
@@ -492,11 +529,11 @@ fu! s:create_ui(grep_results, source_win_id, keyword) abort
 
   call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
 
-  call b:render.AddLine([ b:render.CreateItem("text", "> Help", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("help_link", "> Help", 0, -1, "Comment") ])
 
-  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "[o/enter] open file   [tab/p] preview file", 0, -1, "String") ])
-  call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("help_text", "", 0, -1, "Comment") ])
+  call b:render.AddLine([ b:render.CreateItem("help_text", "[o/enter] open file   [tab/p] preview file", 0, -1, "String") ])
+  call b:render.AddLine([ b:render.CreateItem("help_text", "", 0, -1, "Comment") ])
 
   " call b:render.AddLine([ b:render.CreateItem("button", "[u] + search usages", 0, -1, "Identifier") ])
   " call b:render.AddLine([ b:render.CreateItem("text", "", 0, -1, "Comment") ])
@@ -646,6 +683,9 @@ fu! g:AnyJumpHandlePreview() abort
 
         " remove from ui
         call deletebufline(b:render.buf_id, start_preview_ln)
+
+      elseif line[0].type == 'help_link'
+        echo "help link remove"
       else
         let start_preview_ln = 0
       endif
@@ -697,6 +737,8 @@ fu! g:AnyJumpHandlePreview() abort
       endfor
 
       let b:render.preview_opened = v:true
+    elseif action_item.type == 'help_link'
+      echo "link text"
     endif
   endif
 
