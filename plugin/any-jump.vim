@@ -4,7 +4,7 @@
 " - [ ] При не сохраненном файле вылетает ошибка на jump'е
 " - [ ] AnyJumpFirst
 " - [ ] add failed tests run & move test load to separate command
-" - [ ] save winid, not bufid for correct focus change
+" - [+] save winid, not bufid for correct focus change
 " - [ ] add "save search" button
 " - [ ] add save jumps lists inside popup window
 " - [ ] add grouping for results
@@ -150,11 +150,8 @@ fu! s:create_ui(grep_results, source_win_id, keyword) abort
   " open the new window, floating, and enter to it
   call nvim_open_win(buf, v:true, opts)
 
-  " TODO: remove
-  let b:grep_results = a:grep_results
-
-  let b:ui        = internal_buffer#GetClass().New(buf)
-  let b:source_win_id = a:source_win_id
+  let b:ui = internal_buffer#GetClass().New(buf)
+  let b:ui.source_win_id = a:source_win_id
 
   " move ui drawing to method?
   call b:ui.AddLine([ b:ui.CreateItem("text", "", 0, -1, "Comment") ])
@@ -265,7 +262,7 @@ endfu
 
 fu! s:jump_back() abort
   if exists('w:any_jump_prev_buf_id')
-    let new_prev_buf_id = bufnr()
+    let new_prev_buf_id = winbufnr(winnr())
 
     execute ":buf " . w:any_jump_prev_buf_id
     let w:any_jump_prev_buf_id = new_prev_buf_id
@@ -283,6 +280,10 @@ fu! s:jump_last_results() abort
   endif
 endfu
 
+" ----------------------------------------------
+" Event Handlers
+" ----------------------------------------------
+
 fu! g:AnyJumpHandleOpen() abort
   if exists('b:ui') && type(b:ui) != v:t_dict
     return
@@ -299,16 +300,17 @@ fu! g:AnyJumpHandleOpen() abort
   endif
 
   if action_item.type == 'link'
-    if exists('b:source_win_id') && type(b:source_win_id) == v:t_number
-      let win_id = b:source_win_id
+    if has_key(b:ui, 'source_win_id') && type(b:ui.source_win_id) == v:t_number
+      let win_id = b:ui.source_win_id
 
-      " close ui
+      " close buffer
+      " THINK: TODO: buffer remove options/behaviour?
       close!
 
       " jump to definition
       call win_gotoid(win_id)
 
-      let buf_id = bufnr()
+      let buf_id = winbufnr(winnr())
       let w:any_jump_prev_buf_id = buf_id
 
       execute "edit " . action_item.data.path . '|:' . string(action_item.data.line_number)
@@ -336,7 +338,7 @@ fu! g:AnyJumpHandleUsages() abort
   let keyword  = ''
 
   let cur_mode   = mode()
-  let cur_win_id = win_findbuf(bufnr())[0]
+  let cur_win_id = win_findbuf(winbufnr())[0]
 
   if cur_mode == 'n'
     let keyword = expand('<cword>')
@@ -449,12 +451,6 @@ fu! g:AnyJumpHandlePreview() abort
   call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
 endfu
 
-fu! s:dump_state() abort
-  if exists('b:ui')
-    echo "items -> " . b:ui.len()
-  endif
-endfu
-
 
 " ----------------------------------------------
 " Script & Service functions
@@ -502,7 +498,6 @@ command! AnyJumpToggleDebug call s:toggle_debug()
 command! AnyJump call s:jump()
 command! AnyJumpBack call s:jump_back()
 command! AnyJumpLastResults call s:jump_last_results()
-command! AnyJumpDumpState call s:dump_state()
 
 " Bindings
 au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
