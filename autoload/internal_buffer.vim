@@ -22,6 +22,7 @@ let s:InternalBuffer.MethodsList = [
       \'len',
       \'GetItemByPos',
       \'GetItemLineNumber',
+      \'GetFirstItemOfType',
       \]
 
 " Produce new Render Buffer
@@ -143,8 +144,7 @@ fu! s:InternalBuffer.GetItemByPos() dict abort
 endfu
 
 " not optimal, but ok for current ui with around ~100/200 lines
-" COMPLEXITY: N+1
-" TODO: add index like structure
+" COMPLEXITY: O(1)
 fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
   let i = 1
   for line in self.items
@@ -158,6 +158,21 @@ fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
   endfor
 
   return 0
+endfu
+
+fu! s:InternalBuffer.GetFirstItemOfType(type) dict abort
+  let result = 0
+
+  for line in self.items
+    for item in line
+      if item.type == a:type
+        let result = item
+        break
+      endif
+    endfor
+  endfor
+
+  return result
 endfu
 
 " Public api

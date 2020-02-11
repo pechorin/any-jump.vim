@@ -1,8 +1,10 @@
 " POINTS:
 
 " TODO:
+" - [ ] add grouping for results with G (important, huge results lists is bad
+"   for my eyes)
 " - [ ] При не сохраненном файле вылетает ошибка на jump'е
-" - [ ] move search functions to autoload
+" - [*] move search functions to autoload
 " - [ ] silence for some commands?
 " - [ ] AnyJumpFirst
 " - [ ] add failed tests run & move test load to separate command
@@ -50,8 +52,6 @@ endfu
 
 fu! s:search_usages_rg(internal_buffer) abort
   let cmd          = "rg -n --json -t " . a:internal_buffer.language . ' -w ' . a:internal_buffer.keyword
-  echo "cmd -> " . cmd
-
   let raw_results  = system(cmd)
   let grep_results = []
 
@@ -149,6 +149,7 @@ fu! s:search_rg(lang, keyword) abort
 endfu
 
 " TODO: i don't like what where is context dependent calls like b:* / bufnr()
+" TODO: move to internal_buffer.vim?
 fu! s:render_start_screen() abort
   if !exists('b:ui') || !exists('b:ui.definitions_grep_results')
     return
@@ -223,12 +224,72 @@ fu! s:render_start_screen() abort
   call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
 endfu
 
+" TODO: move to internal_buffer.vim?
 fu! s:render_usages() abort
   if !exists('b:ui') || !exists('b:ui.usages_grep_results')
     return
   endif
 
-  echo "R U"
+  let marker_item = b:ui.GetFirstItemOfType('help_link')
+
+  if type(marker_item) != v:t_dict
+    echo "marker item not found"
+    return
+  endif
+
+  let start_ln = b:ui.GetItemLineNumber(marker_item) - 1
+
+  call nvim_buf_set_option(bufnr(), 'modifiable', v:true)
+
+  call b:ui.AddLineAt([ b:ui.CreateItem("usages_text", "> Usages", 0, -1, "Comment") ], start_ln)
+  let start_ln += 1
+
+  call b:ui.AddLineAt([ b:ui.CreateItem("usages_text", " ", 0, -1, "Comment") ], start_ln)
+
+  " draw grep results
+  let idx = 0
+  let first_item = 0
+
+  for gr in b:ui.usages_grep_results
+    if g:any_jump_definitions_results_list_style == 1
+      let path_text = ' ' .  gr.path .  ":" . gr.line_number
+
+      let prefix = b:ui.CreateItem("link", "— ", 0, -1, "Comment",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      let matched_text = b:ui.CreateItem("link", gr.text, 0, -1, "Statement",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      let file_path = b:ui.CreateItem("link", path_text, 0, -1, "String",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      call b:ui.AddLineAt([ prefix, matched_text, file_path ], start_ln)
+
+    elseif g:any_jump_definitions_results_list_style == 2
+      let path_text = gr.path .  ":" . gr.line_number
+
+      let matched_text = b:ui.CreateItem("link", " " . gr.text, 0, -1, "Statement",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      let file_path = b:ui.CreateItem("link", path_text, 0, -1, "String",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      call b:ui.AddLineAt([ file_path, matched_text ], start_ln)
+    endif
+
+    let start_ln += 1
+
+    if idx == 0
+      let first_item = matched_text
+    endif
+
+    let idx += 1
+  endfor
+
+  " let first_item_ln = b:ui.GetItemLineNumber(first_item)
+  " call cursor(first_item_ln, 2)
+
+  call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
 endfu
 
 fu! s:create_ui_window(internal_buffer) abort
@@ -380,11 +441,9 @@ fu! g:AnyJumpHandleUsages() abort
   endif
 
   let grep_results  = s:search_usages_rg(b:ui)
-  " echo "R -> " . string(grep_results)
+  let filtered      = []
 
   " filter out results found in definitions
-  let filtered = []
-
   for result in grep_results
     if index(b:ui.definitions_grep_results, result) == -1
       " not effective? ( TODO: deletion is more memory effective)
