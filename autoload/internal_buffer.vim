@@ -23,13 +23,21 @@ let s:InternalBuffer.MethodsList = [
       \'GetItemByPos',
       \'GetItemLineNumber',
       \'GetFirstItemOfType',
+      \'RenderUiUsagesList',
+      \'RenderUiDefinitionsList',
+      \'RenderUiStartScreen',
+      \'StartUiTransaction',
+      \'EndUiTransaction',
+      \'ConvertGrepResultToItems',
       \]
 
 " Produce new Render Buffer
 fu! s:InternalBuffer.New() abort
   let object = {
         \"items": [],
-        \"preview_opened": 0 }
+        \"preview_opened": v:false,
+        \"usages_opened": v:false
+        \}
 
   for method in self.MethodsList
     let object[method] = s:InternalBuffer[method]
@@ -173,6 +181,142 @@ fu! s:InternalBuffer.GetFirstItemOfType(type) dict abort
   endfor
 
   return result
+endfu
+
+fu! s:InternalBuffer.StartUiTransaction(buf) dict abort
+  call nvim_buf_set_option(a:buf, 'modifiable', v:true)
+endfu
+
+fu! s:InternalBuffer.EndUiTransaction(buf) dict abort
+  call nvim_buf_set_option(a:buf, 'modifiable', v:false)
+endfu
+
+fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx) dict abort
+  let gr    = a:gr
+  let items = []
+
+  if g:any_jump_definitions_results_list_style == 1
+    let path_text = ' ' .  gr.path .  ":" . gr.line_number
+
+    let prefix = self.CreateItem("link", (a:current_idx + 1 . ". "), 0, -1, "Comment",
+          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+
+    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement",
+          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+
+    let file_path = self.CreateItem("link", path_text, 0, -1, "String",
+          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+
+    let items = [ prefix, matched_text, file_path ]
+
+  elseif g:any_jump_definitions_results_list_style == 2
+    let path_text = gr.path .  ":" . gr.line_number
+
+    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement",
+          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+
+    let file_path = self.CreateItem("link", path_text, 0, -1, "String",
+          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+
+    let items = [ file_path, matched_text ]
+  endif
+
+  return items
+endfu
+
+fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
+  if !has_key(self, 'usages_grep_results')
+    return
+  endif
+
+  let start_ln = a:start_ln
+
+  call self.AddLineAt([ self.CreateItem("text", "> Usages", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
+  let start_ln += 1
+
+  call self.AddLineAt([ self.CreateItem("text", "", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
+  let start_ln += 1
+
+  call self.AddLineAt([ self.CreateItem("text", " ", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
+
+  " draw grep results
+  let idx = 0
+
+  for gr in self.usages_grep_results
+    let items = self.ConvertGrepResultToItems(gr, idx)
+    call self.AddLineAt(items, start_ln)
+    let idx += 1
+  endfor
+
+  return v:true
+endfu
+
+fu! s:InternalBuffer.RenderUiStartScreen() dict abort
+  if !has_key(self, 'definitions_grep_results')
+    return
+  endif
+
+  " move ui drawing to method?
+  call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
+
+  call self.AddLine([
+    \self.CreateItem("text", ">", 0, 2, "Comment"),
+    \self.CreateItem("text", self.keyword, 1, -1, "Identifier"),
+    \self.CreateItem("text", "definitions", 1, -1, "Comment"),
+    \])
+
+  call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
+
+  " draw grep results
+  let idx = 0
+  let first_item = 0
+  for gr in self.definitions_grep_results
+    if g:any_jump_definitions_results_list_style == 1
+      let path_text = ' ' .  gr.path .  ":" . gr.line_number
+
+      let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      let file_path = self.CreateItem("link", path_text, 0, -1, "String",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      call self.AddLine([ matched_text, file_path ])
+    elseif g:any_jump_definitions_results_list_style == 2
+      let path_text = gr.path .  ":" . gr.line_number
+
+      let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      let file_path = self.CreateItem("link", path_text, 0, -1, "String",
+            \{"path": gr.path, "line_number": gr.line_number})
+
+      call self.AddLine([ file_path, matched_text ])
+    endif
+
+    if idx == 0
+      let first_item = matched_text
+    endif
+
+    let idx += 1
+  endfor
+
+  let first_item_ln = self.GetItemLineNumber(first_item)
+  call cursor(first_item_ln, 2)
+
+  call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
+
+  call self.AddLine([ self.CreateItem("help_link", "> Help", 0, -1, "Comment") ])
+
+  call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[o/enter] open file   [tab/p] preview file   [u] find usages ", 0, -1, "String") ])
+  call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
+
+  " call self.AddLine([ self.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
+
+  call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
+endfu
+
+fu! s:InternalBuffer.RenderUiDefinitionsList(grep_results, start_ln) dict abort
 endfu
 
 " Public api

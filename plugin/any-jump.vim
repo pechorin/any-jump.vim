@@ -3,10 +3,16 @@
 " TODO:
 " - [ ] add grouping for results with G (important, huge results lists is bad
 "   for my eyes)
+" - [ ] add auto preview option
+" - [ ] store pointer reference after jump inside internal buffer cached
+"   object
+" - [ ] jump to first definition after open
+" - [ ] [b] back button inside buffer should back to definitions results
+" - [ ] AnyJumpFirst
+" - [ ] AnyJumpPreview
 " - [ ] При не сохраненном файле вылетает ошибка на jump'е
 " - [*] move search functions to autoload
 " - [ ] silence for some commands?
-" - [ ] AnyJumpFirst
 " - [ ] add failed tests run & move test load to separate command
 " - [+] save winid, not bufid for correct focus change
 " - [ ] add "save search" button
@@ -37,8 +43,10 @@ let g:any_jump_keyword_match_cursor_mode = 'word'
 
 " File list results ui variants
 "
-" available variants: 1/2
-let g:any_jump_definitions_results_list_style = 1
+" available variants: 1/2/3
+let g:any_jump_definitions_results_list_style = 2
+
+let g:any_jump_list_numbers = v:true
 
 
 " ----------------------------------------------
@@ -148,156 +156,9 @@ fu! s:search_rg(lang, keyword) abort
   return grep_results
 endfu
 
-" TODO: i don't like what where is context dependent calls like b:* / bufnr()
-" TODO: move to internal_buffer.vim?
-fu! s:render_start_screen() abort
-  if !exists('b:ui') || !exists('b:ui.definitions_grep_results')
-    return
-  endif
-
-  " move ui drawing to method?
-  call b:ui.AddLine([ b:ui.CreateItem("text", "", 0, -1, "Comment") ])
-
-  call b:ui.AddLine([
-    \b:ui.CreateItem("text", ">", 0, 2, "Comment"),
-    \b:ui.CreateItem("text", b:ui.keyword, 1, -1, "Identifier"),
-    \b:ui.CreateItem("text", "definitions", 1, -1, "Comment"),
-    \])
-
-  call b:ui.AddLine([ b:ui.CreateItem("text", "", 0, -1, "Comment") ])
-
-  " draw grep results
-  let idx = 0
-  let first_item = 0
-  for gr in b:ui.definitions_grep_results
-    if g:any_jump_definitions_results_list_style == 1
-      let path_text = ' ' .  gr.path .  ":" . gr.line_number
-
-      let matched_text = b:ui.CreateItem("link", gr.text, 0, -1, "Statement",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      let file_path = b:ui.CreateItem("link", path_text, 0, -1, "String",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      call b:ui.AddLine([ matched_text, file_path ])
-    elseif g:any_jump_definitions_results_list_style == 2
-      let path_text = gr.path .  ":" . gr.line_number
-
-      let matched_text = b:ui.CreateItem("link", " " . gr.text, 0, -1, "Statement",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      let file_path = b:ui.CreateItem("link", path_text, 0, -1, "String",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      call b:ui.AddLine([ file_path, matched_text ])
-    endif
-
-    if idx == 0
-      let first_item = matched_text
-    endif
-
-    let idx += 1
-  endfor
-
-  let first_item_ln = b:ui.GetItemLineNumber(first_item)
-  call cursor(first_item_ln, 2)
-
-  call b:ui.AddLine([ b:ui.CreateItem("text", "", 0, -1, "Comment") ])
-
-  call b:ui.AddLine([ b:ui.CreateItem("help_link", "> Help", 0, -1, "Comment") ])
-
-  call b:ui.AddLine([ b:ui.CreateItem("help_text", "", 0, -1, "Comment") ])
-  call b:ui.AddLine([ b:ui.CreateItem("help_text", "[o/enter] open file   [tab/p] preview file   [u] find usages ", 0, -1, "String") ])
-  call b:ui.AddLine([ b:ui.CreateItem("help_text", "", 0, -1, "Comment") ])
-
-  " call b:ui.AddLine([ b:ui.CreateItem("button", "[u] + search usages", 0, -1, "Identifier") ])
-  " call b:ui.AddLine([ b:ui.CreateItem("text", "", 0, -1, "Comment") ])
-
-  " call b:ui.AddLine([ b:ui.CreateItem("button", "[f] + search file names", 0, -1, "Identifier") ])
-
-
-  " call b:ui.AddLine([ b:ui.CreateItem("button", "[c] + search cross projects", 0, -1, "Identifier") ])
-  " call b:ui.AddLine([ b:ui.CreateItem("text", "", 0, -1, "Comment") ])
-
-  " call b:ui.AddLine([ b:ui.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
-
-  call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
-endfu
-
-" TODO: move to internal_buffer.vim?
-fu! s:render_usages() abort
-  if !exists('b:ui') || !exists('b:ui.usages_grep_results')
-    return
-  endif
-
-  let marker_item = b:ui.GetFirstItemOfType('help_link')
-
-  if type(marker_item) != v:t_dict
-    echo "marker item not found"
-    return
-  endif
-
-  let start_ln = b:ui.GetItemLineNumber(marker_item) - 1
-
-  call nvim_buf_set_option(bufnr(), 'modifiable', v:true)
-
-  call b:ui.AddLineAt([ b:ui.CreateItem("usages_text", "> Usages", 0, -1, "Comment") ], start_ln)
-  let start_ln += 1
-
-  call b:ui.AddLineAt([ b:ui.CreateItem("usages_text", " ", 0, -1, "Comment") ], start_ln)
-
-  " draw grep results
-  let idx = 0
-  let first_item = 0
-
-  for gr in b:ui.usages_grep_results
-    if g:any_jump_definitions_results_list_style == 1
-      let path_text = ' ' .  gr.path .  ":" . gr.line_number
-
-      let prefix = b:ui.CreateItem("link", "— ", 0, -1, "Comment",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      let matched_text = b:ui.CreateItem("link", gr.text, 0, -1, "Statement",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      let file_path = b:ui.CreateItem("link", path_text, 0, -1, "String",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      call b:ui.AddLineAt([ prefix, matched_text, file_path ], start_ln)
-
-    elseif g:any_jump_definitions_results_list_style == 2
-      let path_text = gr.path .  ":" . gr.line_number
-
-      let matched_text = b:ui.CreateItem("link", " " . gr.text, 0, -1, "Statement",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      let file_path = b:ui.CreateItem("link", path_text, 0, -1, "String",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      call b:ui.AddLineAt([ file_path, matched_text ], start_ln)
-    endif
-
-    let start_ln += 1
-
-    if idx == 0
-      let first_item = matched_text
-    endif
-
-    let idx += 1
-  endfor
-
-  " let first_item_ln = b:ui.GetItemLineNumber(first_item)
-  " call cursor(first_item_ln, 2)
-
-  call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
-endfu
-
 fu! s:create_ui_window(internal_buffer) abort
-  " creates a scratch, unlisted, new, empty, unnamed buffer
-  " to be used in the floating window
   let buf = nvim_create_buf(v:false, v:true)
 
-  " nvim_buf_set_keymap(buf, 'n' ...)
   call nvim_buf_set_option(buf, 'filetype', 'any-jump')
   call nvim_buf_set_option(buf, 'bufhidden', 'delete')
   call nvim_buf_set_option(buf, 'buftype', 'nofile')
@@ -305,9 +166,7 @@ fu! s:create_ui_window(internal_buffer) abort
 
   let height = float2nr(&lines * 0.6)
   let width = float2nr(&columns * 0.6)
-  " horizontal position (centralized)
   let horizontal = float2nr((&columns - width) / 2)
-  " vertical position (one line down of the top)
   let vertical = 2
 
   let opts = {
@@ -318,11 +177,9 @@ fu! s:create_ui_window(internal_buffer) abort
         \ 'height': height
         \ }
 
-  " open the new window, floating, and enter to it
   call nvim_open_win(buf, v:true, opts)
 
   let b:ui = a:internal_buffer
-  call s:render_start_screen()
 endfu
 
 fu! s:Jump() abort
@@ -367,6 +224,7 @@ fu! s:Jump() abort
   let w:any_jump_last_ib = ib
 
   call s:create_ui_window(ib)
+  call ib.RenderUiStartScreen()
 endfu
 
 fu! s:JumpBack() abort
@@ -383,7 +241,8 @@ fu! s:JumpLastResults() abort
     let cur_win_id = win_findbuf(bufnr())[0]
     let w:any_jump_last_ib.source_win_id = cur_win_id
 
-    call s:create_ui_window(w:any_jump_last_ib)
+    echoe "not implmented"
+    " call s:create_ui_window(w:any_jump_last_ib)
   endif
 endfu
 
@@ -440,6 +299,55 @@ fu! g:AnyJumpHandleUsages() abort
     return
   endif
 
+  " close current opened usages
+  " TODO: move to method
+  if b:ui.usages_opened
+    let b:ui.usages_opened = v:false
+
+    let idx            = 0
+    let layer_start_ln = 0
+
+    call nvim_buf_set_option(bufnr(), 'modifiable', v:true)
+
+    for line in b:ui.items
+      if has_key(line[0], 'data') && type(line[0].data) == v:t_dict
+            \ && has_key(line[0].data, 'layer')
+            \ && line[0].data.layer == 'usages'
+
+        let line[0].gc = v:true " mark for destroy
+
+        if !layer_start_ln
+          let layer_start_ln = idx + 1
+        endif
+
+        " remove from ui
+        call deletebufline(bufnr(), layer_start_ln)
+      else
+        let layer_start_ln = 0
+      endif
+
+      let idx += 1
+    endfor
+
+    call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
+
+    " remove marked for garbage collection lines
+    let new_items = []
+
+    for line in b:ui.items
+      if has_key(line[0], 'gc') == v:false || line[0].gc == v:false
+        call add(new_items, line)
+      endif
+    endfor
+
+    let b:ui.items = new_items
+
+    " reset state
+    let b:ui.usages_opened = v:false
+
+    return v:true
+  endif
+
   let grep_results  = s:search_usages_rg(b:ui)
   let filtered      = []
 
@@ -451,9 +359,16 @@ fu! g:AnyJumpHandleUsages() abort
     endif
   endfor
 
+  let b:ui.usages_opened       = v:true
   let b:ui.usages_grep_results = filtered
 
-  call s:render_usages()
+  let marker_item = b:ui.GetFirstItemOfType('help_link')
+
+  let start_ln = b:ui.GetItemLineNumber(marker_item) - 1
+
+  call b:ui.StartUiTransaction(bufnr())
+  call b:ui.RenderUiUsagesList(b:ui.usages_grep_results, start_ln)
+  call b:ui.EndUiTransaction(bufnr())
 endfu
 
 fu! g:AnyJumpHandlePreview() abort
@@ -469,11 +384,10 @@ fu! g:AnyJumpHandlePreview() abort
   " remove all previews
   if b:ui.preview_opened
 
-    let idx              = 0
-    let start_preview_ln = 0
+    let idx            = 0
+    let layer_start_ln = 0
 
     for line in b:ui.items
-
       if line[0].type == 'preview_text'
         let line[0].gc = v:true " mark for destroy
 
@@ -483,17 +397,17 @@ fu! g:AnyJumpHandlePreview() abort
           call add(current_previewed_links, prev_line[0])
         endif
 
-        if start_preview_ln == 0
-          let start_preview_ln = idx + 1
+        if !layer_start_ln
+          let layer_start_ln = idx + 1
         endif
 
         " remove from ui
-        call deletebufline(bufnr(), start_preview_ln)
+        call deletebufline(bufnr(), layer_start_ln)
 
       elseif line[0].type == 'help_link'
-        echo "help link remove"
+        " not implemeted
       else
-        let start_preview_ln = 0
+        let layer_start_ln = 0
       endif
 
       let idx += 1
