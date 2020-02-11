@@ -25,8 +25,10 @@ let s:InternalBuffer.MethodsList = [
       \]
 
 " Produce new Render Buffer
-fu! s:InternalBuffer.New(buf_id) abort
-  let object = { "items": [], "buf_id": a:buf_id, "preview_opened": 0 }
+fu! s:InternalBuffer.New() abort
+  let object = {
+        \"items": [],
+        \"preview_opened": 0 }
 
   for method in self.MethodsList
     let object[method] = s:InternalBuffer[method]
@@ -58,11 +60,11 @@ fu! s:InternalBuffer.RenderLine(items, line) dict abort
     call add(hl_regions, [item.hl_group, hl_from, hl_to])
   endfor
 
-  call appendbufline(self.buf_id, a:line, text)
+  call appendbufline(bufnr(), a:line, text)
 
   for region in hl_regions
     call nvim_buf_add_highlight(
-          \self.buf_id,
+          \bufnr(),
           \-1,
           \region[0],
           \a:line,

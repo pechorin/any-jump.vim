@@ -2,6 +2,8 @@
 
 " TODO:
 " - [ ] При не сохраненном файле вылетает ошибка на jump'е
+" - [ ] move search functions to autoload
+" - [ ] silence for some commands?
 " - [ ] AnyJumpFirst
 " - [ ] add failed tests run & move test load to separate command
 " - [+] save winid, not bufid for correct focus change
@@ -14,6 +16,7 @@
 " - [ ] THINK: hl keyword line in preview
 " - [ ] THINK: async load of additional searches
 " - [ ] THINK: start async requests after some timeout of main rg request
+" - [ ] internal jumps history map + ui
 
 " let g:any_jump_loaded = v:true
 
@@ -45,14 +48,42 @@ fu! s:new_grep_result() abort
   return dict
 endfu
 
-fu! s:search_usages_rg(lang, keyword) abort
-  let cmd          = "rg -n --json -t " . a:lang . ' -w ' . a:keyword
+fu! s:search_usages_rg(internal_buffer) abort
+  let cmd          = "rg -n --json -t " . a:internal_buffer.language . ' -w ' . a:internal_buffer.keyword
   echo "cmd -> " . cmd
 
   let raw_results  = system(cmd)
   let grep_results = []
 
-  echo "res -> " . raw_results
+  if len(raw_results) > 0
+    let matches = []
+
+    for res in split(raw_results, "\n")
+      let match = json_decode(res)
+      call add(matches, match)
+    endfor
+
+    for match in matches
+      if get(match, 'type') == 'match'
+        let data = get(match, 'data')
+
+        if type(data) == v:t_dict
+          let text = data.lines.text
+          let text = substitute(text, '^\s*', '', 'g')
+          let text = substitute(text, '\n', '', 'g')
+
+          let grep_result             = s:new_grep_result()
+          let grep_result.line_number = data.line_number
+          let grep_result.path        = data.path.text
+          let grep_result.text        = text
+
+          call add(grep_results, grep_result)
+        endif
+      end
+    endfor
+  endif
+
+  return grep_results
 endfu
 
 fu! s:search_rg(lang, keyword) abort
@@ -117,48 +148,18 @@ fu! s:search_rg(lang, keyword) abort
   return grep_results
 endfu
 
-fu! s:create_ui(grep_results, source_win_id, keyword) abort
-  if len(a:grep_results) == 0
-    return 0
+" TODO: i don't like what where is context dependent calls like b:* / bufnr()
+fu! s:render_start_screen() abort
+  if !exists('b:ui') || !exists('b:ui.definitions_grep_results')
+    return
   endif
-
-  " creates a scratch, unlisted, new, empty, unnamed buffer
-  " to be used in the floating window
-  let buf = nvim_create_buf(v:false, v:true)
-
-  " nvim_buf_set_keymap(buf, 'n' ...)
-  call nvim_buf_set_option(buf, 'filetype', 'any-jump')
-  call nvim_buf_set_option(buf, 'bufhidden', 'delete')
-  call nvim_buf_set_option(buf, 'buftype', 'nofile')
-  call nvim_buf_set_option(buf, 'modifiable', v:true)
-
-  let height = float2nr(&lines * 0.6)
-  let width = float2nr(&columns * 0.6)
-  " horizontal position (centralized)
-  let horizontal = float2nr((&columns - width) / 2)
-  " vertical position (one line down of the top)
-  let vertical = 2
-
-  let opts = {
-        \ 'relative': 'editor',
-        \ 'row': vertical,
-        \ 'col': horizontal,
-        \ 'width': width,
-        \ 'height': height
-        \ }
-
-  " open the new window, floating, and enter to it
-  call nvim_open_win(buf, v:true, opts)
-
-  let b:ui = internal_buffer#GetClass().New(buf)
-  let b:ui.source_win_id = a:source_win_id
 
   " move ui drawing to method?
   call b:ui.AddLine([ b:ui.CreateItem("text", "", 0, -1, "Comment") ])
 
   call b:ui.AddLine([
     \b:ui.CreateItem("text", ">", 0, 2, "Comment"),
-    \b:ui.CreateItem("text", a:keyword, 1, -1, "Identifier"),
+    \b:ui.CreateItem("text", b:ui.keyword, 1, -1, "Identifier"),
     \b:ui.CreateItem("text", "definitions", 1, -1, "Comment"),
     \])
 
@@ -167,7 +168,7 @@ fu! s:create_ui(grep_results, source_win_id, keyword) abort
   " draw grep results
   let idx = 0
   let first_item = 0
-  for gr in a:grep_results
+  for gr in b:ui.definitions_grep_results
     if g:any_jump_definitions_results_list_style == 1
       let path_text = ' ' .  gr.path .  ":" . gr.line_number
 
@@ -219,10 +220,51 @@ fu! s:create_ui(grep_results, source_win_id, keyword) abort
 
   " call b:ui.AddLine([ b:ui.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
 
-  call nvim_buf_set_option(buf, 'modifiable', v:false)
+  call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
 endfu
 
-fu! s:jump() abort
+fu! s:render_usages() abort
+  if !exists('b:ui') || !exists('b:ui.usages_grep_results')
+    return
+  endif
+
+  echo "R U"
+endfu
+
+fu! s:create_ui_window(internal_buffer) abort
+  " creates a scratch, unlisted, new, empty, unnamed buffer
+  " to be used in the floating window
+  let buf = nvim_create_buf(v:false, v:true)
+
+  " nvim_buf_set_keymap(buf, 'n' ...)
+  call nvim_buf_set_option(buf, 'filetype', 'any-jump')
+  call nvim_buf_set_option(buf, 'bufhidden', 'delete')
+  call nvim_buf_set_option(buf, 'buftype', 'nofile')
+  call nvim_buf_set_option(buf, 'modifiable', v:true)
+
+  let height = float2nr(&lines * 0.6)
+  let width = float2nr(&columns * 0.6)
+  " horizontal position (centralized)
+  let horizontal = float2nr((&columns - width) / 2)
+  " vertical position (one line down of the top)
+  let vertical = 2
+
+  let opts = {
+        \ 'relative': 'editor',
+        \ 'row': vertical,
+        \ 'col': horizontal,
+        \ 'width': width,
+        \ 'height': height
+        \ }
+
+  " open the new window, floating, and enter to it
+  call nvim_open_win(buf, v:true, opts)
+
+  let b:ui = a:internal_buffer
+  call s:render_start_screen()
+endfu
+
+fu! s:Jump() abort
   " check current language
   if !lang_map#lang_exists(&l:filetype)
     call s:log("not found map definition for filetype " . string(&l:filetype))
@@ -254,13 +296,19 @@ fu! s:jump() abort
     return
   endif
 
-  let w:any_jump_last_results = grep_results
-  let w:any_jump_last_keyword = keyword
+  let ib = internal_buffer#GetClass().New()
 
-  call s:create_ui(grep_results, cur_win_id, keyword)
+  let ib.keyword                  = keyword
+  let ib.language                 = &l:filetype
+  let ib.source_win_id            = cur_win_id
+  let ib.definitions_grep_results = grep_results
+
+  let w:any_jump_last_ib = ib
+
+  call s:create_ui_window(ib)
 endfu
 
-fu! s:jump_back() abort
+fu! s:JumpBack() abort
   if exists('w:any_jump_prev_buf_id')
     let new_prev_buf_id = winbufnr(winnr())
 
@@ -269,14 +317,12 @@ fu! s:jump_back() abort
   endif
 endfu
 
-fu! s:jump_last_results() abort
-  if exists('w:any_jump_last_results') && exists('w:any_jump_last_keyword')
-    if type(w:any_jump_last_results) != v:t_list
-      return
-    endif
-
+fu! s:JumpLastResults() abort
+  if exists('w:any_jump_last_ib')
     let cur_win_id = win_findbuf(bufnr())[0]
-    call s:create_ui(w:any_jump_last_results, cur_win_id, w:any_jump_last_keyword)
+    let w:any_jump_last_ib.source_win_id = cur_win_id
+
+    call s:create_ui_window(w:any_jump_last_ib)
   endif
 endfu
 
@@ -329,31 +375,26 @@ fu! g:AnyJumpHandleUsages() abort
     return
   endif
 
-  " check current language
-  if !lang_map#lang_exists(&l:filetype)
-    call s:log("not found map definition for filetype " . string(&l:filetype))
+  if !has_key(b:ui, 'keyword') || !has_key(b:ui, 'language')
     return
   endif
 
-  let keyword  = ''
+  let grep_results  = s:search_usages_rg(b:ui)
+  " echo "R -> " . string(grep_results)
 
-  let cur_mode   = mode()
-  let cur_win_id = win_findbuf(winbufnr())[0]
+  " filter out results found in definitions
+  let filtered = []
 
-  if cur_mode == 'n'
-    let keyword = expand('<cword>')
-  else
-    " THINK: implement visual mode selection?
-    " https://stackoverflow.com/a/6271254/190454
-    call s:log_debug("not implemented for mode " . cur_mode)
-    return
-  endif
+  for result in grep_results
+    if index(b:ui.definitions_grep_results, result) == -1
+      " not effective? ( TODO: deletion is more memory effective)
+      call add(filtered, result)
+    endif
+  endfor
 
-  if len(keyword) == 0
-    return
-  endif
+  let b:ui.usages_grep_results = filtered
 
-  let grep_results = s:search_usages_rg(&l:filetype, keyword)
+  call s:render_usages()
 endfu
 
 fu! g:AnyJumpHandlePreview() abort
@@ -388,7 +429,7 @@ fu! g:AnyJumpHandlePreview() abort
         endif
 
         " remove from ui
-        call deletebufline(b:ui.buf_id, start_preview_ln)
+        call deletebufline(bufnr(), start_preview_ln)
 
       elseif line[0].type == 'help_link'
         echo "help link remove"
@@ -433,7 +474,7 @@ fu! g:AnyJumpHandlePreview() abort
 
       let preview = split(system(cmd), "\n")
 
-      " insert
+      " TODO: move to func
       let render_ln = b:ui.GetItemLineNumber(action_item)
       for line in preview
         let new_item = b:ui.CreateItem("preview_text", line, 0, -1, "Comment", { "link": action_item })
@@ -458,7 +499,7 @@ endfu
 
 let s:debug = v:true
 
-fu! s:toggle_debug()
+fu! s:ToggleDebug()
   let s:debug = s:debug ? v:false : v:true
 
   echo "debug enabled: " . s:debug
@@ -487,17 +528,17 @@ fu! s:run_tests()
   call s:log("Tests finished")
 endfu
 
-fu! s:init() abort
+fu! s:Init() abort
   if s:debug
     call s:run_tests()
   end
 endfu
 
 " Commands
-command! AnyJumpToggleDebug call s:toggle_debug()
-command! AnyJump call s:jump()
-command! AnyJumpBack call s:jump_back()
-command! AnyJumpLastResults call s:jump_last_results()
+command! AnyJump call s:Jump()
+command! AnyJumpBack call s:JumpBack()
+command! AnyJumpLastResults call s:JumpLastResults()
+command! AnyJumpToggleDebug call s:ToggleDebug()
 
 " Bindings
 au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
@@ -505,6 +546,7 @@ au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
 au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
 au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
 au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
+au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
 
 nnoremap <leader>aj :AnyJump<CR>
@@ -513,4 +555,4 @@ nnoremap <leader>al :AnyJumpLastResults<CR>
 
 " run tests for debug
 " init lang map
-call s:init()
+call s:Init()
