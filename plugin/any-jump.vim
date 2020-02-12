@@ -1,30 +1,29 @@
 " TODO:
-" - [ ] after pressing p jump to next result
-" - [*] jump to first usage after [u]
-" - [ ] if no rg results found -> run usages
-" - [ ] add AnyJumpUsages
-" - [ ] add grouping for results with G (important, huge results lists is bad
+" - if no definitions results found -> run usages
+" - add AnyJumpUsages
+" - add grouping for results with G (important, huge results lists is bad
 "   for my eyes)
-" - [ ] add auto preview option
-" - [ ] store pointer reference after jump inside internal buffer cached
+" - add auto preview option
+" - store pointer reference after jump inside internal buffer cached
 "   object
-" - [ ] jump to first definition after open
-" - [ ] [b] back button inside buffer should back to definitions results
-" - [ ] AnyJumpFirst
-" - [ ] AnyJumpPreview
-" - [ ] При не сохраненном файле вылетает ошибка на jump'е
-" - [ ] silence for some commands?
-" - [ ] add failed tests run & move test load to separate command
-" - [ ] add "save search" button
-" - [ ] add save jumps lists inside popup window
-" - [ ] add grouping for results
-" - [ ] add cache
-" - [ ] optimize regexps processing (do most job at first lang?)
-" - [ ] THINK_NOT: compact/full ui mode
-" - [ ] THINK: hl keyword line in preview
-" - [ ] THINK: async load of additional searches
-" - [ ] THINK: start async requests after some timeout of main rg request
-" - [ ] internal jumps history map + ui
+" - AnyJumpFirst
+" - AnyJumpPreview
+" - При не сохраненном файле вылетает ошибка на jump'е
+" - silence for some commands?
+" - add failed tests run & move test load to separate command
+" - add "save search" button
+" - add save jumps lists inside popup window
+" - add grouping for results
+" - add cache
+" - optimize regexps processing (do most job at first lang?)
+" - internal jumps history map + ui
+
+" THINK:
+" - hl keyword line in preview
+" - async load of additional searches
+" - start async requests after some timeout of main rg request
+" - after pressing p jump to next result
+" - compact/full ui mode
 
 " let g:any_jump_loaded = v:true
 
@@ -49,6 +48,8 @@ let g:any_jump_definitions_results_list_style = 2
 " Show line numbers in search rusults
 let g:any_jump_list_numbers = v:true
 
+" Preview next available search result after pressing preview button
+let g:any_jump_follow_previews = v:true
 
 " ----------------------------------------------
 " Functions
@@ -271,8 +272,18 @@ fu! g:AnyJumpHandleUsages() abort
   call b:ui.JumpToFirstOfType('link', 'usages')
 endfu
 
+fu! g:AnyJumpToFirstLink() abort
+  if !exists('b:ui')
+    return
+  endif
+
+  call b:ui.JumpToFirstOfType('link')
+
+  return v:true
+endfu
+
 fu! g:AnyJumpHandlePreview() abort
-  if type(b:ui) != v:t_dict
+  if !exists('b:ui')
     return
   endif
 
@@ -283,7 +294,6 @@ fu! g:AnyJumpHandlePreview() abort
 
   " remove all previews
   if b:ui.preview_opened
-
     let idx            = 0
     let layer_start_ln = 0
 
@@ -410,6 +420,7 @@ au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
 au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
+au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
 
 nnoremap <leader>aj :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>

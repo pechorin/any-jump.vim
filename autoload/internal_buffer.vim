@@ -206,7 +206,7 @@ fu! s:InternalBuffer.GetFirstItemOfType(type, ...) dict abort
 endfu
 
 fu! s:InternalBuffer.JumpToFirstOfType(type, ...) dict abort
-  let item = self.GetFirstItemOfType(a:type, a:1)
+  let item = self.GetFirstItemOfType(a:type, a:000)
 
   if type(item) == v:t_dict
     let ln = self.GetItemLineNumber(item)
