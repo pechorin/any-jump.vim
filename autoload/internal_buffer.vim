@@ -36,9 +36,10 @@ let s:InternalBuffer.MethodsList = [
 " Produce new Render Buffer
 fu! s:InternalBuffer.New() abort
   let object = {
-        \"items": [],
+        \"items":          [],
+        \"gc":             v:false,
         \"preview_opened": v:false,
-        \"usages_opened": v:false
+        \"usages_opened":  v:false,
         \}
 
   for method in self.MethodsList
