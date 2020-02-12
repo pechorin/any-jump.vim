@@ -1,5 +1,6 @@
 " TODO:
 " - [ ] after pressing p jump to next result
+" - [ ] jump to first usage after [u]
 " - [ ] if no rg results found -> run usages
 " - [ ] add AnyJumpUsages
 " - [ ] add grouping for results with G (important, huge results lists is bad
@@ -309,7 +310,7 @@ fu! g:AnyJumpHandleUsages() abort
     let layer_start_ln = 0
     let usages_started = v:false
 
-    call nvim_buf_set_option(bufnr(), 'modifiable', v:true)
+    call b:ui.StartUiTransaction(bufnr())
 
     for line in b:ui.items
       if has_key(line[0], 'data') && type(line[0].data) == v:t_dict
@@ -337,7 +338,7 @@ fu! g:AnyJumpHandleUsages() abort
       let idx += 1
     endfor
 
-    call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
+    call b:ui.EndUiTransaction(bufnr())
 
     " remove marked for garbage collection lines
     let new_items = []
@@ -384,7 +385,7 @@ fu! g:AnyJumpHandlePreview() abort
     return
   endif
 
-  call nvim_buf_set_option(bufnr(), 'modifiable', v:true)
+  call b:ui.StartUiTransaction(bufnr())
 
   let current_previewed_links = []
   let action_item             = b:ui.GetItemByPos()
@@ -470,7 +471,7 @@ fu! g:AnyJumpHandlePreview() abort
     endif
   endif
 
-  call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
+  call b:ui.EndUiTransaction(bufnr())
 endfu
 
 
