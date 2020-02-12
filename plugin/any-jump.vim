@@ -1,6 +1,6 @@
 " TODO:
 " - [ ] after pressing p jump to next result
-" - [ ] jump to first usage after [u]
+" - [*] jump to first usage after [u]
 " - [ ] if no rg results found -> run usages
 " - [ ] add AnyJumpUsages
 " - [ ] add grouping for results with G (important, huge results lists is bad
@@ -123,6 +123,8 @@ fu! s:Jump() abort
 
   call s:create_ui_window(ib)
   call ib.RenderUiStartScreen()
+
+  call ib.JumpToFirstOfType('link', 'definitions')
 endfu
 
 fu! s:JumpBack() abort
@@ -237,6 +239,8 @@ fu! g:AnyJumpHandleUsages() abort
     call b:ui.EndUiTransaction(bufnr())
     call b:ui.RemoveGarbagedLines()
 
+    call b:ui.JumpToFirstOfType('link', 'definitions')
+
     let b:ui.usages_opened = v:false
 
     return v:true
@@ -263,6 +267,8 @@ fu! g:AnyJumpHandleUsages() abort
   call b:ui.StartUiTransaction(bufnr())
   call b:ui.RenderUiUsagesList(b:ui.usages_grep_results, start_ln)
   call b:ui.EndUiTransaction(bufnr())
+
+  call b:ui.JumpToFirstOfType('link', 'usages')
 endfu
 
 fu! g:AnyJumpHandlePreview() abort

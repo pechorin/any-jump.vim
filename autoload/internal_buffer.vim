@@ -31,6 +31,7 @@ let s:InternalBuffer.MethodsList = [
       \'ConvertGrepResultToItems',
       \'RemoveLines',
       \'RemoveGarbagedLines',
+      \'JumpToFirstOfType',
       \]
 
 " Produce new Render Buffer
@@ -173,12 +174,28 @@ fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
   return 0
 endfu
 
-fu! s:InternalBuffer.GetFirstItemOfType(type) dict abort
+fu! s:InternalBuffer.GetFirstItemOfType(type, ...) dict abort
   let result = 0
+  let layer  = 0
+
+  if a:0 == 1
+    let layer = a:1
+  endif
 
   for line in self.items
+    if type(result) == v:t_dict
+      break
+    endif
+
     for item in line
-      if item.type == a:type
+      let type_is_ok  = item.type == a:type
+      let layer_is_ok = v:true
+
+      if type(layer) == v:t_string
+        let layer_is_ok = item.data.layer == layer
+      endif
+
+      if type_is_ok && layer_is_ok
         let result = item
         break
       endif
@@ -186,6 +203,15 @@ fu! s:InternalBuffer.GetFirstItemOfType(type) dict abort
   endfor
 
   return result
+endfu
+
+fu! s:InternalBuffer.JumpToFirstOfType(type, ...) dict abort
+  let item = self.GetFirstItemOfType(a:type, a:1)
+
+  if type(item) == v:t_dict
+    let ln = self.GetItemLineNumber(item)
+    call cursor(ln, 2)
+  endif
 endfu
 
 fu! s:InternalBuffer.StartUiTransaction(buf) dict abort
@@ -279,7 +305,6 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
 
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
 
-
   " draw grep results
   let idx        = 0
   let first_item = 0
@@ -297,9 +322,6 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
     let insert_ln += 1
   endfor
 
-  let first_item_ln = self.GetItemLineNumber(first_item)
-  call cursor(first_item_ln, 2)
-
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
 
   call self.AddLine([ self.CreateItem("help_link", "> Help", 0, -1, "Comment") ])
@@ -309,8 +331,6 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
   call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
 
   " call self.AddLine([ self.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
-
-  call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
 endfu
 
 fu! s:InternalBuffer.RemoveGarbagedLines() dict abort
