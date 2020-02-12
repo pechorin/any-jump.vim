@@ -1,4 +1,6 @@
 " TODO:
+" - [ ] after pressing p jump to next result
+" - [ ] if no rg results found -> run usages
 " - [ ] add AnyJumpUsages
 " - [ ] add grouping for results with G (important, huge results lists is bad
 "   for my eyes)
@@ -305,6 +307,7 @@ fu! g:AnyJumpHandleUsages() abort
 
     let idx            = 0
     let layer_start_ln = 0
+    let usages_started = v:false
 
     call nvim_buf_set_option(bufnr(), 'modifiable', v:true)
 
@@ -317,9 +320,15 @@ fu! g:AnyJumpHandleUsages() abort
 
         if !layer_start_ln
           let layer_start_ln = idx + 1
+          let usages_started = v:true
         endif
 
         " remove from ui
+        call deletebufline(bufnr(), layer_start_ln)
+
+      " remove preview lines for usages
+      elseif usages_started && line[0].type == 'preview_text'
+        let line[0].gc = v:true
         call deletebufline(bufnr(), layer_start_ln)
       else
         let layer_start_ln = 0

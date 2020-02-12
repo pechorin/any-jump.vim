@@ -192,7 +192,7 @@ fu! s:InternalBuffer.EndUiTransaction(buf) dict abort
   call nvim_buf_set_option(a:buf, 'modifiable', v:false)
 endfu
 
-fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx) dict abort
+fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx, layer) dict abort
   let gr    = a:gr
   let items = []
 
@@ -200,13 +200,13 @@ fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx) dict abort
     let path_text = ' ' .  gr.path .  ":" . gr.line_number
 
     let prefix = self.CreateItem("link", (a:current_idx + 1 . " "), 0, -1, "Comment",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
 
     let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
 
     let file_path = self.CreateItem("link", path_text, 0, -1, "String",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
 
     let items = [ prefix, matched_text, file_path ]
 
@@ -214,10 +214,10 @@ fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx) dict abort
     let path_text = gr.path .  ":" . gr.line_number
 
     let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
 
     let file_path = self.CreateItem("link", path_text, 0, -1, "String",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
+          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
 
     let items = [ file_path, matched_text ]
   endif
@@ -244,7 +244,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   let idx = 0
 
   for gr in self.usages_grep_results
-    let items = self.ConvertGrepResultToItems(gr, idx)
+    let items = self.ConvertGrepResultToItems(gr, idx, "usages")
     call self.AddLineAt(items, start_ln)
 
     let idx += 1
@@ -277,7 +277,7 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
   let insert_ln = self.len()
 
   for gr in self.definitions_grep_results
-    let items = self.ConvertGrepResultToItems(gr, idx)
+    let items = self.ConvertGrepResultToItems(gr, idx, "definitions")
     call self.AddLineAt(items, insert_ln)
 
     if idx == 0
