@@ -13,10 +13,8 @@
 " - [ ] AnyJumpFirst
 " - [ ] AnyJumpPreview
 " - [ ] При не сохраненном файле вылетает ошибка на jump'е
-" - [*] move search functions to autoload
 " - [ ] silence for some commands?
 " - [ ] add failed tests run & move test load to separate command
-" - [+] save winid, not bufid for correct focus change
 " - [ ] add "save search" button
 " - [ ] add save jumps lists inside popup window
 " - [ ] add grouping for results
@@ -54,109 +52,6 @@ let g:any_jump_list_numbers = v:true
 " ----------------------------------------------
 " Functions
 " ----------------------------------------------
-
-fu! s:new_grep_result() abort
-  let dict = { "line_number": 0, "path": 0, "text": 0 }
-  return dict
-endfu
-
-fu! s:search_usages_rg(internal_buffer) abort
-  let cmd          = "rg -n --json -t " . a:internal_buffer.language . ' -w ' . a:internal_buffer.keyword
-  let raw_results  = system(cmd)
-  let grep_results = []
-
-  if len(raw_results) > 0
-    let matches = []
-
-    for res in split(raw_results, "\n")
-      let match = json_decode(res)
-      call add(matches, match)
-    endfor
-
-    for match in matches
-      if get(match, 'type') == 'match'
-        let data = get(match, 'data')
-
-        if type(data) == v:t_dict
-          let text = data.lines.text
-          let text = substitute(text, '^\s*', '', 'g')
-          let text = substitute(text, '\n', '', 'g')
-
-          let grep_result             = s:new_grep_result()
-          let grep_result.line_number = data.line_number
-          let grep_result.path        = data.path.text
-          let grep_result.text        = text
-
-          call add(grep_results, grep_result)
-        endif
-      end
-    endfor
-  endif
-
-  return grep_results
-endfu
-
-fu! s:search_rg(lang, keyword) abort
-  let patterns = []
-  let lang     = lang_map#get_definitions(a:lang)
-
-  for rule in lang
-    " insert real keyword insted of placeholder
-    let regexp = substitute(rule.regexp, "KEYWORD", a:keyword, "g")
-
-    " remove vim escapings
-    let regexp = substitute(regexp, '\\(', '(', 'g')
-    let regexp = substitute(regexp, '\\)', ')', 'g')
-    let regexp = substitute(regexp, '\\+', '+', 'g')
-    let regexp = substitute(regexp, '\\|', '|', 'g')
-    let regexp = substitute(regexp, '\\?', '?', 'g')
-
-    " change word boundaries
-    let regexp = substitute(regexp, '\\<', '\\b', 'g')
-    let regexp = substitute(regexp, '\\>', '\\b', 'g')
-
-    call add(patterns, regexp)
-  endfor
-
-  let regexp = map(patterns, { _, pattern -> '(' . pattern . ')' })
-  let regexp = join(regexp, '|')
-  let regexp = "'(" . regexp . ")'"
-
-  let cmd          = "rg -n --json -t " . a:lang . ' ' . regexp
-  let raw_results  = system(cmd)
-  let grep_results = []
-
-  if len(raw_results) > 0
-    let matches = []
-
-    for res in split(raw_results, "\n")
-      let match = json_decode(res)
-      call add(matches, match)
-    endfor
-
-    for match in matches
-      if get(match, 'type') == 'match'
-        let data = get(match, 'data')
-
-        if type(data) == v:t_dict
-          let text = data.lines.text
-          let text = substitute(text, '^\s*', '', 'g')
-          let text = substitute(text, '\n', '', 'g')
-
-          let grep_result             = s:new_grep_result()
-          let grep_result.line_number = data.line_number
-          let grep_result.path        = data.path.text
-          let grep_result.text        = text
-
-          call add(grep_results, grep_result)
-          " call s:log_debug(string(grep_result))
-        endif
-      end
-    endfor
-  endif
-
-  return grep_results
-endfu
 
 fu! s:create_ui_window(internal_buffer) abort
   let buf = nvim_create_buf(v:false, v:true)
@@ -209,7 +104,7 @@ fu! s:Jump() abort
     return
   endif
 
-  let grep_results = s:search_rg(&l:filetype, keyword)
+  let grep_results = search#SearchDefinitions(&l:filetype, keyword)
 
   if len(grep_results) == 0
     call s:log('no results found for ' . keyword)
@@ -346,7 +241,7 @@ fu! g:AnyJumpHandleUsages() abort
     return v:true
   endif
 
-  let grep_results  = s:search_usages_rg(b:ui)
+  let grep_results  = search#SearchUsages(b:ui)
   let filtered      = []
 
   " filter out results found in definitions
