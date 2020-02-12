@@ -267,7 +267,12 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
 
   let start_ln = a:start_ln
 
-  call self.AddLineAt([ self.CreateItem("text", "> Usages", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
+  call self.AddLineAt([
+    \self.CreateItem("text", ">", 0, 2, "Function", {'layer': 'usages'}),
+    \self.CreateItem("text", self.keyword, 1, -1, "Identifier", {'layer': 'usages'}),
+    \self.CreateItem("text", "usages", 1, -1, "Function", {'layer': 'usages'}),
+    \], start_ln)
+
   let start_ln += 1
 
   call self.AddLineAt([ self.CreateItem("text", "", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
@@ -294,13 +299,12 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
     return
   endif
 
-  " move ui drawing to method?
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
 
   call self.AddLine([
-    \self.CreateItem("text", ">", 0, 2, "Comment"),
+    \self.CreateItem("text", ">", 0, 2, "Function"),
     \self.CreateItem("text", self.keyword, 1, -1, "Identifier"),
-    \self.CreateItem("text", "definitions", 1, -1, "Comment"),
+    \self.CreateItem("text", "definitions", 1, -1, "Function"),
     \])
 
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
