@@ -43,9 +43,10 @@ let g:any_jump_keyword_match_cursor_mode = 'word'
 
 " File list results ui variants
 "
-" available variants: 1/2/3
-let g:any_jump_definitions_results_list_style = 1
+" available variants: 1/2
+let g:any_jump_definitions_results_list_style = 2
 
+" Show line numbers in search rusults
 let g:any_jump_list_numbers = v:true
 
 

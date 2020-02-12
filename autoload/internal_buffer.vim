@@ -200,11 +200,16 @@ fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx, layer) dict abort
   let gr    = a:gr
   let items = []
 
+  let prefix_text = ""
+  if g:any_jump_list_numbers
+    let prefix_text = a:current_idx + 1 . " "
+  endif
+
+  let prefix = self.CreateItem("link", prefix_text, 0, -1, "Comment",
+        \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
+
   if g:any_jump_definitions_results_list_style == 1
     let path_text = ' ' .  gr.path .  ":" . gr.line_number
-
-    let prefix = self.CreateItem("link", (a:current_idx + 1 . " "), 0, -1, "Comment",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
 
     let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement",
           \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
@@ -223,7 +228,7 @@ fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx, layer) dict abort
     let file_path = self.CreateItem("link", path_text, 0, -1, "String",
           \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
 
-    let items = [ file_path, matched_text ]
+    let items = [ prefix, file_path, matched_text ]
   endif
 
   return items
