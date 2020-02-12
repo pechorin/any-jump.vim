@@ -339,19 +339,8 @@ fu! g:AnyJumpHandleUsages() abort
     endfor
 
     call b:ui.EndUiTransaction(bufnr())
+    call b:ui.RemoveGarbagedLines()
 
-    " remove marked for garbage collection lines
-    let new_items = []
-
-    for line in b:ui.items
-      if has_key(line[0], 'gc') == v:false || line[0].gc == v:false
-        call add(new_items, line)
-      endif
-    endfor
-
-    let b:ui.items = new_items
-
-    " reset state
     let b:ui.usages_opened = v:false
 
     return v:true
@@ -422,18 +411,7 @@ fu! g:AnyJumpHandlePreview() abort
       let idx += 1
     endfor
 
-    " remove marked for garbage collection lines
-    let new_items = []
-
-    for line in b:ui.items
-      if line[0].gc != v:true
-        call add(new_items, line)
-      endif
-    endfor
-
-    let b:ui.items = new_items
-
-    " reset state
+    call b:ui.RemoveGarbagedLines()
     let b:ui.preview_opened = v:false
   end
 

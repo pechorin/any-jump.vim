@@ -30,6 +30,7 @@ let s:InternalBuffer.MethodsList = [
       \'EndUiTransaction',
       \'ConvertGrepResultToItems',
       \'RemoveLines',
+      \'RemoveGarbagedLines',
       \]
 
 " Produce new Render Buffer
@@ -302,6 +303,19 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
   " call self.AddLine([ self.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
 
   call nvim_buf_set_option(bufnr(), 'modifiable', v:false)
+endfu
+
+fu! s:InternalBuffer.RemoveGarbagedLines() dict abort
+  " remove marked for garbage collection lines
+  let new_items = []
+
+  for line in self.items
+    if has_key(line[0], 'gc') == v:false || line[0].gc == v:false
+      call add(new_items, line)
+    endif
+  endfor
+
+  let self.items = new_items
 endfu
 
 fu! s:InternalBuffer.RenderUiDefinitionsList(grep_results, start_ln) dict abort
