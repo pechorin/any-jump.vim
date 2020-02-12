@@ -25,10 +25,11 @@ let s:InternalBuffer.MethodsList = [
       \'GetFirstItemOfType',
       \'RenderUiUsagesList',
       \'RenderUiDefinitionsList',
-      \'RenderUiStartScreen',
+      \'RenderUi',
+      \'RenderUiGrepResults',
       \'StartUiTransaction',
       \'EndUiTransaction',
-      \'ConvertGrepResultToItems',
+      \'GrepResultToItems',
       \'RemoveLines',
       \'RemoveGarbagedLines',
       \'JumpToFirstOfType',
@@ -161,6 +162,7 @@ endfu
 " COMPLEXITY: O(1)
 fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
   let i = 1
+
   for line in self.items
     for item in line
       if item == a:item
@@ -222,7 +224,7 @@ fu! s:InternalBuffer.EndUiTransaction(buf) dict abort
   call nvim_buf_set_option(a:buf, 'modifiable', v:false)
 endfu
 
-fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx, layer) dict abort
+fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
   let gr    = a:gr
   let items = []
 
@@ -260,11 +262,10 @@ fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx, layer) dict abort
   return items
 endfu
 
-fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
-  if !has_key(self, 'usages_grep_results')
-    return
-  endif
+fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
+endfu
 
+fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   let start_ln = a:start_ln
 
   call self.AddLineAt([
@@ -284,7 +285,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   let idx = 0
 
   for gr in self.usages_grep_results
-    let items = self.ConvertGrepResultToItems(gr, idx, "usages")
+    let items = self.GrepResultToItems(gr, idx, "usages")
     call self.AddLineAt(items, start_ln)
 
     let idx += 1
@@ -294,11 +295,11 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   return v:true
 endfu
 
-fu! s:InternalBuffer.RenderUiStartScreen() dict abort
-  if !has_key(self, 'definitions_grep_results')
-    return
-  endif
+fu! s:InternalBuffer.RenderUiGrepResults(grep_results) dict abort
 
+endfu
+
+fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
 
   call self.AddLine([
@@ -315,7 +316,7 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
   let insert_ln = self.len()
 
   for gr in self.definitions_grep_results
-    let items = self.ConvertGrepResultToItems(gr, idx, "definitions")
+    let items = self.GrepResultToItems(gr, idx, "definitions")
     call self.AddLineAt(items, insert_ln)
 
     if idx == 0
@@ -326,7 +327,16 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
     let insert_ln += 1
   endfor
 
+  if len(self.definitions_grep_results) == 0
+    call self.AddLine([ self.CreateItem("text", "No definitions results", 0, -1, "Comment") ])
+  endif
+
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
+
+  if len(self.usages_grep_results) > 0
+    let current_ln = self.len()
+    call self.RenderUiUsagesList(self.usages_grep_results, self.len())
+  endif
 
   call self.AddLine([ self.CreateItem("help_link", "> Help", 0, -1, "Function") ])
 

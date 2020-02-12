@@ -19,6 +19,7 @@
 " - internal jumps history map + ui
 
 " THINK:
+" - add tags file search support
 " - hl keyword line in preview
 " - async load of additional searches
 " - start async requests after some timeout of main rg request
@@ -63,10 +64,10 @@ fu! s:create_ui_window(internal_buffer) abort
   call nvim_buf_set_option(buf, 'buftype', 'nofile')
   call nvim_buf_set_option(buf, 'modifiable', v:true)
 
-  let height = float2nr(&lines * 0.6)
-  let width = float2nr(&columns * 0.6)
+  let height     = float2nr(&lines * 0.6)
+  let width      = float2nr(&columns * 0.6)
   let horizontal = float2nr((&columns - width) / 2)
-  let vertical = 2
+  let vertical   = 2
 
   let opts = {
         \ 'relative': 'editor',
@@ -121,10 +122,9 @@ fu! s:Jump() abort
   let ib.definitions_grep_results = grep_results
 
   let w:any_jump_last_ib = ib
-
   call s:create_ui_window(ib)
-  call ib.RenderUiStartScreen()
 
+  call ib.RenderUi()
   call ib.JumpToFirstOfType('link', 'definitions')
 endfu
 
@@ -282,6 +282,28 @@ fu! g:AnyJumpToFirstLink() abort
   return v:true
 endfu
 
+fu! g:AnyJumpToggleGrouping() abort
+  if !exists('b:ui')
+    return
+  endif
+
+  call b:ui.StartUiTransaction(bufnr())
+
+  let current_ln = line('.')
+
+  call deletebufline(bufnr(), 1, b:ui.len() + 1)
+
+  let b:ui.items = []
+  let b:ui.preview_opened = v:false
+  let b:ui.usages_opened  = v:false
+
+  call b:ui.RenderUi()
+
+  call cursor(current_ln, 2)
+
+  call b:ui.EndUiTransaction(bufnr())
+endfu
+
 fu! g:AnyJumpHandlePreview() abort
   if !exists('b:ui')
     return
@@ -421,6 +443,7 @@ au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
 au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
+au FileType any-jump nnoremap <buffer> g :call g:AnyJumpToggleGrouping()<cr>
 
 nnoremap <leader>aj :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
