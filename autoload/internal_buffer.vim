@@ -29,6 +29,7 @@ let s:InternalBuffer.MethodsList = [
       \'StartUiTransaction',
       \'EndUiTransaction',
       \'ConvertGrepResultToItems',
+      \'RemoveLines',
       \]
 
 " Produce new Render Buffer
@@ -198,7 +199,7 @@ fu! s:InternalBuffer.ConvertGrepResultToItems(gr, current_idx) dict abort
   if g:any_jump_definitions_results_list_style == 1
     let path_text = ' ' .  gr.path .  ":" . gr.line_number
 
-    let prefix = self.CreateItem("link", (a:current_idx + 1 . ". "), 0, -1, "Comment",
+    let prefix = self.CreateItem("link", (a:current_idx + 1 . " "), 0, -1, "Comment",
           \{"path": gr.path, "line_number": gr.line_number, "layer": "usages"})
 
     let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement",
@@ -245,7 +246,9 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   for gr in self.usages_grep_results
     let items = self.ConvertGrepResultToItems(gr, idx)
     call self.AddLineAt(items, start_ln)
+
     let idx += 1
+    let start_ln += 1
   endfor
 
   return v:true
@@ -267,37 +270,22 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
 
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
 
+
   " draw grep results
-  let idx = 0
+  let idx        = 0
   let first_item = 0
+  let insert_ln = self.len()
+
   for gr in self.definitions_grep_results
-    if g:any_jump_definitions_results_list_style == 1
-      let path_text = ' ' .  gr.path .  ":" . gr.line_number
-
-      let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      let file_path = self.CreateItem("link", path_text, 0, -1, "String",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      call self.AddLine([ matched_text, file_path ])
-    elseif g:any_jump_definitions_results_list_style == 2
-      let path_text = gr.path .  ":" . gr.line_number
-
-      let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      let file_path = self.CreateItem("link", path_text, 0, -1, "String",
-            \{"path": gr.path, "line_number": gr.line_number})
-
-      call self.AddLine([ file_path, matched_text ])
-    endif
+    let items = self.ConvertGrepResultToItems(gr, idx)
+    call self.AddLineAt(items, insert_ln)
 
     if idx == 0
-      let first_item = matched_text
+      let first_item = items[0]
     endif
 
     let idx += 1
+    let insert_ln += 1
   endfor
 
   let first_item_ln = self.GetItemLineNumber(first_item)
@@ -317,6 +305,9 @@ fu! s:InternalBuffer.RenderUiStartScreen() dict abort
 endfu
 
 fu! s:InternalBuffer.RenderUiDefinitionsList(grep_results, start_ln) dict abort
+endfu
+
+fu! s:InternalBuffer.RemoveLines(line_from, line_to) dict abort
 endfu
 
 " Public api
