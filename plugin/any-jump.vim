@@ -19,7 +19,7 @@
 " - internal jumps history map + ui
 
 " THINK:
-" - add tags file search support
+" - add tags file search support (ctags)
 " - hl keyword line in preview
 " - async load of additional searches
 " - start async requests after some timeout of main rg request
@@ -289,19 +289,30 @@ fu! g:AnyJumpToggleGrouping() abort
 
   call b:ui.StartUiTransaction(bufnr())
 
-  let current_ln = line('.')
+  let current_ln          = line('.')
+  let preview_lines_count = 0
+
+  for lines in b:ui.items[0:current_ln - 1]
+    for item in lines
+      if item.type == 'preview_text'
+        let preview_lines_count += 1
+        break
+      endif
+    endfor
+  endfor
+
+  let new_current_ln = current_ln - preview_lines_count
 
   call deletebufline(bufnr(), 1, b:ui.len() + 1)
 
-  let b:ui.items = []
+  let b:ui.items          = []
   let b:ui.preview_opened = v:false
   let b:ui.usages_opened  = v:false
 
   call b:ui.RenderUi()
-
-  call cursor(current_ln, 2)
-
   call b:ui.EndUiTransaction(bufnr())
+
+  call cursor(new_current_ln, 2)
 endfu
 
 fu! g:AnyJumpHandlePreview() abort
