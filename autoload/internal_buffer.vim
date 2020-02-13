@@ -30,6 +30,7 @@ let s:InternalBuffer.MethodsList = [
       \'StartUiTransaction',
       \'EndUiTransaction',
       \'GrepResultToItems',
+      \'GrepResultToGroupedItems',
       \'RemoveLines',
       \'RemoveGarbagedLines',
       \'JumpToFirstOfType',
@@ -42,6 +43,7 @@ fu! s:InternalBuffer.New() abort
         \"gc":                       v:false,
         \"preview_opened":           v:false,
         \"usages_opened":            v:false,
+        \"grouping_enabled":         v:false,
         \"definitions_grep_results": [],
         \"usages_grep_results":      [],
         \}
@@ -225,36 +227,29 @@ fu! s:InternalBuffer.EndUiTransaction(buf) dict abort
 endfu
 
 fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
-  let gr    = a:gr
-  let items = []
+  let gr      = a:gr
+  let items   = []
+  let options = { "path": gr.path, "line_number": gr.line_number, "layer": a:layer }
 
   let prefix_text = ""
+
   if g:any_jump_list_numbers
     let prefix_text = a:current_idx + 1 . " "
   endif
 
-  let prefix = self.CreateItem("link", prefix_text, 0, -1, "Comment",
-        \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
+  let prefix = self.CreateItem("link", prefix_text, 0, -1, "Comment", options)
 
   if g:any_jump_definitions_results_list_style == 1
-    let path_text = ' ' .  gr.path .  ":" . gr.line_number
-
-    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
-
-    let file_path = self.CreateItem("link", path_text, 0, -1, "String",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
+    let path_text    = ' ' .  gr.path .  ":" . gr.line_number
+    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", options)
+    let file_path    = self.CreateItem("link", path_text, 0, -1, "String", options)
 
     let items = [ prefix, matched_text, file_path ]
 
   elseif g:any_jump_definitions_results_list_style == 2
-    let path_text = gr.path .  ":" . gr.line_number
-
-    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
-
-    let file_path = self.CreateItem("link", path_text, 0, -1, "String",
-          \{"path": gr.path, "line_number": gr.line_number, "layer": a:layer})
+    let path_text    = gr.path .  ":" . gr.line_number
+    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement", options)
+    let file_path    = self.CreateItem("link", path_text, 0, -1, "String", options)
 
     let items = [ prefix, file_path, matched_text ]
   endif
@@ -263,6 +258,32 @@ fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
 endfu
 
 fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
+  let gr      = a:gr
+  let items   = []
+  let options = { "path": gr.path, "line_number": gr.line_number, "layer": a:layer}
+
+  let prefix_text = ""
+
+  if g:any_jump_list_numbers
+    let prefix_text = a:current_idx + 1 . " "
+  endif
+
+  let prefix = self.CreateItem("link", prefix_text, 0, -1, "Comment", options)
+
+  if g:any_jump_definitions_results_list_style == 1
+    let path_text    = ' ' .  gr.path .  ":" . gr.line_number
+    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", options)
+
+    let items = [ prefix, matched_text ]
+
+  elseif g:any_jump_definitions_results_list_style == 2
+    let path_text    = gr.path .  ":" . gr.line_number
+    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement", options)
+
+    let items = [ prefix, matched_text ]
+  endif
+
+  return items
 endfu
 
 fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
@@ -315,17 +336,66 @@ fu! s:InternalBuffer.RenderUi() dict abort
   let first_item = 0
   let insert_ln = self.len()
 
-  for gr in self.definitions_grep_results
-    let items = self.GrepResultToItems(gr, idx, "definitions")
-    call self.AddLineAt(items, insert_ln)
+  if self.grouping_enabled
+    " group by file name rendering
+    let render_map = {}
 
-    if idx == 0
-      let first_item = items[0]
-    endif
+    for gr in self.definitions_grep_results
+      if !has_key(render_map, gr.path)
+        let render_map[gr.path] = []
+      endif
 
-    let idx += 1
-    let insert_ln += 1
-  endfor
+      call add(render_map[gr.path], gr)
+    endfor
+
+    let path_idx = 0
+    for path in keys(render_map)
+      let first_gr = render_map[path][0]
+      let opts     = {
+            \"path":         path,
+            \"line_number":  first_gr.line_number,
+            \"layer":        "definitions",
+            \"group_header": v:true,
+            \}
+
+      let prefix     = self.CreateItem("link", ">", 0, -1, "Comment", opts)
+      let group_name = self.CreateItem("link", path, 1, -1, "Function", opts)
+      let line       = [ prefix, group_name ]
+
+      call self.AddLine(line)
+
+      for gr in render_map[path]
+        let items = self.GrepResultToGroupedItems(gr, idx, "definitions")
+        call self.AddLine(items)
+
+        " if idx == 0
+        "   let first_item = items[0]
+        " endif
+
+        let idx += 1
+        " let insert_ln += 1
+      endfor
+
+      if path_idx != len(keys(render_map)) - 1
+         call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
+      endif
+
+      let path_idx += 1
+    endfor
+  else
+    " simple list style results rendering
+    for gr in self.definitions_grep_results
+      let items = self.GrepResultToItems(gr, idx, "definitions")
+      call self.AddLineAt(items, insert_ln)
+
+      if idx == 0
+        let first_item = items[0]
+      endif
+
+      let idx += 1
+      let insert_ln += 1
+    endfor
+  endif
 
   if len(self.definitions_grep_results) == 0
     call self.AddLine([ self.CreateItem("text", "No definitions results", 0, -1, "Comment") ])
@@ -342,7 +412,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
   call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[enter/o] open file   [tab/p] preview file   [esc/q] close ", 0, -1, "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[g] toggle grouping   [b] back to first result in list", 0, -1, "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[G] toggle grouping   [b] back to first result in list", 0, -1, "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[u] find usages", 0, -1, "Comment") ])
   " call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
   " call self.AddLine([ self.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])

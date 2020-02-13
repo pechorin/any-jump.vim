@@ -1,4 +1,7 @@
 " TODO:
+" - fix slow perfomance because of <leader>a shadowing with <leader>aj
+" - add preview lines count option
+" - add paths priorities for better search results
 " - if no definitions results found -> run usages
 " - add AnyJumpUsages
 " - add grouping for results with G (important, huge results lists is bad
@@ -289,30 +292,33 @@ fu! g:AnyJumpToggleGrouping() abort
 
   call b:ui.StartUiTransaction(bufnr())
 
-  let current_ln          = line('.')
-  let preview_lines_count = 0
-
-  for lines in b:ui.items[0:current_ln - 1]
-    for item in lines
-      if item.type == 'preview_text'
-        let preview_lines_count += 1
-        break
-      endif
-    endfor
-  endfor
-
-  let new_current_ln = current_ln - preview_lines_count
+  let cursor_item = b:ui.GetItemByPos()
 
   call deletebufline(bufnr(), 1, b:ui.len() + 1)
 
-  let b:ui.items          = []
-  let b:ui.preview_opened = v:false
-  let b:ui.usages_opened  = v:false
+  let b:ui.items            = []
+  let b:ui.preview_opened   = v:false
+  let b:ui.usages_opened    = v:false
+  let b:ui.grouping_enabled = b:ui.grouping_enabled ? v:false : v:true
 
   call b:ui.RenderUi()
   call b:ui.EndUiTransaction(bufnr())
 
-  call cursor(new_current_ln, 2)
+  echo "ci -> " . string(cursor_item)
+
+
+  " try to restore cursor position
+  if cursor_item.type == "link"
+    let new_ln = b:ui.GetItemLineNumber(cursor_item)
+    call cursor(new_ln, 2)
+  else
+    let maybe_item = b:ui.GetFirstItemOfType('link')
+
+    if type(maybe_item) == v:t_dict
+      let new_ln = b:ui.GetItemLineNumber(maybe_item)
+      call cursor(new_ln, 2)
+    endif
+  endif
 endfu
 
 fu! g:AnyJumpHandlePreview() abort
@@ -367,7 +373,7 @@ fu! g:AnyJumpHandlePreview() abort
   endif
 
   if type(action_item) == v:t_dict
-    if action_item.type == 'link'
+    if action_item.type == 'link' && !has_key(action_item.data, "group_header")
       let file_ln               = action_item.data.line_number
       let preview_before_offset = 2
       let preview_after_offset  = 5
@@ -454,7 +460,7 @@ au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
 au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
-au FileType any-jump nnoremap <buffer> g :call g:AnyJumpToggleGrouping()<cr>
+au FileType any-jump nnoremap <buffer> G :call g:AnyJumpToggleGrouping()<cr>
 
 nnoremap <leader>aj :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
