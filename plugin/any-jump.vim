@@ -334,7 +334,6 @@ fu! g:AnyJumpToggleGrouping() abort
 
     if type(maybe_item) == v:t_dict
       let new_ln = b:ui.GetItemLineNumber(maybe_item)
-      echo "new ln from first item -> " . new_ln
       call cursor(new_ln, 2)
     endif
   endif
@@ -481,7 +480,7 @@ au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
 au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
 au FileType any-jump nnoremap <buffer> G :call g:AnyJumpToggleGrouping()<cr>
 
-nnoremap <leader>aj :AnyJump<CR>
+nnoremap <leader>j :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
 nnoremap <leader>al :AnyJumpLastResults<CR>
 
