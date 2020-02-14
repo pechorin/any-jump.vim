@@ -460,7 +460,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
   call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[enter/o] open file   [tab/p] preview file   [esc/q] close ", 0, -1, "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[G] toggle grouping   [b] back to first result in list", 0, -1, "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[g] toggle grouping   [b] back to first result in list", 0, -1, "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[u] find usages", 0, -1, "Comment") ])
   " call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
   " call self.AddLine([ self.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])

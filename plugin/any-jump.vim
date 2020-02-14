@@ -1,11 +1,9 @@
 " TODO:
 " - add preview lines count option
+" - add results limiting by default
 " - add paths priorities for better search results
-" - if no definitions results found -> run usages
-" - add AnyJumpUsages
 " - add auto preview option
-" - store pointer reference after jump inside internal buffer cached
-"   object
+" - store pointer reference after jump inside internal buffer cached object
 " - AnyJumpFirst
 " - AnyJumpPreview
 " - При не сохраненном файле вылетает ошибка на jump'е
@@ -16,6 +14,7 @@
 " - add cache
 " - optimize regexps processing (do most job at first lang?)
 " - internal jumps history map + ui
+" - fix/recheck s:JumpLastResults s:JumpBack
 
 " THINK:
 " - add tags file search support (ctags)
@@ -50,6 +49,9 @@ let g:any_jump_list_numbers = v:true
 
 " Preview next available search result after pressing preview button
 let g:any_jump_follow_previews = v:true
+
+" Auto search usages
+let g:any_jump_after_search_usages = v:false
 
 " ----------------------------------------------
 " Functions
@@ -99,7 +101,6 @@ fu! s:Jump() abort
     " THINK: implement visual mode selection?
     " https://stackoverflow.com/a/6271254/190454
     call s:log_debug("not implemented for mode " . cur_mode)
-    return
   endif
 
   if len(keyword) == 0
@@ -108,17 +109,17 @@ fu! s:Jump() abort
 
   let grep_results = search#SearchDefinitions(&l:filetype, keyword)
 
-  if len(grep_results) == 0
-    call s:log('no results found for ' . keyword)
-    return
-  endif
-
   let ib = internal_buffer#GetClass().New()
-
   let ib.keyword                  = keyword
   let ib.language                 = &l:filetype
   let ib.source_win_id            = cur_win_id
   let ib.definitions_grep_results = grep_results
+
+  if g:any_jump_after_search_usages || len(grep_results) == 0
+    let ib.usages_opened       = v:true
+    let usages_grep_results    = search#SearchUsages(ib)
+    let ib.usages_grep_results = usages_grep_results
+  endif
 
   let w:any_jump_last_ib = ib
   call s:create_ui_window(ib)
@@ -472,7 +473,7 @@ au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
 au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
-au FileType any-jump nnoremap <buffer> G :call g:AnyJumpToggleGrouping()<cr>
+au FileType any-jump nnoremap <buffer> g :call g:AnyJumpToggleGrouping()<cr>
 
 nnoremap <leader>j :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
