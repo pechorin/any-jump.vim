@@ -1,28 +1,33 @@
 " TODO:
-" - add preview lines count option
+" - При не сохраненном файле вылетает ошибка на jump'е
+" - silence for commands
 " - add results limiting by default
 " - add paths priorities for better search results
-" - add auto preview option
-" - store pointer reference after jump inside internal buffer cached object
-" - AnyJumpFirst
-" - AnyJumpPreview
-" - При не сохраненном файле вылетает ошибка на jump'е
-" - silence for some commands?
-" - add failed tests run & move test load to separate command
+"
 " - add "save search" button
 " - add save jumps lists inside popup window
-" - add cache
 " - optimize regexps processing (do most job at first lang?)
-" - internal jumps history map + ui
+" - add internal buffers cache
+" - jumps history
+"
 " - fix/recheck s:JumpLastResults s:JumpBack
-
-" THINK:
-" - add tags file search support (ctags)
-" - hl keyword line in preview
-" - async load of additional searches
-" - start async requests after some timeout of main rg request
+"
+" - add auto preview option
 " - after pressing p jump to next result
+"
+" - impl VimL rules
+" - impl all rules from dumb-jump
+" - add failed tests run & move test load to separate command
+"
+" THINK:
+" - hl keyword line in preview
 " - compact/full ui mode
+"
+" TODO_FUTURE_RELEASES:
+" - AnyJumpPreview
+" - AnyJumpFirst
+" - add tags file search support (ctags)
+
 
 " let g:any_jump_loaded = v:true
 
@@ -52,6 +57,9 @@ let g:any_jump_follow_previews = v:true
 
 " Auto search usages
 let g:any_jump_after_search_usages = v:false
+
+" Amount of preview lines for each search result
+let g:any_jump_preview_lines_count = 5
 
 " ----------------------------------------------
 " Functions
@@ -389,7 +397,7 @@ fu! g:AnyJumpHandlePreview() abort
     if action_item.type == 'link' && !has_key(action_item.data, "group_header")
       let file_ln               = action_item.data.line_number
       let preview_before_offset = 2
-      let preview_after_offset  = 5
+      let preview_after_offset  = g:any_jump_preview_lines_count
       let preview_end_ln        = file_ln + preview_after_offset
 
       let path = join([getcwd(), action_item.data.path], '/')
