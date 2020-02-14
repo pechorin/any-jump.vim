@@ -229,7 +229,11 @@ endfu
 fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
   let gr      = a:gr
   let items   = []
-  let options = { "path": gr.path, "line_number": gr.line_number, "layer": a:layer }
+  let options =
+        \{ "path": gr.path, "line_number": gr.line_number, "layer": a:layer }
+  let original_link_options =
+        \{ "path": gr.path, "line_number": gr.line_number,
+        \"layer": a:layer, "original_link": v:true }
 
   let prefix_text = ""
 
@@ -241,14 +245,14 @@ fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
 
   if g:any_jump_definitions_results_list_style == 1
     let path_text    = ' ' .  gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", options)
+    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", original_link_options)
     let file_path    = self.CreateItem("link", path_text, 0, -1, "String", options)
 
     let items = [ prefix, matched_text, file_path ]
 
   elseif g:any_jump_definitions_results_list_style == 2
     let path_text    = gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement", options)
+    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement", original_link_options)
     let file_path    = self.CreateItem("link", path_text, 0, -1, "String", options)
 
     let items = [ prefix, file_path, matched_text ]
@@ -260,7 +264,11 @@ endfu
 fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
   let gr      = a:gr
   let items   = []
-  let options = { "path": gr.path, "line_number": gr.line_number, "layer": a:layer}
+  let options =
+        \{ "path": gr.path, "line_number": gr.line_number, "layer": a:layer }
+  let original_link_options =
+        \{ "path": gr.path, "line_number": gr.line_number,
+        \"layer": a:layer, "original_link": v:true }
 
   let prefix_text = ""
 
@@ -272,13 +280,13 @@ fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
 
   if g:any_jump_definitions_results_list_style == 1
     let path_text    = ' ' .  gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", options)
+    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", original_link_options)
 
     let items = [ prefix, matched_text ]
 
   elseif g:any_jump_definitions_results_list_style == 2
     let path_text    = gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement", options)
+    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement", original_link_options)
 
     let items = [ prefix, matched_text ]
   endif

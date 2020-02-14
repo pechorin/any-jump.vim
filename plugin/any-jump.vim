@@ -294,6 +294,21 @@ fu! g:AnyJumpToggleGrouping() abort
 
   let cursor_item = b:ui.GetItemByPos()
 
+  " try to find original link
+  if type(cursor_item) == v:t_dict && type(cursor_item.data) == v:t_dict
+        \ && cursor_item.type == 'link'
+        \ && !has_key(cursor_item, 'original_link')
+    let ln   = b:ui.GetItemLineNumber(cursor_item)
+    let line = b:ui.items[ln - 1]
+
+    for item in line
+      if type(item.data) == v:t_dict && has_key(item.data, 'original_link')
+        let cursor_item = item
+        break
+      endif
+    endfor
+  endif
+
   call deletebufline(bufnr(), 1, b:ui.len() + 1)
 
   let b:ui.items            = []
@@ -304,18 +319,22 @@ fu! g:AnyJumpToggleGrouping() abort
   call b:ui.RenderUi()
   call b:ui.EndUiTransaction(bufnr())
 
-  echo "ci -> " . string(cursor_item)
-
-
   " try to restore cursor position
-  if cursor_item.type == "link"
+  if type(cursor_item) == v:t_dict
+        \ && cursor_item.type == "link"
+        \ && type(cursor_item.data) == v:t_dict
+        \ && !has_key(cursor_item.data, 'group_header')
+
     let new_ln = b:ui.GetItemLineNumber(cursor_item)
+
+    echo "new ln from link item -> " . new_ln
     call cursor(new_ln, 2)
   else
     let maybe_item = b:ui.GetFirstItemOfType('link')
 
     if type(maybe_item) == v:t_dict
       let new_ln = b:ui.GetItemLineNumber(maybe_item)
+      echo "new ln from first item -> " . new_ln
       call cursor(new_ln, 2)
     endif
   endif
