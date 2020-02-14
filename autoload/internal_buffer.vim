@@ -308,11 +308,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   call self.AddLineAt([ self.CreateItem("text", "", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
   let start_ln += 1
 
-  " let start_ln += 1
-
-  " draw grep results
   let idx = 0
-
   if self.grouping_enabled
     " group by file name rendering
     let render_map = {}
@@ -345,18 +341,14 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
       for gr in render_map[path]
         let items = self.GrepResultToGroupedItems(gr, idx, "definitions")
         call self.AddLineAt(items, start_ln)
+
         let start_ln += 1
-
-        " if idx == 0
-        "   let first_item = items[0]
-        " endif
-
         let idx += 1
-        " let insert_ln += 1
       endfor
 
       if path_idx != len(keys(render_map)) - 1
         call self.AddLineAt([ self.CreateItem("text", "", 0, -1, "Comment") ], start_ln)
+
         let start_ln += 1
       endif
 
@@ -429,12 +421,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
         let items = self.GrepResultToGroupedItems(gr, idx, "definitions")
         call self.AddLine(items)
 
-        " if idx == 0
-        "   let first_item = items[0]
-        " endif
-
         let idx += 1
-        " let insert_ln += 1
       endfor
 
       if path_idx != len(keys(render_map)) - 1

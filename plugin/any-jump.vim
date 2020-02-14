@@ -1,11 +1,8 @@
 " TODO:
-" - fix slow perfomance because of <leader>a shadowing with <leader>aj
 " - add preview lines count option
 " - add paths priorities for better search results
 " - if no definitions results found -> run usages
 " - add AnyJumpUsages
-" - add grouping for results with G (important, huge results lists is bad
-"   for my eyes)
 " - add auto preview option
 " - store pointer reference after jump inside internal buffer cached
 "   object
@@ -16,7 +13,6 @@
 " - add failed tests run & move test load to separate command
 " - add "save search" button
 " - add save jumps lists inside popup window
-" - add grouping for results
 " - add cache
 " - optimize regexps processing (do most job at first lang?)
 " - internal jumps history map + ui
