@@ -313,7 +313,6 @@ fu! g:AnyJumpToggleGrouping() abort
 
   let b:ui.items            = []
   let b:ui.preview_opened   = v:false
-  let b:ui.usages_opened    = v:false
   let b:ui.grouping_enabled = b:ui.grouping_enabled ? v:false : v:true
 
   call b:ui.RenderUi()
@@ -327,15 +326,14 @@ fu! g:AnyJumpToggleGrouping() abort
 
     let new_ln = b:ui.GetItemLineNumber(cursor_item)
 
-    echo "new ln from link item -> " . new_ln
-    call cursor(new_ln, 2)
-  else
-    let maybe_item = b:ui.GetFirstItemOfType('link')
-
-    if type(maybe_item) == v:t_dict
-      let new_ln = b:ui.GetItemLineNumber(maybe_item)
+    " item removed
+    if new_ln == 0
+      call b:ui.JumpToFirstOfType('link')
+    else
       call cursor(new_ln, 2)
     endif
+  else
+    call b:ui.JumpToFirstOfType('link')
   endif
 endfu
 

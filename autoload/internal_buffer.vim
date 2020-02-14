@@ -308,18 +308,71 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   call self.AddLineAt([ self.CreateItem("text", "", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
   let start_ln += 1
 
-  call self.AddLineAt([ self.CreateItem("text", " ", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
+  " let start_ln += 1
 
   " draw grep results
   let idx = 0
 
-  for gr in self.usages_grep_results
-    let items = self.GrepResultToItems(gr, idx, "usages")
-    call self.AddLineAt(items, start_ln)
+  if self.grouping_enabled
+    " group by file name rendering
+    let render_map = {}
 
-    let idx += 1
-    let start_ln += 1
-  endfor
+    for gr in self.usages_grep_results
+      if !has_key(render_map, gr.path)
+        let render_map[gr.path] = []
+      endif
+
+      call add(render_map[gr.path], gr)
+    endfor
+
+    let path_idx = 0
+    for path in keys(render_map)
+      let first_gr = render_map[path][0]
+      let opts     = {
+            \"path":         path,
+            \"line_number":  first_gr.line_number,
+            \"layer":        "definitions",
+            \"group_header": v:true,
+            \}
+
+      let prefix     = self.CreateItem("link", ">", 0, -1, "Comment", opts)
+      let group_name = self.CreateItem("link", path, 1, -1, "Function", opts)
+      let line       = [ prefix, group_name ]
+
+      call self.AddLineAt(line, start_ln)
+      let start_ln += 1
+
+      for gr in render_map[path]
+        let items = self.GrepResultToGroupedItems(gr, idx, "definitions")
+        call self.AddLineAt(items, start_ln)
+        let start_ln += 1
+
+        " if idx == 0
+        "   let first_item = items[0]
+        " endif
+
+        let idx += 1
+        " let insert_ln += 1
+      endfor
+
+      if path_idx != len(keys(render_map)) - 1
+        call self.AddLineAt([ self.CreateItem("text", "", 0, -1, "Comment") ], start_ln)
+        let start_ln += 1
+      endif
+
+      let path_idx += 1
+    endfor
+  else
+    for gr in self.usages_grep_results
+      let items = self.GrepResultToItems(gr, idx, "usages")
+      call self.AddLineAt(items, start_ln)
+
+      let idx += 1
+      let start_ln += 1
+    endfor
+  endif
+
+  call self.AddLineAt([ self.CreateItem("text", " ", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
 
   return v:true
 endfu
