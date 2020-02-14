@@ -23,15 +23,14 @@ let s:InternalBuffer.MethodsList = [
       \'GetItemByPos',
       \'GetItemLineNumber',
       \'GetFirstItemOfType',
+      \'TryFindOriginalLinkFromPos',
+      \'TryRestoreCursorForItem',
       \'RenderUiUsagesList',
-      \'RenderUiDefinitionsList',
       \'RenderUi',
-      \'RenderUiGrepResults',
       \'StartUiTransaction',
       \'EndUiTransaction',
       \'GrepResultToItems',
       \'GrepResultToGroupedItems',
-      \'RemoveLines',
       \'RemoveGarbagedLines',
       \'JumpToFirstOfType',
       \]
@@ -44,6 +43,7 @@ fu! s:InternalBuffer.New() abort
         \"preview_opened":           v:false,
         \"usages_opened":            v:false,
         \"grouping_enabled":         v:false,
+        \"overmaxed_results_hidden": v:true,
         \"definitions_grep_results": [],
         \"usages_grep_results":      [],
         \}
@@ -209,6 +209,46 @@ fu! s:InternalBuffer.GetFirstItemOfType(type, ...) dict abort
   return result
 endfu
 
+fu! s:InternalBuffer.TryFindOriginalLinkFromPos() dict abort
+  let cursor_item = self.GetItemByPos()
+
+  " try to find original link
+  if type(cursor_item) == v:t_dict && type(cursor_item.data) == v:t_dict
+        \ && cursor_item.type == 'link'
+        \ && !has_key(cursor_item, 'original_link')
+    let ln   = self.GetItemLineNumber(cursor_item)
+    let line = self.items[ln - 1]
+
+    for item in line
+      if type(item.data) == v:t_dict && has_key(item.data, 'original_link')
+        let cursor_item = item
+        break
+      endif
+    endfor
+  endif
+
+  return cursor_item
+endfu
+
+fu! s:InternalBuffer.TryRestoreCursorForItem(item) dict abort
+  if type(a:item) == v:t_dict
+        \ && a:item.type == "link"
+        \ && type(a:item.data) == v:t_dict
+        \ && !has_key(a:item.data, 'group_header')
+
+    let new_ln = self.GetItemLineNumber(a:item)
+
+    " item removed
+    if new_ln == 0
+      call self.JumpToFirstOfType('link')
+    else
+      call cursor(new_ln, 2)
+    endif
+  else
+    call self.JumpToFirstOfType('link')
+  endif
+endfu
+
 fu! s:InternalBuffer.JumpToFirstOfType(type, ...) dict abort
   let item = self.GetFirstItemOfType(a:type, a:000)
 
@@ -295,7 +335,18 @@ fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
 endfu
 
 fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
-  let start_ln = a:start_ln
+  let start_ln     = a:start_ln
+  let hidden_count = 0
+
+  " TODO: move to method
+  if type(g:any_jump_max_search_results) == v:t_number
+        \ && g:any_jump_max_search_results > 0
+        \ && self.overmaxed_results_hidden == v:true
+    let collection = self.usages_grep_results[0 : g:any_jump_max_search_results - 1]
+    let hidden_count = len(self.usages_grep_results[g:any_jump_max_search_results : -1])
+  else
+    let collection = self.usages_grep_results
+  endif
 
   call self.AddLineAt([
     \self.CreateItem("text", ">", 0, 2, "Function", {'layer': 'usages'}),
@@ -313,7 +364,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
     " group by file name rendering
     let render_map = {}
 
-    for gr in self.usages_grep_results
+    for gr in collection
       if !has_key(render_map, gr.path)
         let render_map[gr.path] = []
       endif
@@ -355,7 +406,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
       let path_idx += 1
     endfor
   else
-    for gr in self.usages_grep_results
+    for gr in collection
       let items = self.GrepResultToItems(gr, idx, "usages")
       call self.AddLineAt(items, start_ln)
 
@@ -364,13 +415,17 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
     endfor
   endif
 
+  if hidden_count > 0
+    call self.AddLineAt([ self.CreateItem("text", "", 0, -1, "Comment") ], start_ln)
+    let start_ln += 1
+
+    call self.AddLineAt([ self.CreateItem("text", '+ ' . hidden_count . ' more results found', 0, -1, "Function") ], start_ln)
+    let start_ln += 1
+  endif
+
   call self.AddLineAt([ self.CreateItem("text", " ", 0, -1, "Comment", {"layer": "usages"}) ], start_ln)
 
   return v:true
-endfu
-
-fu! s:InternalBuffer.RenderUiGrepResults(grep_results) dict abort
-
 endfu
 
 fu! s:InternalBuffer.RenderUi() dict abort
@@ -385,15 +440,26 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
 
   " draw grep results
-  let idx        = 0
-  let first_item = 0
-  let insert_ln = self.len()
+  let idx          = 0
+  let first_item   = 0
+  let insert_ln    = self.len()
+  let hidden_count = 0
+
+  " TODO: move to method
+  if type(g:any_jump_max_search_results) == v:t_number
+        \ && g:any_jump_max_search_results > 0
+        \ && self.overmaxed_results_hidden == v:true
+    let collection   = self.definitions_grep_results[0 : g:any_jump_max_search_results - 1]
+    let hidden_count = len(self.definitions_grep_results[g:any_jump_max_search_results : -1])
+  else
+    let collection = self.definitions_grep_results
+  endif
 
   if self.grouping_enabled
     " group by file name rendering
     let render_map = {}
 
-    for gr in self.definitions_grep_results
+    for gr in collection
       if !has_key(render_map, gr.path)
         let render_map[gr.path] = []
       endif
@@ -432,7 +498,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
     endfor
   else
     " simple list style results rendering
-    for gr in self.definitions_grep_results
+    for gr in collection
       let items = self.GrepResultToItems(gr, idx, "definitions")
       call self.AddLineAt(items, insert_ln)
 
@@ -447,6 +513,11 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
   if len(self.definitions_grep_results) == 0
     call self.AddLine([ self.CreateItem("text", "No definitions results", 0, -1, "Comment") ])
+  endif
+
+  if hidden_count > 0
+    call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
+    call self.AddLine([ self.CreateItem("text", '+ ' . hidden_count . ' more results found', 0, -1, "Function") ])
   endif
 
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
@@ -477,12 +548,6 @@ fu! s:InternalBuffer.RemoveGarbagedLines() dict abort
   endfor
 
   let self.items = new_items
-endfu
-
-fu! s:InternalBuffer.RenderUiDefinitionsList(grep_results, start_ln) dict abort
-endfu
-
-fu! s:InternalBuffer.RemoveLines(line_from, line_to) dict abort
 endfu
 
 " Public api

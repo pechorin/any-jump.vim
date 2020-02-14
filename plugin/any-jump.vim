@@ -1,4 +1,7 @@
 " TODO:
+" - separate option for usages limiting count
+" - jump to "more button" should toggle a
+" - G not the best mapping for grouping :/
 " - При не сохраненном файле вылетает ошибка на jump'е
 " - silence for commands
 " - add results limiting by default
@@ -60,6 +63,9 @@ let g:any_jump_after_search_usages = v:false
 
 " Amount of preview lines for each search result
 let g:any_jump_preview_lines_count = 5
+
+" Max search results, other results can be opened via [a]
+let g:any_jump_max_search_results = 5
 
 " ----------------------------------------------
 " Functions
@@ -297,22 +303,7 @@ fu! g:AnyJumpToggleGrouping() abort
 
   call b:ui.StartUiTransaction(bufnr())
 
-  let cursor_item = b:ui.GetItemByPos()
-
-  " try to find original link
-  if type(cursor_item) == v:t_dict && type(cursor_item.data) == v:t_dict
-        \ && cursor_item.type == 'link'
-        \ && !has_key(cursor_item, 'original_link')
-    let ln   = b:ui.GetItemLineNumber(cursor_item)
-    let line = b:ui.items[ln - 1]
-
-    for item in line
-      if type(item.data) == v:t_dict && has_key(item.data, 'original_link')
-        let cursor_item = item
-        break
-      endif
-    endfor
-  endif
+  let cursor_item = b:ui.TryFindOriginalLinkFromPos()
 
   call deletebufline(bufnr(), 1, b:ui.len() + 1)
 
@@ -323,23 +314,30 @@ fu! g:AnyJumpToggleGrouping() abort
   call b:ui.RenderUi()
   call b:ui.EndUiTransaction(bufnr())
 
-  " try to restore cursor position
-  if type(cursor_item) == v:t_dict
-        \ && cursor_item.type == "link"
-        \ && type(cursor_item.data) == v:t_dict
-        \ && !has_key(cursor_item.data, 'group_header')
+  call b:ui.TryRestoreCursorForItem(cursor_item)
+endfu
 
-    let new_ln = b:ui.GetItemLineNumber(cursor_item)
-
-    " item removed
-    if new_ln == 0
-      call b:ui.JumpToFirstOfType('link')
-    else
-      call cursor(new_ln, 2)
-    endif
-  else
-    call b:ui.JumpToFirstOfType('link')
+fu! g:AnyJumpToggleAllResults() abort
+  if !exists('b:ui')
+    return
   endif
+
+  let b:ui.overmaxed_results_hidden =
+        \ b:ui.overmaxed_results_hidden ? v:false : v:true
+
+  call b:ui.StartUiTransaction(bufnr())
+
+  let cursor_item = b:ui.TryFindOriginalLinkFromPos()
+
+  call deletebufline(bufnr(), 1, b:ui.len() + 1)
+
+  let b:ui.items            = []
+  let b:ui.preview_opened   = v:false
+
+  call b:ui.RenderUi()
+  call b:ui.EndUiTransaction(bufnr())
+
+  call b:ui.TryRestoreCursorForItem(cursor_item)
 endfu
 
 fu! g:AnyJumpHandlePreview() abort
@@ -482,6 +480,7 @@ au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
 au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
 au FileType any-jump nnoremap <buffer> g :call g:AnyJumpToggleGrouping()<cr>
+au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
 
 nnoremap <leader>j :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
