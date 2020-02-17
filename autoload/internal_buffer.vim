@@ -33,6 +33,7 @@ let s:InternalBuffer.MethodsList = [
       \'GrepResultToGroupedItems',
       \'RemoveGarbagedLines',
       \'JumpToFirstOfType',
+      \'ClearBuffer',
       \]
 
 " Produce new Render Buffer
@@ -258,6 +259,10 @@ fu! s:InternalBuffer.JumpToFirstOfType(type, ...) dict abort
   endif
 endfu
 
+fu! s:InternalBuffer.ClearBuffer(buf) dict abort
+  call deletebufline(a:buf, 1, self.len() + 1)
+endfu
+
 fu! s:InternalBuffer.StartUiTransaction(buf) dict abort
   call nvim_buf_set_option(a:buf, 'modifiable', v:true)
 endfu
@@ -283,14 +288,14 @@ fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
 
   let prefix = self.CreateItem("link", prefix_text, 0, -1, "Comment", options)
 
-  if g:any_jump_definitions_results_list_style == 1
+  if g:any_jump_results_ui_style == 'filename_first'
     let path_text    = ' ' .  gr.path .  ":" . gr.line_number
     let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", original_link_options)
     let file_path    = self.CreateItem("link", path_text, 0, -1, "String", options)
 
     let items = [ prefix, matched_text, file_path ]
 
-  elseif g:any_jump_definitions_results_list_style == 2
+  elseif g:any_jump_results_ui_style == 'filename_last'
     let path_text    = gr.path .  ":" . gr.line_number
     let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement", original_link_options)
     let file_path    = self.CreateItem("link", path_text, 0, -1, "String", options)
@@ -316,20 +321,9 @@ fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
     let prefix_text = a:current_idx + 1 . " "
   endif
 
-  let prefix = self.CreateItem("link", prefix_text, 0, -1, "Comment", options)
-
-  if g:any_jump_definitions_results_list_style == 1
-    let path_text    = ' ' .  gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", original_link_options)
-
-    let items = [ prefix, matched_text ]
-
-  elseif g:any_jump_definitions_results_list_style == 2
-    let path_text    = gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", " " . gr.text, 0, -1, "Statement", original_link_options)
-
-    let items = [ prefix, matched_text ]
-  endif
+  let prefix       = self.CreateItem("link", prefix_text, 0, -1, "Comment", options)
+  let matched_text = self.CreateItem("link", gr.text, 0, -1, "Statement", original_link_options)
+  let items        = [ prefix, matched_text ]
 
   return items
 endfu
@@ -419,7 +413,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
     call self.AddLineAt([ self.CreateItem("text", "", 0, -1, "Comment") ], start_ln)
     let start_ln += 1
 
-    call self.AddLineAt([ self.CreateItem("text", '+ ' . hidden_count . ' more results found', 0, -1, "Function") ], start_ln)
+    call self.AddLineAt([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', 0, -1, "Function") ], start_ln)
     let start_ln += 1
   endif
 
@@ -429,6 +423,9 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
 endfu
 
 fu! s:InternalBuffer.RenderUi() dict abort
+  " clear items before render
+  let self.items = []
+
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
 
   call self.AddLine([
@@ -517,7 +514,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
   if hidden_count > 0
     call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
-    call self.AddLine([ self.CreateItem("text", '+ ' . hidden_count . ' more results found', 0, -1, "Function") ])
+    call self.AddLine([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', 0, -1, "Function") ])
   endif
 
   call self.AddLine([ self.CreateItem("text", "", 0, -1, "Comment") ])
@@ -531,8 +528,8 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
   call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[enter/o] open file   [tab/p] preview file   [esc/q] close ", 0, -1, "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[g] toggle grouping   [b] back to first result in list", 0, -1, "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[u] find usages", 0, -1, "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[t] toggle grouping   [a] show all results   [b] back to first result in list", 0, -1, "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[u] show usages", 0, -1, "Comment") ])
   " call self.AddLine([ self.CreateItem("help_text", "", 0, -1, "Comment") ])
   " call self.AddLine([ self.CreateItem("button", "[s] save search   [S] clean search   [N] next saved   [P] previous saved", 0, -1, "Identifier") ])
 endfu

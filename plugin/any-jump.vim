@@ -1,77 +1,73 @@
 " TODO:
-" - separate option for usages limiting count
-" - jump to "more button" should toggle a
-" - G not the best mapping for grouping :/
-" - При не сохраненном файле вылетает ошибка на jump'е
-" - silence for commands
-" - add results limiting by default
-" - add paths priorities for better search results
-"
-" - add "save search" button
-" - add save jumps lists inside popup window
-" - optimize regexps processing (do most job at first lang?)
-" - add internal buffers cache
-" - jumps history
-"
-" - fix/recheck s:JumpLastResults s:JumpBack
-"
-" - add auto preview option
-" - after pressing p jump to next result
-"
-" - impl VimL rules
+" - move keybindings to config
 " - impl all rules from dumb-jump
-" - add failed tests run & move test load to separate command
 "
-" THINK:
-" - hl keyword line in preview
-" - compact/full ui mode
+" TODO_THINK:
+" - after pressing p jump to next result
+" - add auto preview option
+" - optimize regexps processing (do most job at first lang?)
+" - add failed tests run & move test load to separate command
+" - impl VimL rules
 "
 " TODO_FUTURE_RELEASES:
+" - hl keyword line in preview
+" - paths priorities for better search results
 " - AnyJumpPreview
 " - AnyJumpFirst
-" - add tags file search support (ctags)
-
-
-" let g:any_jump_loaded = v:true
-
-" Options:
-
-" Cursor keyword match mode
 "
-" in line:
+" TODO_MAYBE:
+" - add tags file search support (ctags)
+" - compact/full ui mode
+"
+" - jumps history & jumps work flow
+" - add "save search" button
+" - saved searches list
+
+" === Plugin options ===
+
+" Cursor keyword selection mode
+"
+" on line:
+"
 " "MyNamespace::MyClass"
+"                  ^
 "
 " then cursor is on MyClass word
 "
-" 'word' - will match MyClass
-" 'full' - will match MyNamespace::MyClass
+" 'word' - will match 'MyClass'
+" 'full' - will match 'MyNamespace::MyClass'
 let g:any_jump_keyword_match_cursor_mode = 'word'
 
-" File list results ui variants
-"
-" available variants: 1/2
-let g:any_jump_definitions_results_list_style = 1
+" Ungrouped results ui variants:
+" - 'filename_first'
+" - 'filename_last'
+let g:any_jump_results_ui_style = 'filename_first' "
 
 " Show line numbers in search rusults
 let g:any_jump_list_numbers = v:true
 
-" Preview next available search result after pressing preview button
-let g:any_jump_follow_previews = v:true
-
 " Auto search usages
-let g:any_jump_after_search_usages = v:false
+let g:any_jump_usages_enabled = v:false
+
+" Auto group results by filename
+let g:any_jump_grouping_enabled = v:false
 
 " Amount of preview lines for each search result
 let g:any_jump_preview_lines_count = 5
 
 " Max search results, other results can be opened via [a]
-let g:any_jump_max_search_results = 5
+let g:any_jump_max_search_results = 7
+
+" TODO: NOT_IMPLEMENTED:
+
+" Preview next available search result after pressing preview button
+" let g:any_jump_follow_previews = v:true
 
 " ----------------------------------------------
 " Functions
 " ----------------------------------------------
 
-fu! s:create_ui_window(internal_buffer) abort
+fu! s:CreateUi(internal_buffer) abort
   let buf = nvim_create_buf(v:false, v:true)
 
   call nvim_buf_set_option(buf, 'filetype', 'any-jump')
@@ -95,6 +91,8 @@ fu! s:create_ui_window(internal_buffer) abort
   call nvim_open_win(buf, v:true, opts)
 
   let b:ui = a:internal_buffer
+  call b:ui.RenderUi()
+  call b:ui.JumpToFirstOfType('link', 'definitions')
 endfu
 
 fu! s:Jump() abort
@@ -127,19 +125,17 @@ fu! s:Jump() abort
   let ib.keyword                  = keyword
   let ib.language                 = &l:filetype
   let ib.source_win_id            = cur_win_id
+  let ib.grouping_enabled         = g:any_jump_grouping_enabled
   let ib.definitions_grep_results = grep_results
 
-  if g:any_jump_after_search_usages || len(grep_results) == 0
+  if g:any_jump_usages_enabled || len(grep_results) == 0
     let ib.usages_opened       = v:true
     let usages_grep_results    = search#SearchUsages(ib)
     let ib.usages_grep_results = usages_grep_results
   endif
 
   let w:any_jump_last_ib = ib
-  call s:create_ui_window(ib)
-
-  call ib.RenderUi()
-  call ib.JumpToFirstOfType('link', 'definitions')
+  call s:CreateUi(ib)
 endfu
 
 fu! s:JumpBack() abort
@@ -156,8 +152,7 @@ fu! s:JumpLastResults() abort
     let cur_win_id = win_findbuf(bufnr())[0]
     let w:any_jump_last_ib.source_win_id = cur_win_id
 
-    echoe "not implmented"
-    " call s:create_ui_window(w:any_jump_last_ib)
+    call s:CreateUi(w:any_jump_last_ib)
   endif
 endfu
 
@@ -196,6 +191,8 @@ fu! g:AnyJumpHandleOpen() abort
 
       execute "edit " . action_item.data.path . '|:' . string(action_item.data.line_number)
     endif
+  elseif action_item.type == 'more_button'
+    call g:AnyJumpToggleAllResults()
   endif
 endfu
 
@@ -301,18 +298,17 @@ fu! g:AnyJumpToggleGrouping() abort
     return
   endif
 
-  call b:ui.StartUiTransaction(bufnr())
-
+  let buf         = bufnr()
   let cursor_item = b:ui.TryFindOriginalLinkFromPos()
 
-  call deletebufline(bufnr(), 1, b:ui.len() + 1)
+  call b:ui.StartUiTransaction(buf)
+  call b:ui.ClearBuffer(buf)
 
-  let b:ui.items            = []
   let b:ui.preview_opened   = v:false
   let b:ui.grouping_enabled = b:ui.grouping_enabled ? v:false : v:true
 
   call b:ui.RenderUi()
-  call b:ui.EndUiTransaction(bufnr())
+  call b:ui.EndUiTransaction(buf)
 
   call b:ui.TryRestoreCursorForItem(cursor_item)
 endfu
@@ -322,20 +318,21 @@ fu! g:AnyJumpToggleAllResults() abort
     return
   endif
 
+  let buf = bufnr()
+
   let b:ui.overmaxed_results_hidden =
         \ b:ui.overmaxed_results_hidden ? v:false : v:true
 
-  call b:ui.StartUiTransaction(bufnr())
+  call b:ui.StartUiTransaction(buf)
 
   let cursor_item = b:ui.TryFindOriginalLinkFromPos()
 
-  call deletebufline(bufnr(), 1, b:ui.len() + 1)
+  call b:ui.ClearBuffer(buf)
 
-  let b:ui.items            = []
-  let b:ui.preview_opened   = v:false
+  let b:ui.preview_opened = v:false
 
   call b:ui.RenderUi()
-  call b:ui.EndUiTransaction(bufnr())
+  call b:ui.EndUiTransaction(buf)
 
   call b:ui.TryRestoreCursorForItem(cursor_item)
 endfu
@@ -348,7 +345,13 @@ fu! g:AnyJumpHandlePreview() abort
   call b:ui.StartUiTransaction(bufnr())
 
   let current_previewed_links = []
-  let action_item             = b:ui.GetItemByPos()
+  let action_item = b:ui.GetItemByPos()
+
+  " dispatch to other items handler
+  if type(action_item) == v:t_dict && action_item.type == 'more_button'
+    call g:AnyJumpToggleAllResults()
+    return
+  endif
 
   " remove all previews
   if b:ui.preview_opened
@@ -427,7 +430,7 @@ endfu
 " Script & Service functions
 " ----------------------------------------------
 
-let s:debug = v:true
+let s:debug = v:false
 
 fu! s:ToggleDebug()
   let s:debug = s:debug ? v:false : v:true
@@ -436,12 +439,12 @@ fu! s:ToggleDebug()
 endfu
 
 fu! s:log(message)
-  echo "[smart-jump] " . a:message
+  echo "[any-jump] " . a:message
 endfu
 
 fu! s:log_debug(message)
   if s:debug == v:true
-    echo "[smart-jump] " . a:message
+    echo "[any-jump] " . a:message
   endif
 endfu
 
@@ -470,7 +473,7 @@ command! AnyJumpBack call s:JumpBack()
 command! AnyJumpLastResults call s:JumpLastResults()
 command! AnyJumpToggleDebug call s:ToggleDebug()
 
-" Bindings
+" KeyBindings
 au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
 au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
 au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
@@ -478,9 +481,12 @@ au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
 au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
 au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
+au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
 au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
-au FileType any-jump nnoremap <buffer> g :call g:AnyJumpToggleGrouping()<cr>
+au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
 au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
+au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
+" au FileType any-jump nnoremap <buffer> n :call g:AnyJumpJumpToNext()<cr>
 
 nnoremap <leader>j :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
