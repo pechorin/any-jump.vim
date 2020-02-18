@@ -1,6 +1,7 @@
 " TODO:
-" - move keybindings to config
 " - impl all rules from dumb-jump
+" - update README
+" - create doc
 "
 " TODO_THINK:
 " - after pressing p jump to next result
