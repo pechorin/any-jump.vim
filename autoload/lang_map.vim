@@ -62,6 +62,7 @@ call add(s:definitions.ruby, {
       \"spec_failed": ["if test == 1234", "foo_test = 1234"],
       \})
 
+
 call add(s:definitions.ruby, {
       \"type": "function",
       \"regexp": '\(^\|[^\w.]\)\(\(private\|public\|protected\)\s\+\)\?def\s\+\(\w\+\(::\|[.]\)\)*KEYWORD\($\|[^\w\|:]\)',
