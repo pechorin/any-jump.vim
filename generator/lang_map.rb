@@ -1,16 +1,19 @@
+require 'rubygems'
+require 'bundler/setup'
+
 require 'json'
 require 'sxp'
 require 'uri'
 require 'net/http'
 
-el_path = Dir.pwd + '/generator/lang_map.el'
+LISP_LANG_MAP_PATH = Dir.pwd + '/lang_map.el'
 
-unless File.exists?(el_path)
-  throw "file not found -> #{el_path}"
+unless File.exists?(LISP_LANG_MAP_PATH)
+  throw "file not found -> #{LISP_LANG_MAP_PATH}"
 end
 
-el_scp = File.read(el_path)
-sexps  = SXP.read(el_scp)[3]
+lisp  = File.read(LISP_LANG_MAP_PATH)
+sexps = SXP.read(lisp)
 
 unless sexps.is_a?(Array)
   raise RuntimeError, "No sexps found"
