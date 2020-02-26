@@ -9,8 +9,7 @@ Uses fast and simple syntax lookup with **ripgrep** or **ag** (required to be in
 **Keyword search sources**
 
 - definitions
-- usages (todo)
-- ctags (todo)
+- usages
 
 **You can (any-jump flow)**
 
