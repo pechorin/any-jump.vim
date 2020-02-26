@@ -35,8 +35,6 @@ fu! search#SearchDefinitions(lang, keyword) abort
   let regexp = join(regexp, '|')
   let regexp = "\"(" . regexp . ")\""
 
-  echo "SE -> " . search_engine
-
   if search_engine == 'rg'
     let grep_results = s:RunRgDefinitionSearch(a:lang, regexp)
   elseif search_engine == 'ag'
