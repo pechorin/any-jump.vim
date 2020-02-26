@@ -59,6 +59,9 @@ let g:any_jump_preview_lines_count = 5
 " Max search results, other results can be opened via [a]
 let g:any_jump_max_search_results = 7
 
+" Prefered search engine: rg or ag
+let g:any_jump_search_prefered_engine = 'rg'
+
 " TODO: NOT_IMPLEMENTED:
 
 " Preview next available search result after pressing preview button
@@ -452,9 +455,8 @@ fu! s:log_debug(message)
 endfu
 
 fu! s:RunSpecs() abort
-  let s:debug = v:true
-
   let errors = []
+  let errors += search#RunSearchEnginesSpecs()
   let errors += search#RunRegexpSpecs()
 
   if len(errors) > 0

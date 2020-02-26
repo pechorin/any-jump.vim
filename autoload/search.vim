@@ -4,20 +4,30 @@
 " --- Public api ---
 "
 
-let g:any_jump_regexp_keyword_word = 'KEYWORD'
+let s:regexp_keyword_word = 'KEYWORD'
+let s:engines             = ['rg', 'ag']
 
 fu! search#SearchUsages(internal_buffer) abort
-  let grep_results = call s:RunRgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
+  if g:any_jump_search_prefered_engine == 'rg'
+    let grep_results = s:RunRgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
+  elseif g:any_jump_search_prefered_engine == 'ag'
+    let grep_results = s:RunAgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
+  end
 
   return grep_results
 endfu
 
 fu! search#SearchDefinitions(lang, keyword) abort
-  let patterns = []
-  let lang     = lang_map#find_definitions(a:lang)
+  let patterns      = []
+  let lang          = lang_map#find_definitions(a:lang)
+  let search_engine = g:any_jump_search_prefered_engine
+
+  if index(lang[0].supports, search_engine) == -1
+    let search_engine = (search_engine == 'rg' ? 'ag' : 'rg')
+  endif
 
   for rule in lang
-    let regexp = substitute(rule.pcre2_regexp, g:any_jump_regexp_keyword_word, a:keyword, "g")
+    let regexp = substitute(rule.pcre2_regexp, s:regexp_keyword_word, a:keyword, "g")
     call add(patterns, regexp)
   endfor
 
@@ -25,55 +35,79 @@ fu! search#SearchDefinitions(lang, keyword) abort
   let regexp = join(regexp, '|')
   let regexp = "\"(" . regexp . ")\""
 
-  let grep_results = s:RunRgDefinitionSearch(a:lang, regexp)
+  echo "SE -> " . search_engine
+
+  if search_engine == 'rg'
+    let grep_results = s:RunRgDefinitionSearch(a:lang, regexp)
+  elseif search_engine == 'ag'
+    let grep_results = s:RunAgDefinitionSearch(a:lang, regexp)
+  end
 
   return grep_results
+endfu
+
+fu! search#RunSearchEnginesSpecs()
+  let errors = []
+
+  let has_rg = executable('rg')
+  let has_ag = executable('ag')
+
+  if !(has_rg || has_ag)
+    let error = "rg or ag executable not found"
+    echoe error
+
+    call add(errors, error)
+  endif
+
+  return errors
 endfu
 
 fu! search#RunRegexpSpecs()
   let errors = []
   let passed = 0
 
-  " FIXME:
-  " haskell supports only ag (add ag support) ?
-
-  " add auto shell escape for \$ to \\\$
-
   for lang in keys(lang_map#definitions())
     for entry in lang_map#definitions()[lang]
-      let re = entry["pcre2_regexp"]
-      let keyword = (lang == 'haskell' ? 'Test' : 'test')
+      let re = entry.pcre2_regexp
+      let keyword = 'test'
 
       if len(re) > 0
         let test_re = substitute(re, 'KEYWORD', keyword, 'g')
+        let error_exit_codes = {"spec_success": [1,2], "spec_failed": [0,2]}
 
-        for spec_string in entry["spec_success"]
-          let cmd = "echo \"" . spec_string . "\" | rg -N --pcre2 --no-filename \"" . test_re . "\""
-          " echo 'cmd -> ' . string(cmd)
-          let raw_results = system(cmd)
+        for spec_type in keys(error_exit_codes)
+          for spec_string in entry[spec_type]
+            for engine in s:engines
+              if index(entry.supports, engine) == -1
+                continue
+              endif
 
-          if v:shell_error == 2 || v:shell_error == 1
-            call add(errors, "FAILED success-spec -- " . string(raw_results) . ' -- ' . lang  . " -- " . spec_string  . ' -- ' . test_re)
-          else
-            let passed += 1
-          endif
-        endfo
+              let cmd = 0
 
-        for spec_string in entry["spec_failed"]
-          let cmd = "echo \'" . spec_string . "\' | rg -N --pcre2 --no-filename \"" . test_re . "\""
-          let raw_results = system(cmd)
+              if engine == 'rg'
+                let cmd = "echo \"" . spec_string . "\" | rg --pcre2 --no-filename \"" . test_re . "\""
+              end
 
-          if v:shell_error == 0 || v:shell_error == 2
-            call add(errors, "FAILED failed-spec -- " . string(raw_results)  . ' -- ' . lang . ' -- ' . spec_string . ' -- ' . test_re)
-          else
-            let passed += 1
-          endif
+              if engine == 'ag'
+                let cmd = "echo \"" . spec_string . "\" | ag \"" . test_re . "\""
+              endif
 
+              let raw_results = system(cmd)
+
+              if index(error_exit_codes[spec_type], v:shell_error) >= 0
+                call add(errors, "FAILED -- " . spec_type . ' ' . string(raw_results) . ' -- ' . lang  . " -- " . spec_string  . ' -- ' . test_re)
+              else
+                let passed += 1
+              endif
+
+            endfor
+          endfor
         endfor
-
       endif
 
     endfor
+
+    echo "lang " . lang . ' finished tests ' . passed
   endfor
 
   echo "passed tests: " . passed
@@ -100,6 +134,22 @@ fu! s:RunRgDefinitionSearch(language, patterns) abort
   let cmd          = "rg -n --pcre2 --json -t " . a:language . ' ' . a:patterns
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
+
+  return grep_results
+endfu
+
+fu! s:RunAgUsagesSearch(language, keyword) abort
+  let cmd          = "ag --nogroup --noheading --" . a:language . ' -w ' . a:keyword
+  let raw_results  = system(cmd)
+  let grep_results = s:ParseAgResults(raw_results)
+
+  return grep_results
+endfu
+
+fu! s:RunAgDefinitionSearch(language, patterns) abort
+  let cmd          = "ag --nogroup --noheading --" . a:language . ' ' . a:patterns
+  let raw_results  = system(cmd)
+  let grep_results = s:ParseAgResults(raw_results)
 
   return grep_results
 endfu
@@ -131,7 +181,36 @@ fu! s:ParseRgResults(raw_results) abort
 
           call add(grep_results, grep_result)
         endif
-      end
+      endif
+    endfor
+  endif
+
+  return grep_results
+endfu
+
+fu! s:ParseAgResults(raw_results) abort
+  let grep_results = []
+
+  if len(a:raw_results) > 0
+    let matches = []
+
+    for line in split(a:raw_results, "\n")
+      if len(line) == 0
+        continue
+      endif
+
+      let res         = split(line, ':')
+      let grep_result = s:NewGrepResult()
+
+      if len(res) != 3
+        continue
+      endif
+
+      let grep_result.line_number = res[1]
+      let grep_result.path        = res[0]
+      let grep_result.text        = substitute(res[2], '^\s*', '', '')
+
+      call add(grep_results, grep_result)
     endfor
   endif
 
