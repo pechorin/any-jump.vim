@@ -1,10 +1,44 @@
 " Search methods definitions
 
-fu! search#NewGrepResult() abort
+"
+" --- Public api ---
+"
+
+let g:any_jump_regexp_keyword_word = 'KEYWORD'
+
+fu! search#SearchUsages(internal_buffer) abort
+  let grep_results = call s:RunRgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
+
+  return grep_results
+endfu
+
+fu! search#SearchDefinitions(lang, keyword) abort
+  let patterns = []
+  let lang     = lang_map#find_definitions(a:lang)
+
+  for rule in lang
+    let regexp = substitute(rule.pcre2_regexp, g:any_jump_regexp_keyword_word, a:keyword, "g")
+    call add(patterns, regexp)
+  endfor
+
+  let regexp = map(patterns, { _, pattern -> '(' . pattern . ')' })
+  let regexp = join(regexp, '|')
+  let regexp = "\"(" . regexp . ")\""
+
+  let grep_results = s:RunRgDefinitionSearch(a:lang, regexp)
+
+  return grep_results
+endfu
+
+"
+" --- Private api ---
+"
+
+fu! s:NewGrepResult() abort
   return { "line_number": 0, "path": 0, "text": 0 }
 endfu
 
-fu! search#RunRgUsagesSearch(language, keyword) abort
+fu! s:RunRgUsagesSearch(language, keyword) abort
   let cmd          = "rg -n --pcre2 --json -t " . a:language . ' -w ' . a:keyword
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
@@ -12,7 +46,7 @@ fu! search#RunRgUsagesSearch(language, keyword) abort
   return grep_results
 endfu
 
-fu! search#RunRgDefinitionSearch(language, patterns) abort
+fu! s:RunRgDefinitionSearch(language, patterns) abort
   let cmd          = "rg -n --pcre2 --json -t " . a:language . ' ' . a:patterns
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
@@ -40,7 +74,7 @@ fu! s:ParseRgResults(raw_results) abort
           let text = substitute(text, '^\s*', '', 'g')
           let text = substitute(text, '\n', '', 'g')
 
-          let grep_result             = search#NewGrepResult()
+          let grep_result             = s:NewGrepResult()
           let grep_result.line_number = data.line_number
           let grep_result.path        = data.path.text
           let grep_result.text        = text
@@ -54,27 +88,3 @@ fu! s:ParseRgResults(raw_results) abort
   return grep_results
 endfu
 
-
-fu! search#SearchUsages(internal_buffer) abort
-  let grep_results = call search#RunRgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
-
-  return grep_results
-endfu
-
-fu! search#SearchDefinitions(lang, keyword) abort
-  let patterns = []
-  let lang     = lang_map#find_definitions(a:lang)
-
-  for rule in lang
-    let regexp = substitute(rule.pcre2_regexp, "KEYWORD", a:keyword, "g")
-    call add(patterns, regexp)
-  endfor
-
-  let regexp = map(patterns, { _, pattern -> '(' . pattern . ')' })
-  let regexp = join(regexp, '|')
-  let regexp = "\"(" . regexp . ")\""
-
-  let grep_results = search#RunRgDefinitionSearch(a:lang, regexp)
-
-  return grep_results
-endfu
