@@ -99,7 +99,19 @@ let g:any_jump_results_ui_style = 'filename_first' "
 
 ## Supported languages
 
+- ruby
+- elixir
 - crystal
+- rust
+- haskell
+- java
+- javascript
+- typescript
+- scala
+- kotlin
+- php
+- protobuf
+- scss
 - fsharp
 - c++
 - coffeescript
@@ -111,18 +123,10 @@ let g:any_jump_results_ui_style = 'filename_first' "
 - nix
 - clojure
 - coq
-- java
-- javascript
-- scala
-- protobuf
-- ruby
-- scss
 - systemverilog
-- typescript
 - objc
 - racket
 - vhdl
-- php
 - scheme
 - r
 - sql
@@ -137,14 +141,10 @@ let g:any_jump_results_ui_style = 'filename_first' "
 - perl
 - csharp
 - commonlisp
-- haskell
 - ocaml
 - erlang
 - julia
-- kotlin
 - sml
-- rust
-- elixir
 - groovy
 - dart
 - fortran
