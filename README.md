@@ -1,36 +1,46 @@
-# any-jump [nvim]
+# any-jump
 
-**Jump to any definition — IDE madness without overhead for 40 languages**
+**— IDE madness without overhead for 40+ languages**
 
-_Tool for large codebases inspection_
+_Nvim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
 
-Uses fast and simple syntax lookup with **ripgrep** or **ag** (required to be installed).
+Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future).
 
-**Keyword search sources**
+## Abilities
 
-- definitions
-- usages
+### jump to symbol/class/const/variable definition with `<leader>j`
 
-**You can (any-jump flow)**
+screen
 
-- jump to definition via `<leader>aj`
-- open definition preview via `p` or `tab`
-- jump to definition via `o` or `enter`
-- back to previous opened file via `<leader>ab`
-- open last any-jump search via `<leader>al`
+### open definition usages list with `u`
+
+screen
+
+### preview definition with `p` or `tab`
+
+screen
+
+### group results by file
+
+screen
+
+### other search results list style
 
 ![screenshot](/preview_wide.gif)
 
-TODO:
+## Languages
+
+list
+
+## NEXT FUTURES
 
 - save search results
 
-IDEA:
+## IDEA ##
 
 - original idea comes from dumb-jump.el
 
-## SCREENSHOTS
 
-### search results for keyword "Base" with opened preview:
+## search results for keyword "Base" with opened preview:
 
 ![screenshot](/image.png)
