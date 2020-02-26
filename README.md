@@ -74,21 +74,21 @@ let g:any_jump_results_ui_style = 'filename_first' "
 
 ## Features
 
-### open definition usages list with `u`
+### open definitions and usages list
 
-screen
+![screenshot](/usages.png)
 
 ### preview definition with `p` or `tab`
 
-screen
+![screenshot](/preview.png)
 
 ### group results by file
 
-screen
+![screenshot](/group_by_file.png)
 
-### other search results list style
+### search results without line numbers and different ui style
 
-screen
+![screenshot](/no_ln.png)
 
 ## Languages
 
