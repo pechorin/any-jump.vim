@@ -45,7 +45,7 @@ let g:any_jump_keyword_match_cursor_mode = 'word'
 let g:any_jump_results_ui_style = 'filename_first' "
 
 " Show line numbers in search rusults
-let g:any_jump_list_numbers = v:true
+let g:any_jump_list_numbers = v:false
 
 " Auto search usages
 let g:any_jump_usages_enabled = v:true
