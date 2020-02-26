@@ -455,22 +455,24 @@ fu! s:regexp_tests()
   let errors = []
   let passed = 0
 
-  " php
-  " haskell
-  " for lang in keys(lang_map#definitions())
-  let lang = 'nim'
+
+  " FIXME:
+  " haskell supports only ag (add ag support) ?
+
+  " add auto shell escape for \$ to \\\$
+
+  for lang in keys(lang_map#definitions())
     for entry in lang_map#definitions()[lang]
       let re = entry["pcre2_regexp"]
+      let keyword = (lang == 'haskell' ? 'Test' : 'test')
 
       if len(re) > 0
-        let test_re = substitute(re, 'KEYWORD', 'test', 'g')
+        let test_re = substitute(re, 'KEYWORD', keyword, 'g')
 
         for spec_string in entry["spec_success"]
-          let cmd = "echo \'" . spec_string . "\' | rg -N --pcre2 --no-filename \"" . test_re . "\""
+          let cmd = "echo \"" . spec_string . "\" | rg -N --pcre2 --no-filename \"" . test_re . "\""
           " echo 'cmd -> ' . string(cmd)
           let raw_results = system(cmd)
-          " echo 'raw -> ' . string(raw_results)
-          " echo v:shell_error
 
           if v:shell_error == 2 || v:shell_error == 1
             call add(errors, "FAILED success-spec -- " . string(raw_results) . ' -- ' . lang  . " -- " . spec_string  . ' -- ' . test_re)
@@ -482,8 +484,6 @@ fu! s:regexp_tests()
         for spec_string in entry["spec_failed"]
           let cmd = "echo \'" . spec_string . "\' | rg -N --pcre2 --no-filename \"" . test_re . "\""
           let raw_results = system(cmd)
-          " echo 'raw -> ' . string(raw_results)
-          " echo v:shell_error
 
           if v:shell_error == 0 || v:shell_error == 2
             call add(errors, "FAILED failed-spec -- " . string(raw_results)  . ' -- ' . lang . ' -- ' . spec_string . ' -- ' . test_re)
@@ -496,13 +496,15 @@ fu! s:regexp_tests()
       endif
 
     endfor
-  " endfor
+  endfor
 
   echo "passed tests: " . passed
   return errors
 endfu
 
-fu! s:run_tests()
+fu! s:RunSpecs() abort
+  let s:debug = v:true
+
   let errors = []
   let errors += s:regexp_tests()
 
@@ -515,17 +517,11 @@ fu! s:run_tests()
   call s:log("Tests finished")
 endfu
 
-fu! s:Init() abort
-  if s:debug
-    call s:run_tests()
-  end
-endfu
-
 " Commands
 command! AnyJump call s:Jump()
 command! AnyJumpBack call s:JumpBack()
 command! AnyJumpLastResults call s:JumpLastResults()
-command! AnyJumpToggleDebug call s:ToggleDebug()
+command! AnyJumpRunSpecs call s:RunSpecs()
 
 " KeyBindings
 au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
@@ -545,7 +541,3 @@ au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
 nnoremap <leader>j :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
 nnoremap <leader>al :AnyJumpLastResults<CR>
-
-" run tests for debug
-" init lang map
-call s:Init()
