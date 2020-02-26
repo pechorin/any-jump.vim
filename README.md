@@ -1,6 +1,6 @@
 # any-jump
 
-— IDE madness without overhead for 40+ languages**
+**— IDE madness without overhead for 40+ languages**
 
 _Nvim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
 
