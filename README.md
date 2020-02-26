@@ -9,9 +9,8 @@ Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep 
 - jump to symbol/class/const/variable definition with `<leader>j`
 - display and jump to symbol/class/const/variable usages inside current project
 
-_Jumping through source code of discource sources:_
-
 ![screenshot](/main.gif)
+_— Jumping through source code of discource:_
 
 ## Installation
 
