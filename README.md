@@ -4,7 +4,9 @@
 
 _Nvim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
 
-Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future).
+Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
+
+![screenshot](/preview_wide.gif)
 
 ## Abilities
 
@@ -26,7 +28,7 @@ screen
 
 ### other search results list style
 
-![screenshot](/preview_wide.gif)
+screen
 
 ## Languages
 
