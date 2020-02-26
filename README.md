@@ -109,8 +109,3 @@ list
 ## IDEA ##
 
 - original idea comes from dumb-jump.el
-
-
-## search results for keyword "Base" with opened preview:
-
-![screenshot](/image.png)
