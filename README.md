@@ -149,10 +149,10 @@ let g:any_jump_results_ui_style = 'filename_first' "
 - dart
 - fortran
 
-## NEXT FUTURES
+## Original idea
 
-- save search results
+Comes from dumb-jump.el emacs package
 
-## IDEA ##
+## Issues and contibutions
 
-- original idea comes from dumb-jump.el
+Please open issue on any question and problem
