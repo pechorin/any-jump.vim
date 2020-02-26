@@ -13,6 +13,14 @@ _Jumping through source code of discource sources:_
 
 ![screenshot](/main.gif)
 
+## Installation
+
+via vim-plug:
+
+```viml
+Plug 'pechorin/any-jump.nvim'
+```
+
 ## Keymappings
 
 Global mappings for normal mode:
