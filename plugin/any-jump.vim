@@ -48,7 +48,7 @@ let g:any_jump_results_ui_style = 'filename_first' "
 let g:any_jump_list_numbers = v:true
 
 " Auto search usages
-let g:any_jump_usages_enabled = v:false
+let g:any_jump_usages_enabled = v:true
 
 " Auto group results by filename
 let g:any_jump_grouping_enabled = v:false
@@ -487,7 +487,6 @@ au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
 au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
 au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
 au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
-" au FileType any-jump nnoremap <buffer> n :call g:AnyJumpJumpToNext()<cr>
 
 nnoremap <leader>j :AnyJump<CR>
 nnoremap <leader>ab :AnyJumpBack<CR>
