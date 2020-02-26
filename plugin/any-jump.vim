@@ -431,7 +431,9 @@ endfu
 " Script & Service functions
 " ----------------------------------------------
 
-let s:debug = v:false
+if !exists('s:debug')
+  let s:debug = v:false
+endif
 
 fu! s:ToggleDebug()
   let s:debug = s:debug ? v:false : v:true
@@ -449,9 +451,60 @@ fu! s:log_debug(message)
   endif
 endfu
 
+fu! s:regexp_tests()
+  let errors = []
+  let passed = 0
+
+  " php
+  " haskell
+  " for lang in keys(lang_map#definitions())
+  let lang = 'nim'
+    for entry in lang_map#definitions()[lang]
+      let re = entry["pcre2_regexp"]
+
+      if len(re) > 0
+        let test_re = substitute(re, 'KEYWORD', 'test', 'g')
+
+        for spec_string in entry["spec_success"]
+          let cmd = "echo \'" . spec_string . "\' | rg -N --pcre2 --no-filename \"" . test_re . "\""
+          " echo 'cmd -> ' . string(cmd)
+          let raw_results = system(cmd)
+          " echo 'raw -> ' . string(raw_results)
+          " echo v:shell_error
+
+          if v:shell_error == 2 || v:shell_error == 1
+            call add(errors, "FAILED success-spec -- " . string(raw_results) . ' -- ' . lang  . " -- " . spec_string  . ' -- ' . test_re)
+          else
+            let passed += 1
+          endif
+        endfo
+
+        for spec_string in entry["spec_failed"]
+          let cmd = "echo \'" . spec_string . "\' | rg -N --pcre2 --no-filename \"" . test_re . "\""
+          let raw_results = system(cmd)
+          " echo 'raw -> ' . string(raw_results)
+          " echo v:shell_error
+
+          if v:shell_error == 0 || v:shell_error == 2
+            call add(errors, "FAILED failed-spec -- " . string(raw_results)  . ' -- ' . lang . ' -- ' . spec_string . ' -- ' . test_re)
+          else
+            let passed += 1
+          endif
+
+        endfor
+
+      endif
+
+    endfor
+  " endfor
+
+  echo "passed tests: " . passed
+  return errors
+endfu
+
 fu! s:run_tests()
   let errors = []
-  let errors += lang_map#regexp_tests()
+  let errors += s:regexp_tests()
 
   if len(errors) > 0
     for error in errors

@@ -1163,8 +1163,8 @@ call s:add_definition('go', {
 
 call s:add_definition('javascript', {
 	\"type": 'function',
-	\"pcre2_regexp": '(service|factory)\([''"\]KEYWORD[''"\]',
-	\"emacs_regexp": '(service|factory)\([''"]JJJ[''"]',
+	\"pcre2_regexp": '(service|factory)\(['"]KEYWORD['"]',
+	\"emacs_regexp": '(service|factory)\(['"]JJJ['"]',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["module.factory('test', [\"$rootScope\", function($rootScope) {"],
 	\"spec_failed": [],
@@ -1253,8 +1253,8 @@ call s:add_definition('javascript', {
 
 call s:add_definition('typescript', {
 	\"type": 'function',
-	\"pcre2_regexp": '(service|factory)\([''"\]KEYWORD[''"\]',
-	\"emacs_regexp": '(service|factory)\([''"]JJJ[''"]',
+	\"pcre2_regexp": '(service|factory)\(['"]KEYWORD['"]',
+	\"emacs_regexp": '(service|factory)\(['"]JJJ['"]',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["module.factory('test', [\"$rootScope\", function($rootScope) {"],
 	\"spec_failed": [],

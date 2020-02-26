@@ -5,7 +5,7 @@ fu! search#NewGrepResult() abort
 endfu
 
 fu! search#SearchUsages(internal_buffer) abort
-  let cmd          = "rg -n --json -t " . a:internal_buffer.language . ' -w ' . a:internal_buffer.keyword
+  let cmd          = "rg -n --pcre2 --json -t " . a:internal_buffer.language . ' -w ' . a:internal_buffer.keyword
   let raw_results  = system(cmd)
   let grep_results = []
 
@@ -42,31 +42,18 @@ endfu
 
 fu! search#SearchDefinitions(lang, keyword) abort
   let patterns = []
-  let lang     = lang_map#get_definitions(a:lang)
+  let lang     = lang_map#find_definitions(a:lang)
 
   for rule in lang
-    " insert real keyword insted of placeholder
-    let regexp = substitute(rule.regexp, "KEYWORD", a:keyword, "g")
-
-    " remove vim escapings
-    let regexp = substitute(regexp, '\\(', '(', 'g')
-    let regexp = substitute(regexp, '\\)', ')', 'g')
-    let regexp = substitute(regexp, '\\+', '+', 'g')
-    let regexp = substitute(regexp, '\\|', '|', 'g')
-    let regexp = substitute(regexp, '\\?', '?', 'g')
-
-    " change word boundaries
-    let regexp = substitute(regexp, '\\<', '\\b', 'g')
-    let regexp = substitute(regexp, '\\>', '\\b', 'g')
-
+    let regexp = substitute(rule.pcre2_regexp, "KEYWORD", a:keyword, "g")
     call add(patterns, regexp)
   endfor
 
   let regexp = map(patterns, { _, pattern -> '(' . pattern . ')' })
   let regexp = join(regexp, '|')
-  let regexp = "'(" . regexp . ")'"
+  let regexp = "\"(" . regexp . ")\""
 
-  let cmd          = "rg -n --json -t " . a:lang . ' ' . regexp
+  let cmd          = "rg -n --pcre2 --json -t " . a:lang . ' ' . regexp
   let raw_results  = system(cmd)
   let grep_results = []
 
@@ -93,7 +80,6 @@ fu! search#SearchDefinitions(lang, keyword) abort
           let grep_result.text        = text
 
           call add(grep_results, grep_result)
-          " call s:log_debug(string(grep_result))
         endif
       end
     endfor
