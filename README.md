@@ -1,10 +1,10 @@
 # any-jump [nvim]
 
-**Jump to any definition — IDE madness without overhead**
+**Jump to any definition — IDE madness without overhead for 40 languages**
 
 _Tool for large codebases inspection_
 
-Uses fast and simple syntax lookup with **ripgrep** (required to be installed).
+Uses fast and simple syntax lookup with **ripgrep** or **ag** (required to be installed).
 
 **Keyword search sources**
 
