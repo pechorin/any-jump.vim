@@ -451,62 +451,11 @@ fu! s:log_debug(message)
   endif
 endfu
 
-fu! s:regexp_tests()
-  let errors = []
-  let passed = 0
-
-
-  " FIXME:
-  " haskell supports only ag (add ag support) ?
-
-  " add auto shell escape for \$ to \\\$
-
-  for lang in keys(lang_map#definitions())
-    for entry in lang_map#definitions()[lang]
-      let re = entry["pcre2_regexp"]
-      let keyword = (lang == 'haskell' ? 'Test' : 'test')
-
-      if len(re) > 0
-        let test_re = substitute(re, 'KEYWORD', keyword, 'g')
-
-        for spec_string in entry["spec_success"]
-          let cmd = "echo \"" . spec_string . "\" | rg -N --pcre2 --no-filename \"" . test_re . "\""
-          " echo 'cmd -> ' . string(cmd)
-          let raw_results = system(cmd)
-
-          if v:shell_error == 2 || v:shell_error == 1
-            call add(errors, "FAILED success-spec -- " . string(raw_results) . ' -- ' . lang  . " -- " . spec_string  . ' -- ' . test_re)
-          else
-            let passed += 1
-          endif
-        endfo
-
-        for spec_string in entry["spec_failed"]
-          let cmd = "echo \'" . spec_string . "\' | rg -N --pcre2 --no-filename \"" . test_re . "\""
-          let raw_results = system(cmd)
-
-          if v:shell_error == 0 || v:shell_error == 2
-            call add(errors, "FAILED failed-spec -- " . string(raw_results)  . ' -- ' . lang . ' -- ' . spec_string . ' -- ' . test_re)
-          else
-            let passed += 1
-          endif
-
-        endfor
-
-      endif
-
-    endfor
-  endfor
-
-  echo "passed tests: " . passed
-  return errors
-endfu
-
 fu! s:RunSpecs() abort
   let s:debug = v:true
 
   let errors = []
-  let errors += s:regexp_tests()
+  let errors += search#RunRegexpSpecs()
 
   if len(errors) > 0
     for error in errors
