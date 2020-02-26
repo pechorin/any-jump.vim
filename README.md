@@ -1,6 +1,6 @@
 # any-jump
 
-**— IDE madness without overhead for 40+ languages**
+— IDE madness without overhead for 40+ languages**
 
 _Nvim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
 
@@ -97,9 +97,57 @@ let g:any_jump_results_ui_style = 'filename_first' "
 
 ![screenshot](/no_ln.png)
 
-## Languages
+## Supported languages
 
-list
+- crystal
+- fsharp
+- c++
+- coffeescript
+- go
+- lua
+- nim
+- scad
+- elisp
+- nix
+- clojure
+- coq
+- java
+- javascript
+- scala
+- protobuf
+- ruby
+- scss
+- systemverilog
+- typescript
+- objc
+- racket
+- vhdl
+- php
+- scheme
+- r
+- sql
+- faust
+- vala
+- matlab
+- python
+- pascal
+- tex
+- swift
+- shell
+- perl
+- csharp
+- commonlisp
+- haskell
+- ocaml
+- erlang
+- julia
+- kotlin
+- sml
+- rust
+- elixir
+- groovy
+- dart
+- fortran
 
 ## NEXT FUTURES
 
