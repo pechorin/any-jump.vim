@@ -10,6 +10,7 @@ let s:engines             = ['rg', 'ag']
 let s:rg_filetype_convertion_map = {
       \"python": "py",
       \"javascript": "js",
+      \"typescript": "ts",
       \}
 
 fu! s:GetRgFiletype(lang) abort
