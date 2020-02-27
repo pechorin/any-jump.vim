@@ -26,6 +26,13 @@
 
 " === Plugin options ===
 
+fu! s:set_plugin_global_option(option_name, default_value) abort
+  if !exists('g:' .  a:option_name)
+    let g:{a:option_name} = a:default_value
+  endif
+endfu
+
+
 " Cursor keyword selection mode
 "
 " on line:
@@ -37,30 +44,31 @@
 "
 " 'word' - will match 'MyClass'
 " 'full' - will match 'MyNamespace::MyClass'
-let g:any_jump_keyword_match_cursor_mode = 'word'
+
+call s:set_plugin_global_option('any_jump_keyword_match_cursor_mode', 'word')
 
 " Ungrouped results ui variants:
 " - 'filename_first'
 " - 'filename_last'
-let g:any_jump_results_ui_style = 'filename_first' "
+call s:set_plugin_global_option('any_jump_results_ui_style', 'filename_first')
 
 " Show line numbers in search rusults
-let g:any_jump_list_numbers = v:false
+call s:set_plugin_global_option('any_jump_list_numbers', v:false)
 
 " Auto search usages
-let g:any_jump_usages_enabled = v:true
+call s:set_plugin_global_option('any_jump_usages_enabled', v:true)
 
 " Auto group results by filename
-let g:any_jump_grouping_enabled = v:false
+call s:set_plugin_global_option('any_jump_grouping_enabled', v:false)
 
 " Amount of preview lines for each search result
-let g:any_jump_preview_lines_count = 5
+call s:set_plugin_global_option('any_jump_preview_lines_count', 5)
 
 " Max search results, other results can be opened via [a]
-let g:any_jump_max_search_results = 7
+call s:set_plugin_global_option('any_jump_max_search_results', 10)
 
 " Prefered search engine: rg or ag
-let g:any_jump_search_prefered_engine = 'rg'
+call s:set_plugin_global_option('any_jump_search_prefered_engine', 'rg')
 
 " TODO: NOT_IMPLEMENTED:
 
