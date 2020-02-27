@@ -70,6 +70,9 @@ call s:set_plugin_global_option('any_jump_max_search_results', 10)
 " Prefered search engine: rg or ag
 call s:set_plugin_global_option('any_jump_search_prefered_engine', 'rg')
 
+" Disable default keybindinngs for commands
+call s:set_plugin_global_option('any_jump_disable_default_keybindings', v:false)
+
 " TODO: NOT_IMPLEMENTED:
 
 " Preview next available search result after pressing preview button
@@ -496,6 +499,8 @@ au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
 au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
 au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
 
-nnoremap <leader>j :AnyJump<CR>
-nnoremap <leader>ab :AnyJumpBack<CR>
-nnoremap <leader>al :AnyJumpLastResults<CR>
+if g:any_jump_disable_default_keybindings == v:false
+  nnoremap <leader>j  :AnyJump<CR>
+  nnoremap <leader>ab :AnyJumpBack<CR>
+  nnoremap <leader>al :AnyJumpLastResults<CR>
+end

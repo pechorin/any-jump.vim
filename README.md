@@ -20,9 +20,9 @@ via vim-plug:
 Plug 'pechorin/any-jump.nvim'
 ```
 
-## Keymappings
+## Keybindings
 
-Global mappings for normal mode:
+Default global mappings for normal mode:
 
 ```viml
 " Jump to definition under cursore
@@ -33,6 +33,12 @@ nnoremap <leader>ab :AnyJumpBack<CR>
 
 " open last closed search window again
 nnoremap <leader>al :AnyJumpLastResults<CR>
+```
+
+To **disable default keybindings* write:
+
+```viml
+let g:any_jump_disable_default_keybindings = v:true
 ```
 
 Mappings for popup search window
