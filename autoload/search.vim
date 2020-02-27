@@ -7,6 +7,18 @@
 let s:regexp_keyword_word = 'KEYWORD'
 let s:engines             = ['rg', 'ag']
 
+let s:rg_filetype_convertion_map = {
+      \"python": "py"
+      \}
+
+fu! s:GetRgFiletype(lang) abort
+  if has_key(s:rg_filetype_convertion_map, a:lang)
+    return s:rg_filetype_convertion_map[a:lang]
+  else
+    return a:lang
+  endif
+endfu
+
 fu! search#SearchUsages(internal_buffer) abort
   if g:any_jump_search_prefered_engine == 'rg'
     let grep_results = s:RunRgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
@@ -121,7 +133,9 @@ fu! s:NewGrepResult() abort
 endfu
 
 fu! s:RunRgUsagesSearch(language, keyword) abort
-  let cmd          = "rg -n --pcre2 --json -t " . a:language . ' -w ' . a:keyword
+  let rg_ft = s:GetRgFiletype(a:language)
+
+  let cmd          = "rg -n --pcre2 --json -t " . rg_ft . ' -w ' . a:keyword
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
 
@@ -129,7 +143,9 @@ fu! s:RunRgUsagesSearch(language, keyword) abort
 endfu
 
 fu! s:RunRgDefinitionSearch(language, patterns) abort
-  let cmd          = "rg -n --pcre2 --json -t " . a:language . ' ' . a:patterns
+  let rg_ft = s:GetRgFiletype(a:language)
+
+  let cmd          = "rg -n --pcre2 --json -t " . rg_ft . ' ' . a:patterns
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
 

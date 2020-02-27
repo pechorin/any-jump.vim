@@ -234,7 +234,7 @@ call s:add_definition('scheme', {
 	\"spec_failed": ["(define foo test","(define (test foo","(define (test)"],
 	\})
 
-call s:add_definition('c++', {
+call s:add_definition('cpp', {
 	\"type": 'function',
 	\"pcre2_regexp": '\bKEYWORD(\s|\))*\((\w|[,&*.<>]|\s)*(\))\s*(const|->|\{|$)|typedef\s+(\w|[(*]|\s)+KEYWORD(\)|\s)*\(',
 	\"emacs_regexp": '\bJJJ(\s|\))*\((\w|[,&*.<>]|\s)*(\))\s*(const|->|\{|$)|typedef\s+(\w|[(*]|\s)+JJJ(\)|\s)*\(',
@@ -243,7 +243,7 @@ call s:add_definition('c++', {
 	\"spec_failed": ["return test();)","int test(a, b);","if( test() ) {","else test();"],
 	\})
 
-call s:add_definition('c++', {
+call s:add_definition('cpp', {
 	\"type": 'variable',
 	\"pcre2_regexp": '(\b\w+|[,>])([*&]|\s)+KEYWORD\s*(\[([0-9]|\s)*\])*\s*([=,){;]|:\s*[0-9])|#define\s+KEYWORD\b',
 	\"emacs_regexp": '(\b\w+|[,>])([*&]|\s)+JJJ\s*(\[([0-9]|\s)*\])*\s*([=,){;]|:\s*[0-9])|#define\s+JJJ\b',
@@ -252,7 +252,7 @@ call s:add_definition('c++', {
 	\"spec_failed": [],
 	\})
 
-call s:add_definition('c++', {
+call s:add_definition('cpp', {
 	\"type": 'variable',
 	\"pcre2_regexp": '\b(?!(class\b|struct\b|return\b|else\b|delete\b))(\w+|[,>])([*&]|\s)+KEYWORD\s*(\[(\d|\s)*\])*\s*([=,(){;]|:\s*\d)|#define\s+KEYWORD\b',
 	\"emacs_regexp": '\b(?!(class\b|struct\b|return\b|else\b|delete\b))(\w+|[,>])([*&]|\s)+JJJ\s*(\[(\d|\s)*\])*\s*([=,(){;]|:\s*\d)|#define\s+JJJ\b',
@@ -261,7 +261,7 @@ call s:add_definition('c++', {
 	\"spec_failed": ["return test;","#define NOT test","else test=2;"],
 	\})
 
-call s:add_definition('c++', {
+call s:add_definition('cpp', {
 	\"type": 'type',
 	\"pcre2_regexp": '\b(class|struct|enum|union)\b\s*KEYWORD\b\s*(final\s*)?(:((\s*\w+\s*::)*\s*\w*\s*<?(\s*\w+\s*::)*\w+>?\s*,*)+)?((\{|$))|}\s*KEYWORD\b\s*;',
 	\"emacs_regexp": '\b(class|struct|enum|union)\b\s*JJJ\b\s*(final\s*)?(:((\s*\w+\s*::)*\s*\w*\s*<?(\s*\w+\s*::)*\w+>?\s*,*)+)?((\{|$))|}\s*JJJ\b\s*;',
