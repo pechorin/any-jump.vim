@@ -4,13 +4,15 @@
 
 _Nvim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
 
+_nvim 0.4+ with popup windows required; vim support is planned for near releases_
+
 Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
 
 - jump to symbol/class/const/variable definition with `<leader>j`
 - display and jump to symbol/class/const/variable usages inside current project
 
 ![screenshot](/main.gif)
-_— Jumping through source code of discource:_
+_Jumping through source code of Discource app_
 
 ## Installation
 
