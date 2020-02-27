@@ -8,7 +8,8 @@ let s:regexp_keyword_word = 'KEYWORD'
 let s:engines             = ['rg', 'ag']
 
 let s:rg_filetype_convertion_map = {
-      \"python": "py"
+      \"python": "py",
+      \"javascript": "js",
       \}
 
 fu! s:GetRgFiletype(lang) abort

@@ -32,7 +32,6 @@ fu! s:set_plugin_global_option(option_name, default_value) abort
   endif
 endfu
 
-
 " Cursor keyword selection mode
 "
 " on line:
