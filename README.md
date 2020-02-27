@@ -12,6 +12,7 @@ Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep 
 - display and jump to symbol/class/const/variable usages inside current project
 
 ![screenshot](/main.gif)
+
 _Jumping through source code of Discource app_
 
 ## Installation
