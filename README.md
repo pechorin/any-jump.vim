@@ -22,10 +22,17 @@ Plug 'pechorin/any-jump.nvim'
 
 ## Run
 
-Just place you cursor on any variable / class name/ definition and do `<leader>j` or via command line `:AnyJump`.
-You will run search and see any-jump popup window with results.
+Just place you cursor on any variable/class/constant/name/symbol and press `<leader>j` or execute `:AnyJump` in normal mode.
 
-Where a two types of search results now: definitions and usages.
+## Searches
+
+- **keyword definitions**: find files where keyword defined
+
+- **keyword usages**: find files where keyword used
+
+- _ctags: not implemeneted now, but planned_
+
+- ...
 
 ## Keybindings
 
