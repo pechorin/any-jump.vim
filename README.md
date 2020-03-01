@@ -12,10 +12,6 @@ Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep 
 
 _On screen: jumping through source code of Discourse project_
 
-![vim-support](https://user-images.githubusercontent.com/226270/75636019-104cb380-5c2c-11ea-9730-70db71bac35f.png)
-
-_On screen: running Any-jump on vim 8.2_
-
 ## Installation
 
 via vim-plug:
@@ -123,6 +119,10 @@ let g:any_jump_disable_default_keybindings = 1 " default is false
 ### search results without line numbers and different ui style
 
 ![screenshot](/no_ln.png)
+
+### vim 8.2 inside terminal
+
+![vim-support](https://user-images.githubusercontent.com/226270/75636019-104cb380-5c2c-11ea-9730-70db71bac35f.png)
 
 ## Supported languages
 
