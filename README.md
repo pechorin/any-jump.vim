@@ -86,6 +86,11 @@ let g:any_jump_search_prefered_engine = 'rg'
 " - 'filename_last'
 
 let g:any_jump_results_ui_style = 'filename_first' "
+
+
+" Set the any-jump preview window height and width ratios
+let g:any_jump_preview_window_width_percent = 0.6
+let g:any_jump_preview_window_height_percent = 0.6
 ```
 
 ## Features

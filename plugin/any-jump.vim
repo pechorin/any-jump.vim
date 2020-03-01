@@ -72,6 +72,10 @@ call s:set_plugin_global_option('any_jump_search_prefered_engine', 'rg')
 " Disable default keybindinngs for commands
 call s:set_plugin_global_option('any_jump_disable_default_keybindings', v:false)
 
+" The pop window width, height ratios
+call s:set_plugin_global_option('any_jump_preview_window_width_percent', 0.6)
+call s:set_plugin_global_option('any_jump_preview_window_height_percent', 0.6)
+
 " TODO: NOT_IMPLEMENTED:
 
 " Preview next available search result after pressing preview button
@@ -89,8 +93,8 @@ fu! s:CreateUi(internal_buffer) abort
   call nvim_buf_set_option(buf, 'buftype', 'nofile')
   call nvim_buf_set_option(buf, 'modifiable', v:true)
 
-  let height     = float2nr(&lines * 0.6)
-  let width      = float2nr(&columns * 0.6)
+  let height     = float2nr(&lines * g:any_jump_preview_window_height_percent)
+  let width      = float2nr(&columns * g:any_jump_preview_window_width_percent)
   let horizontal = float2nr((&columns - width) / 2)
   let vertical   = 2
 
