@@ -81,11 +81,12 @@ let g:any_jump_max_search_results = 7
 
 " Prefered search engine: rg or ag
 let g:any_jump_search_prefered_engine = 'rg'
-" Ungrouped results ui variants:
+
+
+" Search results list styles:
 " - 'filename_first'
 " - 'filename_last'
-
-let g:any_jump_results_ui_style = 'filename_first' "
+let g:any_jump_results_ui_style = 'filename_first'
 
 
 " Any-jump window size & position options
