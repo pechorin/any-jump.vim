@@ -10,7 +10,7 @@ Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep 
 
 ![screenshot](/main.gif)
 
-_Jumping through source code of Discource app_
+_On screen: jumping through source code of Discourse project_
 
 ## Installation
 
