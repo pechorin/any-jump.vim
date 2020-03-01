@@ -75,7 +75,7 @@ call s:set_plugin_global_option('any_jump_disable_default_keybindings', v:false)
 " Any-jump window size & position options
 call s:set_plugin_global_option('any_jump_window_width_ratio', 0.6)
 call s:set_plugin_global_option('any_jump_window_height_ratio', 0.6)
-call s:set_plugin_global_option('any_jump_window_top_offset', 4)
+call s:set_plugin_global_option('any_jump_window_top_offset', 2)
 
 " TODO: NOT_IMPLEMENTED:
 
