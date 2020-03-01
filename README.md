@@ -2,9 +2,9 @@
 
 **— IDE madness without overhead for 40+ languages**
 
-_Nvim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
+_Vim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
 
-_nvim 0.4+ with popup windows required; vim support is planned for near releases_
+**nvim 0.4+ or vim 8.2+ required**
 
 Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
 
