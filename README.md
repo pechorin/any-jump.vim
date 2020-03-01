@@ -8,9 +8,6 @@ _nvim 0.4+ with popup windows required; vim support is planned for near releases
 
 Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
 
-- jump to symbol/class/const/variable definition with `<leader>j`
-- display and jump to symbol/class/const/variable usages inside current project
-
 ![screenshot](/main.gif)
 
 _Jumping through source code of Discource app_
@@ -22,6 +19,13 @@ via vim-plug:
 ```viml
 Plug 'pechorin/any-jump.nvim'
 ```
+
+## Run
+
+Just place you cursor on any variable / class name/ definition and do `<leader>j` or via command line `:AnyJump`.
+You will run search and see any-jump popup window with results.
+
+Where a two types of search results now: definitions and usages.
 
 ## Keybindings
 
@@ -38,10 +42,10 @@ nnoremap <leader>ab :AnyJumpBack<CR>
 nnoremap <leader>al :AnyJumpLastResults<CR>
 ```
 
-To **disable default keybindings* write:
+Disabling default any-jump keybindings:
 
 ```viml
-let g:any_jump_disable_default_keybindings = v:true
+let g:any_jump_disable_default_keybindings = 1
 ```
 
 Mappings for popup search window
@@ -65,13 +69,13 @@ au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
 
 ```viml
 " Show line numbers in search rusults
-let g:any_jump_list_numbers = v:true
+let g:any_jump_list_numbers = 0
 
 " Auto search usages
-let g:any_jump_usages_enabled = v:false
+let g:any_jump_usages_enabled = 1
 
 " Auto group results by filename
-let g:any_jump_grouping_enabled = v:false
+let g:any_jump_grouping_enabled = 0
 
 " Amount of preview lines for each search result
 let g:any_jump_preview_lines_count = 5
@@ -93,6 +97,9 @@ let g:any_jump_results_ui_style = 'filename_first'
 let g:any_jump_window_width_ratio  = 0.6
 let g:any_jump_window_height_ratio = 0.6
 let g:any_jump_window_top_offset   = 4
+
+" Disable default any-jump keybindings
+let g:any_jump_disable_default_keybindings = 1 " default is false
 ```
 
 ## Features
