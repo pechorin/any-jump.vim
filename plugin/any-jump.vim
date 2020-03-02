@@ -1,4 +1,8 @@
 " TODO:
+" - фильтрация результатов ( - search definitions ) для определений не
+"   работает как надо
+" - добавить возможность открывать окно не только в текущем window, но и
+"   делать vsplit/split относительного него
 " - create doc
 " - add specs for all search engines
 " - if no language found -> run definitions search in current, unless current
@@ -182,8 +186,38 @@ fu! s:VimPopupFilter(popup_winid, key) abort
   let bufnr = winbufnr(a:popup_winid)
   let ib    = s:GetCurrentInternalBuffer()
 
-  if a:key == "j" || a:key == "k"
-    call popup_filter_menu(a:popup_winid, a:key)
+  if a:key == "j"
+    let buf_info = getbufinfo(bufnr)[0]
+    let idx      = buf_info['lnum']
+    let lnum     = getbufvar(bufnr, 'current_lnum', 1)
+
+    if lnum == buf_info['linecount']
+      let new_lnum = lnum
+    else
+      let new_lnum = lnum + 1
+    endif
+
+    call setbufvar(bufnr, 'current_lnum', new_lnum)
+
+    let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
+    call win_execute(a:popup_winid, eval_string)
+
+    return 1
+
+  elseif a:key == "k"
+    let idx  = getbufinfo(bufnr)[0]['lnum']
+    let lnum = getbufvar(bufnr, 'current_lnum', 2)
+
+    if lnum == 1
+      let new_lnum = 1
+    else
+      let new_lnum = lnum - 1
+    endif
+
+    call setbufvar(bufnr, 'current_lnum', new_lnum)
+
+    let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
+    call win_execute(a:popup_winid, eval_string)
     return 1
 
   elseif a:key == "p" || a:key == "\<TAB>"
@@ -212,7 +246,10 @@ fu! s:VimPopupFilter(popup_winid, key) abort
       return 1
     endif
 
-  elseif a:key == "q" || a:key == '\<ESC>' ||  a:key == 'Q'
+  elseif a:key == "q"
+        \ || a:key == '\<ESC>'
+        \ || a:key == 'Q'
+        \ || a:key == 'x'
     call g:AnyJumpHandleClose()
     return 1
   endif
