@@ -8,6 +8,7 @@
 " - if no language found -> run definitions search in current, unless current
 "   is home directory
 " - hl keyword line in preview
+" - profile vim popup menu k/j move (slow for now)
 "
 " - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
 "
@@ -287,19 +288,26 @@ fu! s:Jump() abort
     return
   endif
 
-  let grep_results = search#SearchDefinitions(&l:filetype, keyword)
-  let ib           = internal_buffer#GetClass().New()
+  let ib = internal_buffer#GetClass().New()
 
   let ib.keyword                  = keyword
   let ib.language                 = &l:filetype
   let ib.source_win_id            = winnr()
   let ib.grouping_enabled         = g:any_jump_grouping_enabled
-  let ib.definitions_grep_results = grep_results
+  let ib.definitions_grep_results = search#SearchDefinitions(&l:filetype, keyword)
 
-  if g:any_jump_usages_enabled || len(grep_results) == 0
+  if g:any_jump_usages_enabled || len(ib.definitions_grep_results) == 0
     let ib.usages_opened       = v:true
     let usages_grep_results    = search#SearchUsages(ib)
-    let ib.usages_grep_results = usages_grep_results
+    let ib.usages_grep_results = []
+
+    " filter out results found in definitions
+    for result in usages_grep_results
+      if index(ib.definitions_grep_results, result) == -1
+        " not effective? ( TODO: deletion is more memory effective)
+        call add(ib.usages_grep_results, result)
+      endif
+    endfor
   endif
 
   " assign any-jump internal buffer to current tab
@@ -364,7 +372,7 @@ fu! g:AnyJumpHandleOpen() abort
   endif
 endfu
 
-fu! g:AnyJumpHandleClose(...) abort
+fu! g:AnyJumpHandleClose() abort
   let ui = s:GetCurrentInternalBuffer()
 
   if s:nvim
@@ -374,7 +382,7 @@ fu! g:AnyJumpHandleClose(...) abort
   endif
 endfu
 
-fu! g:AnyJumpHandleUsages(...) abort
+fu! g:AnyJumpHandleUsages() abort
   let ui = s:GetCurrentInternalBuffer()
 
   " close current opened usages
@@ -388,6 +396,7 @@ fu! g:AnyJumpHandleUsages(...) abort
 
     call ui.StartUiTransaction(ui.vim_bufnr)
 
+    " TODO: move to separate method RemoveUsages()
     for line in ui.items
       if has_key(line[0], 'data') && type(line[0].data) == v:t_dict
             \ && has_key(line[0].data, 'layer')
