@@ -3,6 +3,10 @@
 
 let s:definitions = {}
 
+let s:non_standard_ft_names = {
+      \"javascriptreact": "javascript"
+      \}
+
 fu! s:add_definition(lang, definition) abort
   if !has_key(s:definitions, a:lang)
     let s:definitions[a:lang] = []
@@ -25,6 +29,21 @@ endfu
 
 fu! lang_map#lang_exists(language) abort
   return has_key(s:definitions, a:language)
+endfu
+
+fu! lang_map#get_language_from_filetype(ft) abort
+  echo a:ft
+  if has_key(s:non_standard_ft_names, a:ft)
+    let maybe_lan = s:non_standard_ft_names[a:ft]
+  else
+    let maybe_lan = a:ft
+  endif
+
+  if lang_map#lang_exists(maybe_lan)
+    return maybe_lan
+  else
+    return 0
+  endif
 endfu
 
 call s:add_definition('elisp', {
