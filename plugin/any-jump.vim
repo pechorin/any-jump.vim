@@ -572,11 +572,48 @@ fu! g:AnyJumpHandlePreview() abort
 
       let preview = split(system(cmd), "\n")
 
-      " TODO: move to func
       let render_ln = ui.GetItemLineNumber(action_item)
       for line in preview
-        let new_item = ui.CreateItem("preview_text", line, "Comment", { "link": action_item })
-        call ui.AddLineAt([ new_item ], render_ln + 1)
+        " TODO: move to method
+        let filtered_line = substitute(line, '^\s*', '', 'g')
+        let filtered_line = substitute(filtered_line, '\n', '', 'g')
+
+        if filtered_line == action_item.text
+          let items        = []
+          let cur_text     = line
+          let kw           = ui.CreateItem("preview_text", ui.keyword, "String", { "link": action_item, "no_padding": v:true })
+          let first_kw_pos = match(cur_text, '\<' . ui.keyword . '\>')
+
+          while cur_text != ''
+
+            if first_kw_pos == 0
+              call add(items, kw)
+              let cur_text = cur_text[first_kw_pos + len(ui.keyword) : -1]
+
+            elseif first_kw_pos == -1
+              let tail = cur_text
+              let item = ui.CreateItem("preview_text", tail, "Comment", { "link": action_item, "no_padding": v:true })
+
+              call add(items, item)
+              let cur_text = ''
+
+            else
+              let head = cur_text[0 : first_kw_pos - 1]
+              let head_item = ui.CreateItem("preview_text", head, "Comment", { "link": action_item, "no_padding": v:true })
+
+              call add(items, head_item)
+              call add(items, kw)
+
+              let cur_text = cur_text[first_kw_pos + len(ui.keyword) : -1]
+            endif
+
+            let first_kw_pos = match(cur_text, '\<' . ui.keyword . '\>')
+          endwhile
+        else
+          let items = [ ui.CreateItem("preview_text", line, "Comment", { "link": action_item } ) ]
+        endif
+
+        call ui.AddLineAt(items, render_ln + 1)
 
         let render_ln += 1
       endfor
@@ -589,7 +626,6 @@ fu! g:AnyJumpHandlePreview() abort
 
   call ui.EndUiTransaction(ui.vim_bufnr)
 endfu
-
 
 " ----------------------------------------------
 " Script & Service functions

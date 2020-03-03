@@ -77,8 +77,12 @@ fu! s:InternalBuffer.RenderLine(items, line) dict abort
     if idx == 0
       let text = text . item.text
     else
-      let text = text  . ' ' . item.text
-      let next_start_col = next_start_col + 1
+      if has_key(item.data, 'no_padding')
+        let text = text . item.text
+      else
+        let text = text . ' ' . item.text
+        let next_start_col = next_start_col + 1
+      endif
     endif
 
     let item.start_col = next_start_col
@@ -99,7 +103,7 @@ fu! s:InternalBuffer.RenderLine(items, line) dict abort
             \-1,
             \item.hl_group,
             \a:line - 1,
-            \item.start_col - 1,
+            \item.start_col,
             \item.end_col)
     else
       call prop_add(a:line, item.start_col, {
