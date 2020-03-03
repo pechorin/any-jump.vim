@@ -1,34 +1,36 @@
 " TODO:
-" - фильтрация результатов ( - search definitions ) для определений не
-"   работает как надо
-" - добавить возможность открывать окно не только в текущем window, но и
-"   делать vsplit/split относительного него
-" - create doc
+" - ignore language comments
 " - add specs for all search engines
+"
+" - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
+"
 " - if no language found -> run definitions search in current, unless current
 "   is home directory
+"
 " - hl keyword line in preview
-" - profile vim popup menu k/j move (slow for now)
+"
+" - добавить возможность открывать окно не только в текущем window, но и
+"   делать vsplit/split относительного него
 "
 " - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
-"
-" - add ag conversion for js also
-" - add ag convertion for js
 "
 " - add ability to provide ft aliases for rg/ag and solve problem with new ft
 " - >> it is a good practice to augroup your aucmds
 " - add namespace id for nvim hl
 "
 " - add ability to change list styles by keybind
+" - create doc
+"
+" - paths priorities for better search results
 "
 " TODO_THINK:
+" - rg and ag results sometimes very differenet
 " - after pressing p jump to next result
 " - add auto preview option
 " - impl VimL rules
 " - fzf
 "
 " TODO_FUTURE_RELEASES:
-" - paths priorities for better search results
 " - AnyJumpPreview
 " - AnyJumpFirst
 " - jumps history & jumps work flow
@@ -621,7 +623,7 @@ fu! s:RunSpecs() abort
 
   if len(errors) > 0
     for error in errors
-      echo error
+      echoe error
     endfor
   endif
 

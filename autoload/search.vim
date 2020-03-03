@@ -1,17 +1,49 @@
-" Search methods definitions
-
-"
-" --- Public api ---
-"
+" Search methods
 
 let s:regexp_keyword_word = 'KEYWORD'
 let s:engines             = ['rg', 'ag']
+
+let s:rg_base_cmd = "rg -n --pcre2 --json"
+let s:ag_base_cmd = "ag --nogroup --noheading"
 
 let s:rg_filetype_convertion_map = {
       \"python": "py",
       \"javascript": "js",
       \"typescript": "ts",
+      \"commonlisp": "lisp",
       \}
+
+let s:ag_filetype_convertion_map = {
+      \"javascript": "js",
+      \"typescript": "ts",
+      \"commonlisp": "lisp",
+      \}
+
+let s:non_standard_ft_extensions_map = {
+      \"coffeescript": [ '\.cjs\$', '\.coffee\$', 'Cakefile', '\._coffee\$', '\.coffeekup$', '\.ck\$' ],
+      \"coq": [ '\.v\$' ],
+      \"scad": [ '\.scad\$' ],
+      \"protobuf": [ '\.proto\$' ],
+      \"scss": [ '\.scss\$' ],
+      \"systemverilog": [ '\.sv\$', '\.svh\$' ],
+      \"racket": [ '\.rkt\$' ],
+      \"scheme": [ '\.scm\$', '\.ss\$', '\.sld\$' ],
+      \"faust": [ '\.dsp\$', '\.lib\$' ],
+      \"pascal": [ '\.pas\$', '\.dpr\$', '\.int\$', '\.dfm\$'  ],
+      \"shell": [ '\.sh\$', '\.bash\$', '\.csh\$', '\.ksh\$', '\.tcsh\$' ],
+      \"haskell": [ '\.hs\$', '\.lhs\$' ],
+      \"dart": [ '\.dart\$' ]
+      \}
+
+let s:non_standard_ft_extensions_map_compiled = {}
+for lang in keys(s:non_standard_ft_extensions_map)
+  let rules  = s:non_standard_ft_extensions_map[lang]
+  let regexp = map(rules, { _, pattern -> '(' . pattern . ')' })
+  let regexp = join(regexp, '|')
+  let regexp = "\"(" . regexp . ")\""
+
+  let s:non_standard_ft_extensions_map_compiled[lang] = regexp
+endfor
 
 fu! s:GetRgFiletype(lang) abort
   if has_key(s:rg_filetype_convertion_map, a:lang)
@@ -19,6 +51,36 @@ fu! s:GetRgFiletype(lang) abort
   else
     return a:lang
   endif
+endfu
+
+fu! s:GetAgFiletype(lang) abort
+  if has_key(s:ag_filetype_convertion_map, a:lang)
+    return s:ag_filetype_convertion_map[a:lang]
+  else
+    return a:lang
+  endif
+endfu
+
+fu! search#GetSearchEngineFileTypeSpecifier(engine, language) abort
+  let cmd = 0
+
+  if has_key(s:non_standard_ft_extensions_map_compiled, a:language)
+    if a:engine == 'rg'
+      let file_lists_cmd = 'rg --files | rg ' . s:non_standard_ft_extensions_map_compiled[a:language]
+      let files = split(system(file_lists_cmd), "\n")
+      let cmd   = join(map(files, {_,fname -> ('-f ' . fname)}), ' ')
+    elseif a:engine == 'ag'
+      let cmd = '-G ' . s:non_standard_ft_extensions_map_compiled[a:language]
+    endif
+  else
+    if a:engine == 'rg'
+      let cmd = '-t ' . s:GetRgFiletype(a:language)
+    elseif a:engine == 'ag'
+      let cmd = '--' . s:GetAgFiletype(a:language)
+    endif
+  endif
+
+  return cmd
 endfu
 
 fu! search#SearchUsages(internal_buffer) abort
@@ -58,7 +120,7 @@ fu! search#SearchDefinitions(lang, keyword) abort
   return grep_results
 endfu
 
-fu! search#RunSearchEnginesSpecs()
+fu! search#RunSearchEnginesSpecs() abort
   let errors = []
 
   let has_rg = executable('rg')
@@ -74,20 +136,25 @@ fu! search#RunSearchEnginesSpecs()
   return errors
 endfu
 
-fu! search#RunRegexpSpecs()
+fu! search#RunRegexpSpecs() abort
   let errors = []
   let passed = 0
+  let failed = 0
 
   for lang in keys(lang_map#definitions())
+    let lang_passed = 0
+    let lang_failed = 0
+
     for entry in lang_map#definitions()[lang]
       let re = entry.pcre2_regexp
       let keyword = 'test'
 
       if len(re) > 0
         let test_re = substitute(re, 'KEYWORD', keyword, 'g')
-        let error_exit_codes = {"spec_success": [1,2], "spec_failed": [0,2]}
+        let invalid_exist_statues = {"spec_success": [1,2], "spec_failed": [0,2]}
+        let spec_types = keys(invalid_exist_statues)
 
-        for spec_type in keys(error_exit_codes)
+        for spec_type in spec_types
           for spec_string in entry[spec_type]
             for engine in s:engines
               if index(entry.supports, engine) == -1
@@ -95,21 +162,29 @@ fu! search#RunRegexpSpecs()
               endif
 
               let cmd = 0
+              let ft_args = search#GetSearchEngineFileTypeSpecifier(engine, lang)
 
               if engine == 'rg'
-                let cmd = "echo \"" . spec_string . "\" | rg --pcre2 --no-filename \"" . test_re . "\""
+                let rg_ft = s:GetRgFiletype(lang)
+                let cmd   = "echo \"" . spec_string . "\" | "
+                      \ . s:rg_base_cmd .  " --no-filename  "
+                      \ . ft_args . " \"" . test_re . "\""
               end
 
               if engine == 'ag'
-                let cmd = "echo \"" . spec_string . "\" | ag \"" . test_re . "\""
+                let ag_ft = s:GetAgFiletype(lang)
+                let cmd   = "echo \"" . spec_string . "\" | "
+                      \ . s:ag_base_cmd . " " . ft_args . " \""
+                      \ . test_re . "\""
               endif
 
               let raw_results = system(cmd)
 
-              if index(error_exit_codes[spec_type], v:shell_error) >= 0
-                call add(errors, "FAILED -- " . spec_type . ' ' . string(raw_results) . ' -- ' . lang  . " -- " . spec_string  . ' -- ' . test_re)
+              if index(invalid_exist_statues[spec_type], v:shell_error) != -1
+                call add(errors, 'FAILED ' . engine . ' ' . lang . ' ' . spec_type . ' -- result: ' . string(raw_results) . "; spec: " . string(spec_string)  . '; re: ' . string(test_re))
+                let lang_failed += 1
               else
-                let passed += 1
+                let lang_passed += 1
               endif
 
             endfor
@@ -119,10 +194,9 @@ fu! search#RunRegexpSpecs()
 
     endfor
 
-    echo "lang " . lang . ' finished tests ' . passed
+    echo "lang " . lang . ' finished  success:' . lang_passed . ' failed: ' . lang_failed
   endfor
 
-  echo "passed tests: " . passed
   return errors
 endfu
 
@@ -137,7 +211,7 @@ endfu
 fu! s:RunRgUsagesSearch(language, keyword) abort
   let rg_ft = s:GetRgFiletype(a:language)
 
-  let cmd          = "rg -n --pcre2 --json -t " . rg_ft . ' -w ' . a:keyword
+  let cmd          = s:rg_base_cmd . ' -t ' . rg_ft . ' -w ' . a:keyword
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
 
@@ -147,7 +221,7 @@ endfu
 fu! s:RunRgDefinitionSearch(language, patterns) abort
   let rg_ft = s:GetRgFiletype(a:language)
 
-  let cmd          = "rg -n --pcre2 --json -t " . rg_ft . ' ' . a:patterns
+  let cmd          = s:rg_base_cmd . ' -t ' . rg_ft . ' ' . a:patterns
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
 
@@ -155,7 +229,7 @@ fu! s:RunRgDefinitionSearch(language, patterns) abort
 endfu
 
 fu! s:RunAgUsagesSearch(language, keyword) abort
-  let cmd          = "ag --nogroup --noheading --" . a:language . ' -w ' . a:keyword
+  let cmd          = s:ag_base_cmd . ' --' . a:language . ' -w ' . a:leyword
   let raw_results  = system(cmd)
   let grep_results = s:ParseAgResults(raw_results)
 
@@ -163,7 +237,7 @@ fu! s:RunAgUsagesSearch(language, keyword) abort
 endfu
 
 fu! s:RunAgDefinitionSearch(language, patterns) abort
-  let cmd          = "ag --nogroup --noheading --" . a:language . ' ' . a:patterns
+  let cmd          = s:ag_base_cmd . ' --' . a:language . ' ' . a:patterns
   let raw_results  = system(cmd)
   let grep_results = s:ParseAgResults(raw_results)
 
