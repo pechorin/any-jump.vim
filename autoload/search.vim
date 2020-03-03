@@ -83,6 +83,10 @@ fu! search#GetSearchEngineFileTypeSpecifier(engine, language) abort
   return cmd
 endfu
 
+fu! search#GetLanguage(ft)
+
+endfu
+
 fu! search#SearchUsages(internal_buffer) abort
   if g:any_jump_search_prefered_engine == 'rg'
     let grep_results = s:RunRgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
