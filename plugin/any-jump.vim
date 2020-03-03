@@ -6,8 +6,6 @@
 " - if no language found -> run definitions search in current, unless current
 "   is home directory
 "
-" - hl keyword line in preview
-"
 " - добавить возможность открывать окно не только в текущем window, но и
 "   делать vsplit/split относительного него
 "

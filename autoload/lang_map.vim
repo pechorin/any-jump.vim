@@ -32,7 +32,6 @@ fu! lang_map#lang_exists(language) abort
 endfu
 
 fu! lang_map#get_language_from_filetype(ft) abort
-  echo a:ft
   if has_key(s:non_standard_ft_names, a:ft)
     let maybe_lan = s:non_standard_ft_names[a:ft]
   else
