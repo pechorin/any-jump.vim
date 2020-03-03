@@ -209,9 +209,13 @@ fu! s:NewGrepResult() abort
 endfu
 
 fu! s:RunRgUsagesSearch(language, keyword) abort
-  let rg_ft = s:GetRgFiletype(a:language)
+  if type(a:language) == v:t_string
+    let rg_ft = s:GetRgFiletype(a:language)
+    let cmd   = s:rg_base_cmd . ' -t ' . rg_ft . ' -w ' . a:keyword
+  else
+    let cmd = s:rg_base_cmd . ' -w ' . a:keyword
+  endif
 
-  let cmd          = s:rg_base_cmd . ' -t ' . rg_ft . ' -w ' . a:keyword
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
 
@@ -219,9 +223,13 @@ fu! s:RunRgUsagesSearch(language, keyword) abort
 endfu
 
 fu! s:RunRgDefinitionSearch(language, patterns) abort
-  let rg_ft = s:GetRgFiletype(a:language)
+  if type(a:language) == v:t_string
+    let rg_ft = s:GetRgFiletype(a:language)
+    let cmd   = s:rg_base_cmd . ' -t ' . rg_ft . ' ' . a:patterns
+  else
+    let cmd   = s:rg_base_cmd . ' ' . a:patterns
+  endif
 
-  let cmd          = s:rg_base_cmd . ' -t ' . rg_ft . ' ' . a:patterns
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
 

@@ -3,9 +3,6 @@
 "
 " - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
 "
-" - if no language found -> run definitions search in current, unless current
-"   is home directory
-"
 " - добавить возможность открывать окно не только в текущем window, но и
 "   делать vsplit/split относительного него
 "
@@ -56,7 +53,7 @@ endfu
 let errors = s:host_vim_errors()
 
 if len(errors)
-  echom "any-jump can't be loaded: " . join(errors, ', ')
+  echoe "any-jump can't be loaded: " . join(errors, ', ')
   finish
 endif
 
@@ -109,8 +106,8 @@ call s:set_plugin_global_option('any_jump_search_prefered_engine', 'rg')
 call s:set_plugin_global_option('any_jump_disable_default_keybindings', v:false)
 
 " Any-jump window size & position options
-call s:set_plugin_global_option('any_jump_window_width_ratio', 0.6)
-call s:set_plugin_global_option('any_jump_window_height_ratio', 0.6)
+call s:set_plugin_global_option('any_jump_window_width_ratio', str2float('0.6'))
+call s:set_plugin_global_option('any_jump_window_height_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_top_offset', 2)
 
 " TODO: NOT_IMPLEMENTED:
@@ -267,11 +264,6 @@ endfu
 fu! s:Jump() abort
   let lang = lang_map#get_language_from_filetype(&l:filetype)
 
-  if type(lang) != v:t_string
-    call s:log("not found map definition for filetype !" . string(lang))
-    return
-  endif
-
   let keyword    = ''
   let cur_mode   = mode()
 
@@ -293,7 +285,10 @@ fu! s:Jump() abort
   let ib.language                 = lang
   let ib.source_win_id            = winnr()
   let ib.grouping_enabled         = g:any_jump_grouping_enabled
-  let ib.definitions_grep_results = search#SearchDefinitions(lang, keyword)
+
+  if type(lang) == v:t_string
+    let ib.definitions_grep_results = search#SearchDefinitions(lang, keyword)
+  endif
 
   if g:any_jump_usages_enabled || len(ib.definitions_grep_results) == 0
     let ib.usages_opened       = v:true
