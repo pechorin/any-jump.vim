@@ -1,8 +1,8 @@
-# any-jump
+# any-jump.vim
 
 **— IDE madness without overhead for 40+ languages**
 
-_Vim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
+_Vim plugin for jumping to defitinitions⚒ and usages🔬 through nice popup ui._
 
 **nvim 0.4+ or vim 8.2+ required**
 
