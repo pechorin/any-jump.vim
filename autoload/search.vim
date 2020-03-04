@@ -35,6 +35,50 @@ let s:non_standard_ft_extensions_map = {
       \"dart": [ '\.dart\$' ]
       \}
 
+let s:filetypes_comments_map = {
+      \"cpp":           "//",
+      \"elisp":         ";",
+      \"commonlisp":    ";",
+      \"javascript":    "//",
+      \"typescript":    "//",
+      \"dart":          "//",
+      \"haskell":       "--",
+      \"lua":           "--",
+      \"rust":          "//",
+      \"julia":         "#" ,
+      \"objc":          "//",
+      \"csharp":        "//",
+      \"java":          "//",
+      \"clojure":       ";" ,
+      \"coffeescript":  "#" ,
+      \"faust":         "//",
+      \"fortran":       "!" ,
+      \"go":            "//",
+      \"perl":          "#" ,
+      \"php":           "//",
+      \"python":        "#" ,
+      \"matlab":        "%" ,
+      \"r":             "#" ,
+      \"racket":        ";" ,
+      \"ruby":          "#" ,
+      \"crystal":       "#" ,
+      \"nim":           "#" ,
+      \"nix":           "#" ,
+      \"scala":         "//",
+      \"scheme":        ";" ,
+      \"shell":         "#" ,
+      \"swift":         "//",
+      \"elixir":        "#" ,
+      \"erlang":        "%" ,
+      \"tex":           "%" ,
+      \"systemverilog": "//",
+      \"vhdl":          "--",
+      \"scss":          "//",
+      \"pascal":        "//",
+      \"protobuf":      "//",
+      \}
+
+
 let s:non_standard_ft_extensions_map_compiled = {}
 for lang in keys(s:non_standard_ft_extensions_map)
   let rules  = s:non_standard_ft_extensions_map[lang]
@@ -208,13 +252,9 @@ fu! s:NewGrepResult() abort
   return { "line_number": 0, "path": 0, "text": 0 }
 endfu
 
-fu! s:RunRgUsagesSearch(language, keyword) abort
-  if type(a:language) == v:t_string
-    let rg_ft = s:GetRgFiletype(a:language)
-    let cmd   = s:rg_base_cmd . ' -t ' . rg_ft . ' -w ' . a:keyword
-  else
-    let cmd = s:rg_base_cmd . ' -w ' . a:keyword
-  endif
+fu! s:RunRgDefinitionSearch(language, patterns) abort
+  let rg_ft = s:GetRgFiletype(a:language)
+  let cmd   = s:rg_base_cmd . ' -t ' . rg_ft . ' ' . a:patterns
 
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
@@ -222,16 +262,22 @@ fu! s:RunRgUsagesSearch(language, keyword) abort
   return grep_results
 endfu
 
-fu! s:RunRgDefinitionSearch(language, patterns) abort
-  if type(a:language) == v:t_string
-    let rg_ft = s:GetRgFiletype(a:language)
-    let cmd   = s:rg_base_cmd . ' -t ' . rg_ft . ' ' . a:patterns
-  else
-    let cmd   = s:rg_base_cmd . ' ' . a:patterns
-  endif
+fu! s:RunAgDefinitionSearch(language, patterns) abort
+  let ag_ft = s:GetAgFiletype(a:language)
+  let cmd   = s:ag_base_cmd . ' --' . ag_ft . ' ' . a:patterns
 
   let raw_results  = system(cmd)
+  let grep_results = s:ParseAgResults(raw_results)
+
+  return grep_results
+endfu
+
+fu! s:RunRgUsagesSearch(language, keyword) abort
+  let cmd = s:rg_base_cmd . ' -w ' . a:keyword
+  let raw_results  = system(cmd)
+
   let grep_results = s:ParseRgResults(raw_results)
+  let grep_results = s:FilterGrepResults(a:language, grep_results)
 
   return grep_results
 endfu
@@ -239,17 +285,35 @@ endfu
 fu! s:RunAgUsagesSearch(language, keyword) abort
   let cmd          = s:ag_base_cmd . ' --' . a:language . ' -w ' . a:leyword
   let raw_results  = system(cmd)
+
   let grep_results = s:ParseAgResults(raw_results)
+  let grep_results = s:FilterGrepResults(a:language, grep_results)
 
   return grep_results
 endfu
 
-fu! s:RunAgDefinitionSearch(language, patterns) abort
-  let cmd          = s:ag_base_cmd . ' --' . a:language . ' ' . a:patterns
-  let raw_results  = system(cmd)
-  let grep_results = s:ParseAgResults(raw_results)
+fu! s:FilterGrepResults(language, grep_results) abort
+  if type(a:language) != v:t_string
+    return a:grep_results
+  endif
 
-  return grep_results
+  if g:any_jump_remove_comments_from_results && has_key(s:filetypes_comments_map, a:language)
+    let comment_pattern = s:filetypes_comments_map[a:language]
+    let comment_pattern = '^\s*' . comment_pattern
+
+    let filtered = []
+    for gr in a:grep_results
+      if match(gr.text, comment_pattern) == -1
+        call add(filtered, gr)
+      endif
+    endfor
+
+    return filtered
+  else
+    return a:grep_results
+  endif
+
+  " let comment_pattern = s:filetypes_comments_map
 endfu
 
 fu! s:ParseRgResults(raw_results) abort

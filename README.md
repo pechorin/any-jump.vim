@@ -105,8 +105,11 @@ let g:any_jump_window_width_ratio  = 0.6
 let g:any_jump_window_height_ratio = 0.6
 let g:any_jump_window_top_offset   = 4
 
-" Disable default any-jump keybindings
-let g:any_jump_disable_default_keybindings = 1 " default is false
+" Disable default any-jump keybindings (default: 0)
+let g:any_jump_disable_default_keybindings = 1
+
+" Remove comments line from search results (default: 1)
+call s:set_plugin_global_option('any_jump_remove_comments_from_results', 1)
 ```
 
 ## Features

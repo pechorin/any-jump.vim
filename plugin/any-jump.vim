@@ -1,6 +1,4 @@
 " TODO:
-" - ignore language comments
-"
 " - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
 "
 " - добавить возможность открывать окно не только в текущем window, но и
@@ -113,6 +111,9 @@ call s:set_plugin_global_option('any_jump_window_width_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_height_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_top_offset', 2)
 
+" Remove comments line from search results (default: 1)
+call s:set_plugin_global_option('any_jump_remove_comments_from_results', v:true)
+
 " TODO: NOT_IMPLEMENTED:
 
 " Preview next available search result after pressing preview button
@@ -187,37 +188,10 @@ fu! s:VimPopupFilter(popup_winid, key) abort
 
   if a:key == "j"
     call popup_filter_menu(a:popup_winid, a:key)
-    " let buf_info = getbufinfo(bufnr)[0]
-    " let idx      = buf_info['lnum']
-    " let lnum     = getbufvar(bufnr, 'current_lnum', 1)
-
-    " if lnum == buf_info['linecount']
-    "   let new_lnum = lnum
-    " else
-    "   let new_lnum = lnum + 1
-    " endif
-
-    " call setbufvar(bufnr, 'current_lnum', new_lnum)
-
-    " let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
-    " call win_execute(a:popup_winid, eval_string)
     return 1
 
   elseif a:key == "k"
     call popup_filter_menu(a:popup_winid, a:key)
-    " let idx  = getbufinfo(bufnr)[0]['lnum']
-    " let lnum = getbufvar(bufnr, 'current_lnum', 2)
-
-    " if lnum == 1
-    "   let new_lnum = 1
-    " else
-    "   let new_lnum = lnum - 1
-    " endif
-
-    " call setbufvar(bufnr, 'current_lnum', new_lnum)
-
-    " let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
-    " call win_execute(a:popup_winid, eval_string)
     return 1
 
   elseif a:key == "p" || a:key == "\<TAB>"
