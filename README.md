@@ -2,7 +2,7 @@
 
 **— IDE madness without overhead for 40+ languages**
 
-_Vim plugin for jumping to defitinitions⚒ and usages🔬 through nice popup ui._
+_Vim plugin for jumping to defitinitions⚒ and usages🔬 through nice ui._
 
 **nvim 0.4+ or vim 8.2+ required**
 
