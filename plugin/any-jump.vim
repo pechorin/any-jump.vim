@@ -1,6 +1,7 @@
 " TODO:
-" - after [a] keyword not hl in preview (sometimes, lol)
 " - add search results count for each group
+"
+" - Toggle list styles! button
 "
 " - ignore language comments
 "

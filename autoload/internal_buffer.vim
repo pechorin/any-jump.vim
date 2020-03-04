@@ -402,7 +402,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   call self.AddLineAt([
     \self.CreateItem("text", ">", "Function", {'layer': 'usages'}),
     \self.CreateItem("text", self.keyword, "Identifier", {'layer': 'usages'}),
-    \self.CreateItem("text", "usages", "Function", {'layer': 'usages'}),
+    \self.CreateItem("text", len(self.usages_grep_results) . " usages", "Function", {'layer': 'usages'}),
     \], start_ln)
 
 
@@ -490,7 +490,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([
     \self.CreateItem("text", ">", "Function"),
     \self.CreateItem("text", self.keyword, "Identifier"),
-    \self.CreateItem("text", "definitions", "Function"),
+    \self.CreateItem("text", len(self.definitions_grep_results) . " definitions", "Function"),
     \])
 
   call self.AddLine([ self.CreateItem("text", "", "Comment") ])
