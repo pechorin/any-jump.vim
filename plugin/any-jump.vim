@@ -1,6 +1,4 @@
 " TODO:
-" - add search results count for each group
-"
 " - Toggle list styles! button
 "
 " - ignore language comments
@@ -191,37 +189,38 @@ fu! s:VimPopupFilter(popup_winid, key) abort
   let ib    = s:GetCurrentInternalBuffer()
 
   if a:key == "j"
-    let buf_info = getbufinfo(bufnr)[0]
-    let idx      = buf_info['lnum']
-    let lnum     = getbufvar(bufnr, 'current_lnum', 1)
+    call popup_filter_menu(a:popup_winid, a:key)
+    " let buf_info = getbufinfo(bufnr)[0]
+    " let idx      = buf_info['lnum']
+    " let lnum     = getbufvar(bufnr, 'current_lnum', 1)
 
-    if lnum == buf_info['linecount']
-      let new_lnum = lnum
-    else
-      let new_lnum = lnum + 1
-    endif
+    " if lnum == buf_info['linecount']
+    "   let new_lnum = lnum
+    " else
+    "   let new_lnum = lnum + 1
+    " endif
 
-    call setbufvar(bufnr, 'current_lnum', new_lnum)
+    " call setbufvar(bufnr, 'current_lnum', new_lnum)
 
-    let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
-    call win_execute(a:popup_winid, eval_string)
-
+    " let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
+    " call win_execute(a:popup_winid, eval_string)
     return 1
 
   elseif a:key == "k"
-    let idx  = getbufinfo(bufnr)[0]['lnum']
-    let lnum = getbufvar(bufnr, 'current_lnum', 2)
+    call popup_filter_menu(a:popup_winid, a:key)
+    " let idx  = getbufinfo(bufnr)[0]['lnum']
+    " let lnum = getbufvar(bufnr, 'current_lnum', 2)
 
-    if lnum == 1
-      let new_lnum = 1
-    else
-      let new_lnum = lnum - 1
-    endif
+    " if lnum == 1
+    "   let new_lnum = 1
+    " else
+    "   let new_lnum = lnum - 1
+    " endif
 
-    call setbufvar(bufnr, 'current_lnum', new_lnum)
+    " call setbufvar(bufnr, 'current_lnum', new_lnum)
 
-    let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
-    call win_execute(a:popup_winid, eval_string)
+    " let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
+    " call win_execute(a:popup_winid, eval_string)
     return 1
 
   elseif a:key == "p" || a:key == "\<TAB>"
@@ -258,6 +257,7 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     return 1
   endif
 
+  call g:AnyJumpHandleClose()
   return 1
 endfu
 
@@ -582,13 +582,13 @@ fu! g:AnyJumpHandlePreview() abort
         if filtered_line == action_item.text
           let items        = []
           let cur_text     = line
-          let kw           = ui.CreateItem("preview_text", ui.keyword, "String", { "link": action_item, "no_padding": v:true })
+          let kw           = ui.CreateItem("preview_text", ui.keyword, "Operator", { "link": action_item, "no_padding": v:true })
           let first_kw_pos = match(cur_text, '\<' . ui.keyword . '\>')
 
           while cur_text != ''
 
             if first_kw_pos == 0
-              call add(items, kw)
+              call add(items, deepcopy(kw))
               let cur_text = cur_text[first_kw_pos + len(ui.keyword) : -1]
 
             elseif first_kw_pos == -1
@@ -603,7 +603,7 @@ fu! g:AnyJumpHandlePreview() abort
               let head_item = ui.CreateItem("preview_text", head, "Comment", { "link": action_item, "no_padding": v:true })
 
               call add(items, head_item)
-              call add(items, kw)
+              call add(items, deepcopy(kw))
 
               let cur_text = cur_text[first_kw_pos + len(ui.keyword) : -1]
             endif

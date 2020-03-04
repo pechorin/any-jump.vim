@@ -472,7 +472,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
     call self.AddLineAt([ self.CreateItem("text", "", "Comment", {"layer": "usages"}) ], start_ln)
     let start_ln += 1
 
-    call self.AddLineAt([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Function", {"layer": "usages"}) ], start_ln)
+    call self.AddLineAt([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Operator", {"layer": "usages"}) ], start_ln)
     let start_ln += 1
   endif
 
@@ -567,7 +567,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
   endif
 
   if hidden_count > 0
-    call self.AddLine([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Function") ])
+    call self.AddLine([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Operator") ])
     call self.AddLine([ self.CreateItem("text", "", "Comment") ])
   endif
 
@@ -580,7 +580,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([ self.CreateItem("help_text", "", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[enter/o] open file   [tab/p] preview file   [esc/q] close ", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[T] toggle grouping   [a] show all results   [b] back to first result in list", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[u] show usages", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[u] toggle usages", "Comment") ])
 endfu
 
 fu! s:InternalBuffer.RemoveGarbagedLines() dict abort
