@@ -1,4 +1,7 @@
 " TODO:
+" - after [a] keyword not hl in preview (sometimes, lol)
+" - add search results count for each group
+"
 " - ignore language comments
 "
 " - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
@@ -13,6 +16,10 @@
 "
 " - add ability to change list styles by keybind
 " - create doc
+"
+" - handle many search results
+"
+" - cursor keyword search modes
 "
 " - paths priorities for better search results
 "
