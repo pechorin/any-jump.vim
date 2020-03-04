@@ -1,14 +1,6 @@
 " TODO:
 " - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
 "
-" - добавить возможность открывать окно не только в текущем window, но и
-"   делать vsplit/split относительного него
-"
-" - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
-"
-" - >> it is a good practice to augroup your aucmds
-" - add namespace id for nvim hl
-"
 " - create doc
 "
 " - handle many search results
@@ -23,8 +15,11 @@
 " - add auto preview option
 " - impl VimL rules
 " - fzf
+" - добавить возможность открывать окно не только в текущем window, но и
+"   делать vsplit/split относительного него
 "
 " TODO_FUTURE_RELEASES:
+" - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
 " - AnyJumpPreview
 " - AnyJumpFirst
 " - jumps history & jumps work flow
@@ -251,7 +246,11 @@ fu! s:Jump() abort
   let cur_mode   = mode()
 
   if cur_mode == 'n'
-    let keyword = expand('<cword>')
+    if g:any_jump_keyword_match_cursor_mode == 'word'
+      let keyword = expand('<cword>')
+    else
+      let keyword = expand('<cWORD>')
+    end
   else
     " THINK: implement visual mode selection?
     " https://stackoverflow.com/a/6271254/190454
@@ -661,20 +660,26 @@ command! AnyJumpBack call s:JumpBack()
 command! AnyJumpLastResults call s:JumpLastResults()
 command! AnyJumpRunSpecs call s:RunSpecs()
 
-" KeyBindings
-au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
-au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
-au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
-au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
-au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
-au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
-au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
-au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
-au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
-au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
-au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
-au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
-au FileType any-jump nnoremap <buffer> L :call g:AnyJumpToggleListStyle()<cr>
+" Window KeyBindings
+if s:nvim
+  augroup anyjump
+    au!
+    au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
+    au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
+    au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
+    au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
+    au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
+    au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
+    au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
+    au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
+    au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
+    au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
+    au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
+    au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
+    au FileType any-jump nnoremap <buffer> L :call g:AnyJumpToggleListStyle()<cr>
+  augroup END
+end
+
 
 if g:any_jump_disable_default_keybindings == v:false
   nnoremap <leader>j  :AnyJump<CR>

@@ -109,7 +109,22 @@ let g:any_jump_window_top_offset   = 4
 let g:any_jump_disable_default_keybindings = 1
 
 " Remove comments line from search results (default: 1)
-call s:set_plugin_global_option('any_jump_remove_comments_from_results', 1)
+let g:any_jump_remove_comments_from_results = 1
+
+" Cursor keyword selection mode
+"
+" on line:
+"
+" "MyNamespace::MyClass"
+"                  ^
+"
+" then cursor is on MyClass word
+"
+" 'word' - will match 'MyClass'
+" 'full' - will match 'MyNamespace::MyClass'
+
+let g:any_jump_keyword_match_cursor_mode', 'word'
+
 ```
 
 ## Features
