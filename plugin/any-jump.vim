@@ -1,6 +1,4 @@
 " TODO:
-" - Toggle list styles! button
-"
 " - ignore language comments
 "
 " - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
@@ -13,7 +11,6 @@
 " - >> it is a good practice to augroup your aucmds
 " - add namespace id for nvim hl
 "
-" - add ability to change list styles by keybind
 " - create doc
 "
 " - handle many search results
@@ -239,6 +236,10 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpToggleGrouping()
     return 1
 
+  elseif a:key == "L"
+    call g:AnyJumpToggleListStyle()
+    return 1
+
   elseif a:key == "\<CR>" || a:key == 'o' || a:key == 'O'
     let item = t:any_jump.TryFindOriginalLinkFromPos()
 
@@ -382,6 +383,20 @@ fu! g:AnyJumpHandleClose() abort
   else
     call popup_close(ui.popup_winid)
   endif
+endfu
+
+fu! g:AnyJumpToggleListStyle() abort
+  let ui = s:GetCurrentInternalBuffer()
+  let next_style = g:any_jump_results_ui_style == 'filename_first' ? 'filename_last' : 'filename_first'
+  let g:any_jump_results_ui_style = next_style
+
+  let cursor_item = ui.TryFindOriginalLinkFromPos()
+
+  call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.RenderUi()
+  call ui.EndUiTransaction(ui.vim_bufnr)
+
+  call ui.TryRestoreCursorForItem(cursor_item)
 endfu
 
 fu! g:AnyJumpHandleUsages() abort
@@ -685,6 +700,7 @@ au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
 au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
 au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
 au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
+au FileType any-jump nnoremap <buffer> L :call g:AnyJumpToggleListStyle()<cr>
 
 if g:any_jump_disable_default_keybindings == v:false
   nnoremap <leader>j  :AnyJump<CR>
