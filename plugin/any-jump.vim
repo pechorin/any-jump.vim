@@ -1,5 +1,10 @@
 " TODO:
-" - create doc
+" - [vim] after start cursor ln is -1
+" - [vim] может стоит перепрыгивать пустые строки? при j/k
+" - [vim] ui cursor blinking but after j/k position is okay
+"
+" - preview as text not comment (configurable)
+"
 " - paths priorities for better search results
 "
 " TODO_THINK:
@@ -207,6 +212,10 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpToggleListStyle()
     return 1
 
+  elseif a:key ==# 'b'
+    call g:AnyJumpToFirstLink()
+    return 1
+
   elseif a:key == "\<CR>" || a:key ==# 'o' || a:key ==# 'O'
     let item = t:any_jump.TryFindOriginalLinkFromPos()
 
@@ -359,16 +368,18 @@ endfu
 
 fu! g:AnyJumpToggleListStyle() abort
   let ui = s:GetCurrentInternalBuffer()
-  let next_style = g:any_jump_results_ui_style == 'filename_first' ? 'filename_last' : 'filename_first'
+  let next_style = g:any_jump_results_ui_style == 'filename_first' ?
+        \'filename_last' : 'filename_first'
+
   let g:any_jump_results_ui_style = next_style
 
   let cursor_item = ui.TryFindOriginalLinkFromPos()
   let last_ln_nr  = ui.BufferLnum()
 
-  call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.StartUiTransaction()
   call ui.ClearBuffer(ui.vim_bufnr)
   call ui.RenderUi()
-  call ui.EndUiTransaction(ui.vim_bufnr)
+  call ui.EndUiTransaction()
 
   call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
@@ -413,7 +424,7 @@ fu! g:AnyJumpHandleUsages() abort
       let idx += 1
     endfor
 
-    call ui.EndUiTransaction(ui.vim_bufnr)
+    call ui.EndUiTransaction()
     call ui.RemoveGarbagedLines()
 
     call ui.JumpToFirstOfType('link', 'definitions')
@@ -441,9 +452,9 @@ fu! g:AnyJumpHandleUsages() abort
 
   let start_ln = ui.GetItemLineNumber(marker_item)
 
-  call ui.StartUiTransaction(bufnr())
+  call ui.StartUiTransaction()
   call ui.RenderUiUsagesList(ui.usages_grep_results, start_ln)
-  call ui.EndUiTransaction(bufnr())
+  call ui.EndUiTransaction()
 
   call ui.JumpToFirstOfType('link', 'usages')
 endfu
@@ -462,14 +473,14 @@ fu! g:AnyJumpToggleGrouping() abort
   let cursor_item = ui.TryFindOriginalLinkFromPos()
   let last_ln_nr  = ui.BufferLnum()
 
-  call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.StartUiTransaction()
   call ui.ClearBuffer(ui.vim_bufnr)
 
   let ui.preview_opened   = v:false
   let ui.grouping_enabled = ui.grouping_enabled ? v:false : v:true
 
   call ui.RenderUi()
-  call ui.EndUiTransaction(ui.vim_bufnr)
+  call ui.EndUiTransaction()
 
   call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
@@ -484,14 +495,14 @@ fu! g:AnyJumpLoadNextBatchResults() abort
   let cursor_item = ui.TryFindOriginalLinkFromPos()
   let last_ln_nr  = ui.BufferLnum()
 
-  call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.StartUiTransaction()
   call ui.ClearBuffer(ui.vim_bufnr)
 
   let ui.preview_opened = v:false
   let ui.current_page   = ui.current_page ? ui.current_page + 1 : 2
 
   call ui.RenderUi()
-  call ui.EndUiTransaction(ui.vim_bufnr)
+  call ui.EndUiTransaction()
 
   call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
@@ -502,7 +513,7 @@ fu! g:AnyJumpToggleAllResults() abort
   let ui.overmaxed_results_hidden =
         \ ui.overmaxed_results_hidden ? v:false : v:true
 
-  call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.StartUiTransaction()
 
   let cursor_item = ui.TryFindOriginalLinkFromPos()
   let last_ln_nr  = ui.BufferLnum()
@@ -512,18 +523,16 @@ fu! g:AnyJumpToggleAllResults() abort
   let ui.preview_opened = v:false
 
   call ui.RenderUi()
-  call ui.EndUiTransaction(ui.vim_bufnr)
+  call ui.EndUiTransaction()
 
   call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
 
 fu! g:AnyJumpHandlePreview() abort
-  let ui = s:GetCurrentInternalBuffer()
-
-  call ui.StartUiTransaction(ui.vim_bufnr)
-
-  let current_previewed_links = []
+  let ui          = s:GetCurrentInternalBuffer()
   let action_item = ui.TryFindOriginalLinkFromPos()
+
+  let preview_actioned_on_self_link = v:false
 
   " dispatch to other items handler
   if type(action_item) == v:t_dict && action_item.type == 'more_button'
@@ -533,18 +542,24 @@ fu! g:AnyJumpHandlePreview() abort
 
   " remove all previews
   if ui.preview_opened
+    let ui.preview_opened = v:false
+
     let idx            = 0
     let layer_start_ln = 0
 
+    call ui.StartUiTransaction()
+
     for line in ui.items
       if line[0].type == 'preview_text'
-        let line[0].gc = v:true " mark for destroy
+        for item in line
+          let item.gc = v:true " mark for destroy
+
+          if has_key(item.data, 'link') && item.data.link == action_item
+            let preview_actioned_on_self_link = v:true
+          endif
+        endfor
 
         let prev_line = ui.items[idx - 1]
-
-        if type(prev_line[0]) == v:t_dict && prev_line[0].type == 'link'
-          call add(current_previewed_links, prev_line[0])
-        endif
 
         if !layer_start_ln
           let layer_start_ln = idx + 1
@@ -563,17 +578,22 @@ fu! g:AnyJumpHandlePreview() abort
     endfor
 
     call ui.RemoveGarbagedLines()
-    let ui.preview_opened = v:false
+    call ui.EndUiTransaction()
   endif
 
   " if clicked on just opened preview
   " then just close, not open again
-  if index(current_previewed_links, action_item) >= 0
+  " if index(current_previewed_links, action_item) != -1
+  if preview_actioned_on_self_link
     return
   endif
 
   if type(action_item) == v:t_dict
     if action_item.type == 'link' && !has_key(action_item.data, "group_header")
+      call ui.StartUiTransaction()
+
+      let ui.preview_opened = v:true
+
       let file_ln               = action_item.data.line_number
       let preview_before_offset = 2
       let preview_after_offset  = g:any_jump_preview_lines_count
@@ -584,8 +604,8 @@ fu! g:AnyJumpHandlePreview() abort
             \ . ' | tail -n ' . string(preview_after_offset + 1 + preview_before_offset)
 
       let preview = split(system(cmd), "\n")
-
       let render_ln = ui.GetItemLineNumber(action_item)
+
       for line in preview
         " TODO: move to method
         let filtered_line = substitute(line, '^\s*', '', 'g')
@@ -640,12 +660,12 @@ fu! g:AnyJumpHandlePreview() abort
         let render_ln += 1
       endfor
 
-      let ui.preview_opened = v:true
+      call ui.EndUiTransaction()
+
     elseif action_item.type == 'help_link'
     endif
   endif
 
-  call ui.EndUiTransaction(ui.vim_bufnr)
 endfu
 
 " ----------------------------------------------

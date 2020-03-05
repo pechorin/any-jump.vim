@@ -357,20 +357,20 @@ fu! s:InternalBuffer.BufferLnum() dict abort
   return getbufinfo(self.vim_bufnr)[0]['lnum']
 endfu
 
-fu! s:InternalBuffer.StartUiTransaction(buf) dict abort
+fu! s:InternalBuffer.StartUiTransaction() dict abort
   if !s:nvim
     return
   endif
 
-  call setbufvar(a:buf, '&modifiable', 1)
+  call setbufvar(self.vim_bufnr, '&modifiable', 1)
 endfu
 
-fu! s:InternalBuffer.EndUiTransaction(buf) dict abort
+fu! s:InternalBuffer.EndUiTransaction() dict abort
   if !s:nvim
     return
   endif
 
-  call setbufvar(a:buf, '&modifiable', 0)
+  call setbufvar(self.vim_bufnr, '&modifiable', 0)
 endfu
 
 fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
