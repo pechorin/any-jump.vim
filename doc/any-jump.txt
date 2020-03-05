@@ -1,40 +1,37 @@
-# any-jump
+*any-jump.vim* — Vim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui.
 
-**— IDE madness without overhead for 40+ languages**
 
-_Vim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui_
+                              /~~||/~\\  /---   ||   ||/~\ /~\ |~~\
+                              \__||   |\/       | \_/||   |   ||__/
+                                      _/     \__|              |
 
-**nvim 0.4+ or vim 8.2+ required**
+                          — IDE madness without overhead for 40+ languages
 
-Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
+Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag.
+Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
 
-![screenshot](/main.gif)
+*Searches*
 
-_On screen: jumping through source code of Discourse project_
+- [*] keyword definitions — find files where keyword defined
+- [*] keyword usages — find files where keyword used
+- [ ] ctags
 
-## Installation
+====================================================================
+CONTENTS                                           *any-jump-contents*
 
-via vim-plug:
+    1. Usage ................ |any-jump-usage|
+    2. Keybindings ............. |any-jump-mappings|
+    3. Options .............. |any-jump-options|
 
-```viml
-Plug 'pechorin/any-jump.nvim'
-```
+====================================================================
+Section 1: Usage                                      *any-jump-usage*
 
-## Usage
+Just place you cursor on any variable/class/constant/name/symbol
+and press `<leader>j` or execute `:AnyJump` in normal mode.
 
-Just place you cursor on any variable/class/constant/name/symbol and press `<leader>j` or execute `:AnyJump` in normal mode.
 
-## Searches
-
-- **keyword definitions**: find files where keyword defined
-
-- **keyword usages**: find files where keyword used
-
-- _ctags: not implemeneted now, but planned_
-
-- ...
-
-## Keybindings
+====================================================================
+Section 2: Mappings                                *any-jump-mappings*
 
 Default global mappings for normal mode:
 
@@ -72,9 +69,9 @@ au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
 au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
 ```
 
-## Settings
+====================================================================
+Section 2: Options & settings                       *any-jump-options*
 
-```viml
 " Show line numbers in search rusults
 let g:any_jump_list_numbers = 0
 
@@ -124,87 +121,3 @@ let g:any_jump_remove_comments_from_results = 1
 " 'full' - will match 'MyNamespace::MyClass'
 
 let g:any_jump_keyword_match_cursor_mode', 'word'
-
-```
-
-## Features
-
-### open definitions and usages list
-
-![screenshot](/usages.png)
-
-### preview definition with `p` or `tab`
-
-![screenshot](/preview.png)
-
-### group results by file
-
-![screenshot](/group_by_file.png)
-
-### search results without line numbers and different ui style
-
-![screenshot](/no_ln.png)
-
-### vim 8.2 inside terminal
-
-![vim-support](https://user-images.githubusercontent.com/226270/75636019-104cb380-5c2c-11ea-9730-70db71bac35f.png)
-
-## Supported languages
-
-- ruby
-- elixir
-- crystal
-- rust
-- haskell
-- java
-- javascript
-- typescript
-- scala
-- kotlin
-- php
-- protobuf
-- scss
-- fsharp
-- c++
-- coffeescript
-- go
-- lua
-- nim
-- scad
-- elisp
-- nix
-- clojure
-- coq
-- systemverilog
-- objc
-- racket
-- vhdl
-- scheme
-- r
-- sql
-- faust
-- vala
-- matlab
-- python
-- pascal
-- tex
-- swift
-- shell
-- perl
-- csharp
-- commonlisp
-- ocaml
-- erlang
-- julia
-- sml
-- groovy
-- dart
-- fortran
-
-## Original idea
-
-Comes from dumb-jump.el emacs package
-
-## Issues and contibutions
-
-Please open issue on any question and problem
