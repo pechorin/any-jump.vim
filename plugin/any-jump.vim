@@ -1,4 +1,5 @@
 " TODO:
+" - sometimes modifiable not set
 " - save keyword upcases/downcases for preview text
 "
 " - create doc

@@ -608,9 +608,11 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([ self.CreateItem("help_link", "> Help", "Function") ])
 
   call self.AddLine([ self.CreateItem("help_text", "", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[enter/o] open file   [tab/p] preview file   [esc/q] close ", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[T] toggle grouping   [a] show all results   [b] back to first result in list", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[u] toggle usages   [L] toggle results list style", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[o] open file          [p] preview file       [b] scroll to first result", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[a] show all           ", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[u] show usages        [T] group by file", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "    results ui style", "Comment") ])
 endfu
 
 fu! s:InternalBuffer.RemoveGarbagedLines() dict abort
