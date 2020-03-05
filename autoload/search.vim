@@ -32,7 +32,8 @@ let s:non_standard_ft_extensions_map = {
       \"pascal": [ '\.pas\$', '\.dpr\$', '\.int\$', '\.dfm\$'  ],
       \"shell": [ '\.sh\$', '\.bash\$', '\.csh\$', '\.ksh\$', '\.tcsh\$' ],
       \"haskell": [ '\.hs\$', '\.lhs\$' ],
-      \"dart": [ '\.dart\$' ]
+      \"dart": [ '\.dart\$' ],
+      \"zig":  [ '\.zig\$' ],
       \}
 
 let s:filetypes_comments_map = {
@@ -76,6 +77,7 @@ let s:filetypes_comments_map = {
       \"scss":          "//",
       \"pascal":        "//",
       \"protobuf":      "//",
+      \"zig":           "//",
       \}
 
 
