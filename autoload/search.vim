@@ -7,33 +7,35 @@ let s:rg_base_cmd = "rg -n --pcre2 --json"
 let s:ag_base_cmd = "ag --nogroup --noheading"
 
 let s:rg_filetype_convertion_map = {
-      \"python": "py",
+      \"python":     "py",
       \"javascript": "js",
       \"typescript": "ts",
       \"commonlisp": "lisp",
+      \"scss":       "css",
       \}
 
 let s:ag_filetype_convertion_map = {
       \"javascript": "js",
       \"typescript": "ts",
       \"commonlisp": "lisp",
+      \"scss":       "css",
       \}
 
 let s:non_standard_ft_extensions_map = {
-      \"coffeescript": [ '\.cjs\$', '\.coffee\$', 'Cakefile', '\._coffee\$', '\.coffeekup$', '\.ck\$' ],
-      \"coq": [ '\.v\$' ],
-      \"scad": [ '\.scad\$' ],
-      \"protobuf": [ '\.proto\$' ],
-      \"scss": [ '\.scss\$' ],
+      \"coffeescript":  [ '\.cjs\$', '\.coffee\$', 'Cakefile', '\._coffee\$', '\.coffeekup$', '\.ck\$' ],
+      \"coq":           [ '\.v\$' ],
+      \"scad":          [ '\.scad\$' ],
+      \"protobuf":      [ '\.proto\$' ],
+      \"scss":          [ '\.scss\$' ],
       \"systemverilog": [ '\.sv\$', '\.svh\$' ],
-      \"racket": [ '\.rkt\$' ],
-      \"scheme": [ '\.scm\$', '\.ss\$', '\.sld\$' ],
-      \"faust": [ '\.dsp\$', '\.lib\$' ],
-      \"pascal": [ '\.pas\$', '\.dpr\$', '\.int\$', '\.dfm\$'  ],
-      \"shell": [ '\.sh\$', '\.bash\$', '\.csh\$', '\.ksh\$', '\.tcsh\$' ],
-      \"haskell": [ '\.hs\$', '\.lhs\$' ],
-      \"dart": [ '\.dart\$' ],
-      \"zig":  [ '\.zig\$' ],
+      \"racket":        [ '\.rkt\$' ],
+      \"scheme":        [ '\.scm\$', '\.ss\$', '\.sld\$' ],
+      \"faust":         [ '\.dsp\$', '\.lib\$' ],
+      \"pascal":        [ '\.pas\$', '\.dpr\$', '\.int\$', '\.dfm\$'  ],
+      \"shell":         [ '\.sh\$', '\.bash\$', '\.csh\$', '\.ksh\$', '\.tcsh\$' ],
+      \"haskell":       [ '\.hs\$', '\.lhs\$' ],
+      \"dart":          [ '\.dart\$' ],
+      \"zig":           [ '\.zig\$' ],
       \}
 
 let s:filetypes_comments_map = {
