@@ -609,6 +609,8 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
       let path_idx += 1
     endfor
+
+    call self.AddLine([ self.CreateItem("text", "", "Comment") ])
   else
     if len(collection)
       for gr in collection
