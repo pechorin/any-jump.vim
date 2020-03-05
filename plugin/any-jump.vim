@@ -1,7 +1,6 @@
 " TODO:
 " - create doc
 " - paths priorities for better search results
-" - exclude *.temp files?
 "
 " TODO_THINK:
 " - rg and ag results sometimes very differenet
@@ -102,10 +101,12 @@ call s:set_plugin_global_option('any_jump_window_top_offset', 2)
 " Remove comments line from search results (default: 1)
 call s:set_plugin_global_option('any_jump_remove_comments_from_results', v:true)
 
-" TODO: NOT_IMPLEMENTED:
 
-" Preview next available search result after pressing preview button
-" let g:any_jump_follow_previews = v:true
+" ----------------------------------------------
+" Public customization methods
+" ----------------------------------------------
+
+" TODO: implement
 
 " ----------------------------------------------
 " Functions
@@ -186,7 +187,11 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpHandlePreview()
     return 1
 
-  elseif a:key == "a" || a:key == "A"
+  elseif a:key == "a"
+    call g:AnyJumpLoadNextBatchResults()
+    return 1
+
+  elseif a:key == "A"
     call g:AnyJumpToggleAllResults()
     return 1
 
