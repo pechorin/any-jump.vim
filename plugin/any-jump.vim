@@ -1,11 +1,11 @@
 " TODO:
+"
+" - save keyword upcases/downcases for preview text
 " - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
 "
 " - create doc
 "
 " - handle many search results
-"
-" - cursor keyword search modes
 "
 " - paths priorities for better search results
 "
@@ -366,6 +366,7 @@ fu! g:AnyJumpToggleListStyle() abort
   let cursor_item = ui.TryFindOriginalLinkFromPos()
 
   call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.ClearBuffer(ui.vim_bufnr)
   call ui.RenderUi()
   call ui.EndUiTransaction(ui.vim_bufnr)
 
@@ -460,6 +461,7 @@ fu! g:AnyJumpToggleGrouping() abort
   let ui = s:GetCurrentInternalBuffer()
 
   let cursor_item = ui.TryFindOriginalLinkFromPos()
+  echo "STARt1 -> " . string(cursor_item)
 
   call ui.StartUiTransaction(ui.vim_bufnr)
   call ui.ClearBuffer(ui.vim_bufnr)

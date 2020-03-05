@@ -37,6 +37,7 @@ let s:InternalBuffer.MethodsList = [
       \'RemoveGarbagedLines',
       \'JumpToFirstOfType',
       \'ClearBuffer',
+      \'BufferLnum',
       \]
 
 " Produce new Render Buffer
@@ -140,6 +141,8 @@ fu! s:InternalBuffer.AddLineAt(items, line_number) dict abort
   endif
 endfu
 
+let s:ItemIdsSequence = 0
+
 " type:
 "   'text' / 'link' / 'button' / 'preview_text'
 fu! s:InternalBuffer.CreateItem(type, text, hl_group, ...) dict abort
@@ -149,7 +152,10 @@ fu! s:InternalBuffer.CreateItem(type, text, hl_group, ...) dict abort
     let data = a:1
   endif
 
+  let s:ItemIdsSequence += 1
+
   let item = {
+        \"id":        s:ItemIdsSequence,
         \"type":      a:type,
         \"text":      a:text,
         \"len":       len(a:text),
@@ -209,19 +215,31 @@ endfu
 " not optimal, but ok for current ui with around ~100/200 lines
 " COMPLEXITY: O(1)
 fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
-  let i = 1
+  let i = 0
+  let found = 0
+
+  echo "for item -> . " . string(a:item)
 
   for line in self.items
+    let i += 1
+
     for item in line
-      if item == a:item
-        return i
+      if (item.text == a:item.text)
+            \ || item.data == a:item.data
+        let found = i
+        break
       endif
     endfor
 
-    let i += 1
+    if found > 0
+      break
+    endif
   endfor
 
-  return 0
+  echo "f -> " . found
+  echo "by ->" . string(a:item)
+
+  return found
 endfu
 
 fu! s:InternalBuffer.GetFirstItemOfType(type, ...) dict abort
@@ -278,21 +296,26 @@ endfu
 
 fu! s:InternalBuffer.TryRestoreCursorForItem(item) dict abort
   if type(a:item) == v:t_dict
-        \ && a:item.type == "link"
+    if a:item.type == "link"
         \ && type(a:item.data) == v:t_dict
         \ && !has_key(a:item.data, 'group_header')
 
-    let new_ln = self.GetItemLineNumber(a:item)
+      let new_ln = self.GetItemLineNumber(a:item)
+      echo "new-ln-dbg -> " . new_ln
 
-    " item removed
-    if new_ln == 0
-      call self.JumpToFirstOfType('link')
-    else
-      call cursor(new_ln, 2)
+      " item removed
+      if new_ln == 0
+        echo "---- will jump first of type link FROM LINK"
+        call self.JumpToFirstOfType('link')
+      else
+        call cursor(new_ln, 2)
+        return 1
+      endif
     endif
-  else
-    call self.JumpToFirstOfType('link')
   endif
+
+  echo "---- will jump firt of type link"
+  call self.JumpToFirstOfType('link')
 endfu
 
 fu! s:InternalBuffer.JumpToFirstOfType(type, ...) dict abort
@@ -306,6 +329,10 @@ endfu
 
 fu! s:InternalBuffer.ClearBuffer(buf) dict abort
   call deletebufline(a:buf, 1, self.len() + 1)
+endfu
+
+fu! s:InternalBuffer.BufferLnum() dict abort
+  return getbufinfo(self.vim_bufnr)[0]['lnum']
 endfu
 
 fu! s:InternalBuffer.StartUiTransaction(buf) dict abort
