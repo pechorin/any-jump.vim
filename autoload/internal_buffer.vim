@@ -218,8 +218,6 @@ fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
   let i = 0
   let found = 0
 
-  echo "for item -> . " . string(a:item)
-
   for line in self.items
     let i += 1
 
@@ -235,9 +233,6 @@ fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
       break
     endif
   endfor
-
-  echo "f -> " . found
-  echo "by ->" . string(a:item)
 
   return found
 endfu
@@ -294,28 +289,36 @@ fu! s:InternalBuffer.TryFindOriginalLinkFromPos() dict abort
   return cursor_item
 endfu
 
-fu! s:InternalBuffer.TryRestoreCursorForItem(item) dict abort
+fu! s:InternalBuffer.TryRestoreCursorForItem(item,...) dict abort
+  let opts = {}
+  if a:0 == 1 && type(a:1) == v:t_dict
+    let opts = a:1
+  endif
+
   if type(a:item) == v:t_dict
-    if a:item.type == "link"
-        \ && type(a:item.data) == v:t_dict
+        \ && a:item.type == "link"
         \ && !has_key(a:item.data, 'group_header')
 
       let new_ln = self.GetItemLineNumber(a:item)
-      echo "new-ln-dbg -> " . new_ln
+      call cursor(new_ln, 2)
 
       " item removed
       if new_ln == 0
-        echo "---- will jump first of type link FROM LINK"
         call self.JumpToFirstOfType('link')
       else
         call cursor(new_ln, 2)
-        return 1
       endif
+  else
+    if has_key(opts, 'last_ln_nr')
+      if opts.last_ln_nr > self.len()
+        call self.JumpToFirstOfType('link')
+      else
+        call cursor(opts.last_ln_nr, 2)
+      endif
+    else
+      call self.JumpToFirstOfType('link')
     endif
   endif
-
-  echo "---- will jump firt of type link"
-  call self.JumpToFirstOfType('link')
 endfu
 
 fu! s:InternalBuffer.JumpToFirstOfType(type, ...) dict abort

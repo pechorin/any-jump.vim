@@ -1,13 +1,13 @@
 " TODO:
-"
 " - save keyword upcases/downcases for preview text
-" - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
 "
 " - create doc
 "
 " - handle many search results
 "
 " - paths priorities for better search results
+"
+" - fix help paddings
 "
 " TODO_THINK:
 " - rg and ag results sometimes very differenet
@@ -364,13 +364,14 @@ fu! g:AnyJumpToggleListStyle() abort
   let g:any_jump_results_ui_style = next_style
 
   let cursor_item = ui.TryFindOriginalLinkFromPos()
+  let last_ln_nr  = ui.BufferLnum()
 
   call ui.StartUiTransaction(ui.vim_bufnr)
   call ui.ClearBuffer(ui.vim_bufnr)
   call ui.RenderUi()
   call ui.EndUiTransaction(ui.vim_bufnr)
 
-  call ui.TryRestoreCursorForItem(cursor_item)
+  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
 
 fu! g:AnyJumpHandleUsages() abort
@@ -461,7 +462,7 @@ fu! g:AnyJumpToggleGrouping() abort
   let ui = s:GetCurrentInternalBuffer()
 
   let cursor_item = ui.TryFindOriginalLinkFromPos()
-  echo "STARt1 -> " . string(cursor_item)
+  let last_ln_nr  = ui.BufferLnum()
 
   call ui.StartUiTransaction(ui.vim_bufnr)
   call ui.ClearBuffer(ui.vim_bufnr)
@@ -472,7 +473,7 @@ fu! g:AnyJumpToggleGrouping() abort
   call ui.RenderUi()
   call ui.EndUiTransaction(ui.vim_bufnr)
 
-  call ui.TryRestoreCursorForItem(cursor_item)
+  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
 
 fu! g:AnyJumpToggleAllResults() abort
@@ -484,6 +485,7 @@ fu! g:AnyJumpToggleAllResults() abort
   call ui.StartUiTransaction(ui.vim_bufnr)
 
   let cursor_item = ui.TryFindOriginalLinkFromPos()
+  let last_ln_nr  = ui.BufferLnum()
 
   call ui.ClearBuffer(ui.vim_bufnr)
 
@@ -492,7 +494,7 @@ fu! g:AnyJumpToggleAllResults() abort
   call ui.RenderUi()
   call ui.EndUiTransaction(ui.vim_bufnr)
 
-  call ui.TryRestoreCursorForItem(cursor_item)
+  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
 
 fu! g:AnyJumpHandlePreview() abort
