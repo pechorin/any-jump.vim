@@ -1,14 +1,12 @@
 " TODO:
-" - sometimes modifiable not set
 " - create doc
-" - handle many search results
 " - paths priorities for better search results
+" - exclude *.temp files?
 "
 " TODO_THINK:
 " - rg and ag results sometimes very differenet
 " - after pressing p jump to next result
 " - add auto preview option
-" - impl VimL rules
 " - fzf
 " - добавить возможность открывать окно не только в текущем window, но и
 "   делать vsplit/split относительного него
@@ -345,6 +343,7 @@ endfu
 
 fu! g:AnyJumpHandleClose() abort
   let ui = s:GetCurrentInternalBuffer()
+  let ui.current_page = 1
 
   if s:nvim
     close!
@@ -373,7 +372,6 @@ fu! g:AnyJumpHandleUsages() abort
   let ui = s:GetCurrentInternalBuffer()
 
   " close current opened usages
-  " TODO: move to method
   if ui.usages_opened
     let ui.usages_opened = v:false
 
@@ -464,6 +462,28 @@ fu! g:AnyJumpToggleGrouping() abort
 
   let ui.preview_opened   = v:false
   let ui.grouping_enabled = ui.grouping_enabled ? v:false : v:true
+
+  call ui.RenderUi()
+  call ui.EndUiTransaction(ui.vim_bufnr)
+
+  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+endfu
+
+fu! g:AnyJumpLoadNextBatchResults() abort
+  let ui = s:GetCurrentInternalBuffer()
+
+  if ui.overmaxed_results_hidden == v:false
+    return
+  endif
+
+  let cursor_item = ui.TryFindOriginalLinkFromPos()
+  let last_ln_nr  = ui.BufferLnum()
+
+  call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.ClearBuffer(ui.vim_bufnr)
+
+  let ui.preview_opened = v:false
+  let ui.current_page   = ui.current_page ? ui.current_page + 1 : 2
 
   call ui.RenderUi()
   call ui.EndUiTransaction(ui.vim_bufnr)
@@ -681,8 +701,8 @@ if s:nvim
     au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
     au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
     au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
-    au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
     au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
+    au FileType any-jump nnoremap <buffer> a :call g:AnyJumpLoadNextBatchResults()<cr>
     au FileType any-jump nnoremap <buffer> L :call g:AnyJumpToggleListStyle()<cr>
   augroup END
 end

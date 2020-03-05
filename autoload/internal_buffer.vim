@@ -25,6 +25,7 @@ let s:InternalBuffer.MethodsList = [
       \'len',
       \'GetItemByPos',
       \'GetItemLineNumber',
+      \'GetItemLineNumberByData',
       \'GetFirstItemOfType',
       \'TryFindOriginalLinkFromPos',
       \'TryRestoreCursorForItem',
@@ -44,6 +45,7 @@ let s:InternalBuffer.MethodsList = [
 fu! s:InternalBuffer.New() abort
   let object = {
         \"items":                    [],
+        \"current_page":             0,
         \"gc":                       v:false,
         \"preview_opened":           v:false,
         \"usages_opened":            v:false,
@@ -231,6 +233,30 @@ fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
   return found
 endfu
 
+" not optimal, but ok for current ui with around ~100/200 lines
+" COMPLEXITY: O(1)
+fu! s:InternalBuffer.GetItemLineNumberByData(data) dict abort
+  let i = 0
+  let found = 0
+
+  for line in self.items
+    let i += 1
+
+    for item in line
+      if item.data == a:data
+        let found = i
+        break
+      endif
+    endfor
+
+    if found > 0
+      break
+    endif
+  endfor
+
+  return found
+endfu
+
 fu! s:InternalBuffer.GetFirstItemOfType(type, ...) dict abort
   let result = 0
   let layer  = 0
@@ -293,8 +319,7 @@ fu! s:InternalBuffer.TryRestoreCursorForItem(item,...) dict abort
         \ && a:item.type == "link"
         \ && !has_key(a:item.data, 'group_header')
 
-      let new_ln = self.GetItemLineNumber(a:item)
-      call cursor(new_ln, 2)
+      let new_ln = self.GetItemLineNumberByData(a:item.data)
 
       " item removed
       if new_ln == 0
@@ -415,8 +440,12 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   if type(g:any_jump_max_search_results) == v:t_number
         \ && g:any_jump_max_search_results > 0
         \ && self.overmaxed_results_hidden == v:true
-    let collection = self.usages_grep_results[0 : g:any_jump_max_search_results - 1]
-    let hidden_count = len(self.usages_grep_results[g:any_jump_max_search_results : -1])
+
+    let cp = self.current_page ? self.current_page : 1
+    let to = (cp * g:any_jump_max_search_results) - 1
+
+    let collection   = self.usages_grep_results[0 : to]
+    let hidden_count = len(self.usages_grep_results[to : -1])
   else
     let collection = self.usages_grep_results
   endif
@@ -453,7 +482,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
       let opts     = {
             \"path":         path,
             \"line_number":  first_gr.line_number,
-            \"layer":        "definitions",
+            \"layer":        "usages",
             \"group_header": v:true,
             \}
 
@@ -465,7 +494,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
       let start_ln += 1
 
       for gr in render_map[path]
-        let items = self.GrepResultToGroupedItems(gr, idx, "definitions")
+        let items = self.GrepResultToGroupedItems(gr, idx, "usages")
         call self.AddLineAt(items, start_ln)
 
         let start_ln += 1
@@ -494,7 +523,10 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
     call self.AddLineAt([ self.CreateItem("text", "", "Comment", {"layer": "usages"}) ], start_ln)
     let start_ln += 1
 
-    call self.AddLineAt([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Operator", {"layer": "usages"}) ], start_ln)
+    call self.AddLineAt([
+          \self.CreateItem("more_button", '[ ' . hidden_count . ' more ]', "Operator", {"layer": "usages"}),
+          \self.CreateItem("more_button", '— [a] load more results [A] load all', "Comment", {"layer": "usages"}),
+          \], start_ln)
     let start_ln += 1
   endif
 
@@ -525,8 +557,12 @@ fu! s:InternalBuffer.RenderUi() dict abort
   if type(g:any_jump_max_search_results) == v:t_number
         \ && g:any_jump_max_search_results > 0
         \ && self.overmaxed_results_hidden == v:true
-    let collection   = self.definitions_grep_results[0 : g:any_jump_max_search_results - 1]
-    let hidden_count = len(self.definitions_grep_results[g:any_jump_max_search_results : -1])
+
+    let cp = self.current_page ? self.current_page : 1
+    let to = (cp * g:any_jump_max_search_results) - 1
+
+    let collection   = self.definitions_grep_results[0 : to]
+    let hidden_count = len(self.definitions_grep_results[to : -1])
   else
     let collection = self.definitions_grep_results
   endif
@@ -589,7 +625,10 @@ fu! s:InternalBuffer.RenderUi() dict abort
   endif
 
   if hidden_count > 0
-    call self.AddLine([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Operator") ])
+    call self.AddLine([
+          \self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Operator"),
+          \self.CreateItem("more_button", '— [a] load more results [A] load all', "Comment"),
+          \])
     call self.AddLine([ self.CreateItem("text", "", "Comment") ])
   endif
 
@@ -601,7 +640,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
   call self.AddLine([ self.CreateItem("help_text", "", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[o] open file          [p] preview file       [b] scroll to first result", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[a] show all           ", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[a] load more results  [A] load all results", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[u] show usages        [T] group by file", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "    results ui style", "Comment") ])
