@@ -144,7 +144,7 @@ let g:any_jump_keyword_match_cursor_mode', 'word'
 
 ### search results with line numbers
 
-![screenshot](/no_ln.png)
+![screenshot](/with_ln.png)
 
 ### vim 8.2 inside terminal
 
