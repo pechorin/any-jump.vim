@@ -19,7 +19,7 @@ _On screen: jumping through source code of Discourse project_
 via vim-plug:
 
 ```viml
-Plug 'pechorin/any-jump.nvim'
+Plug 'pechorin/any-jump.vim'
 ```
 
 ## Usage
