@@ -141,8 +141,6 @@ fu! s:InternalBuffer.AddLineAt(items, line_number) dict abort
   endif
 endfu
 
-let s:ItemIdsSequence = 0
-
 " type:
 "   'text' / 'link' / 'button' / 'preview_text'
 fu! s:InternalBuffer.CreateItem(type, text, hl_group, ...) dict abort
@@ -152,10 +150,7 @@ fu! s:InternalBuffer.CreateItem(type, text, hl_group, ...) dict abort
     let data = a:1
   endif
 
-  let s:ItemIdsSequence += 1
-
   let item = {
-        \"id":        s:ItemIdsSequence,
         \"type":      a:type,
         \"text":      a:text,
         \"len":       len(a:text),
@@ -222,8 +217,7 @@ fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
     let i += 1
 
     for item in line
-      if (item.text == a:item.text)
-            \ || item.data == a:item.data
+      if item == a:item
         let found = i
         break
       endif

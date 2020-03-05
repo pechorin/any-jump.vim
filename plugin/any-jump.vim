@@ -1,5 +1,6 @@
 " TODO:
 " - sometimes modifiable not set
+" - add line numbers on grouped by files results
 " - save keyword upcases/downcases for preview text
 "
 " - create doc
