@@ -187,11 +187,11 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpHandlePreview()
     return 1
 
-  elseif a:key == "a"
+  elseif a:key ==# "a"
     call g:AnyJumpLoadNextBatchResults()
     return 1
 
-  elseif a:key == "A"
+  elseif a:key ==# "A"
     call g:AnyJumpToggleAllResults()
     return 1
 
@@ -199,15 +199,15 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpHandleUsages()
     return 1
 
-  elseif a:key == "T"
+  elseif a:key ==# "T"
     call g:AnyJumpToggleGrouping()
     return 1
 
-  elseif a:key == "L"
+  elseif a:key ==# "L"
     call g:AnyJumpToggleListStyle()
     return 1
 
-  elseif a:key == "\<CR>" || a:key == 'o' || a:key == 'O'
+  elseif a:key == "\<CR>" || a:key ==# 'o' || a:key ==# 'O'
     let item = t:any_jump.TryFindOriginalLinkFromPos()
 
     if type(item) == v:t_dict
