@@ -8,7 +8,9 @@ _Vim plugin for jumping to defitinitions⚒ and usages🔬 through nice ui._
 
 Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
 
-![screenshot](/main.gif)
+<p align="center">
+  <img src="https://github.com/pechorin/any-jump.vim/raw/master/main.gif"/>
+</p>
 
 _On screen: jumping through source code of Discourse project_
 
