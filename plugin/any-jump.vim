@@ -79,7 +79,7 @@ call s:set_plugin_global_option('any_jump_results_ui_style', 'filename_first')
 call s:set_plugin_global_option('any_jump_list_numbers', v:false)
 
 " Auto search usages
-call s:set_plugin_global_option('any_jump_usages_enabled', v:true)
+call s:set_plugin_global_option('any_jump_references_enabled', v:true)
 
 " Auto group results by filename
 call s:set_plugin_global_option('any_jump_grouping_enabled', v:false)
@@ -198,8 +198,8 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpToggleAllResults()
     return 1
 
-  elseif a:key == "u" || a:key == "U"
-    call g:AnyJumpHandleUsages()
+  elseif a:key == "r"
+    call g:AnyJumpHandleReferences()
     return 1
 
   elseif a:key ==# "T"
@@ -277,7 +277,7 @@ fu! s:Jump() abort
     let ib.definitions_grep_results = search#SearchDefinitions(lang, keyword)
   endif
 
-  if g:any_jump_usages_enabled || len(ib.definitions_grep_results) == 0
+  if g:any_jump_references_enabled || len(ib.definitions_grep_results) == 0
     let ib.usages_opened       = v:true
     let usages_grep_results    = search#SearchUsages(ib)
     let ib.usages_grep_results = []
@@ -382,7 +382,7 @@ fu! g:AnyJumpToggleListStyle() abort
   call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
 
-fu! g:AnyJumpHandleUsages() abort
+fu! g:AnyJumpHandleReferences() abort
   let ui = s:GetCurrentInternalBuffer()
 
   " close current opened usages
@@ -393,7 +393,7 @@ fu! g:AnyJumpHandleUsages() abort
     let layer_start_ln = 0
     let usages_started = v:false
 
-    call ui.StartUiTransaction(ui.vim_bufnr)
+    call ui.StartUiTransaction()
 
     " TODO: move to separate method RemoveUsages()
     for line in ui.items
@@ -732,8 +732,7 @@ if s:nvim
     au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
     au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
     au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
-    au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
-    au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
+    au FileType any-jump nnoremap <buffer> r :call g:AnyJumpHandleReferences()<cr>
     au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
     au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
     au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>

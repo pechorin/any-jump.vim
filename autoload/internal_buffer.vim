@@ -461,7 +461,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   call self.AddLineAt([
     \self.CreateItem("text", ">", "Function", {'layer': 'usages'}),
     \self.CreateItem("text", self.keyword, "Identifier", {'layer': 'usages'}),
-    \self.CreateItem("text", len(self.usages_grep_results) . " usages", "Function", {'layer': 'usages'}),
+    \self.CreateItem("text", len(self.usages_grep_results) . " references", "Function", {'layer': 'usages'}),
     \], start_ln)
 
 
@@ -651,7 +651,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([ self.CreateItem("help_text", "", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[o] open file          [p] preview file       [b] scroll to first result", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[a] load more results  [A] load all results", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[u] show usages        [T] group by file", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[r] show references    [T] group by file", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "    results ui style", "Comment") ])
 endfu

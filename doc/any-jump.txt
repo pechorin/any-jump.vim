@@ -54,21 +54,15 @@ let g:any_jump_disable_default_keybindings = 1
 
 Mappings for popup search window
 
-```viml
-au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
-au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
-au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
-au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
-au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
-au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
-au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
-au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
-au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
-au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
-au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
-au FileType any-jump nnoremap <buffer> a :call g:AnyJumpLoadNextBatchResults()<cr>
-au FileType any-jump nnoremap <buffer> L :call g:AnyJumpToggleListStyle()<cr>
-```
+o/<CR>     open link
+p/<tab>    preview
+q/x        exit
+r          references
+b          back to first result
+T          group by file
+a          load next N results
+A          load all results
+L          toggle results lists ui style
 
 ====================================================================
 Section 2: Options & settings                       *any-jump-options*
@@ -76,8 +70,8 @@ Section 2: Options & settings                       *any-jump-options*
 " Show line numbers in search rusults
 let g:any_jump_list_numbers = 0
 
-" Auto search usages
-let g:any_jump_usages_enabled = 1
+" Auto search references
+let g:any_jump_references_enabled = 1
 
 " Auto group results by filename
 let g:any_jump_grouping_enabled = 0
