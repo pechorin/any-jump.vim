@@ -1,15 +1,8 @@
 " TODO:
 " - sometimes modifiable not set
-" - add line numbers on grouped by files results
-" - save keyword upcases/downcases for preview text
-"
 " - create doc
-"
 " - handle many search results
-"
 " - paths priorities for better search results
-"
-" - fix help paddings
 "
 " TODO_THINK:
 " - rg and ag results sometimes very differenet
@@ -505,7 +498,7 @@ fu! g:AnyJumpHandlePreview() abort
   call ui.StartUiTransaction(ui.vim_bufnr)
 
   let current_previewed_links = []
-  let action_item = ui.GetItemByPos()
+  let action_item = ui.TryFindOriginalLinkFromPos()
 
   " dispatch to other items handler
   if type(action_item) == v:t_dict && action_item.type == 'more_button'
@@ -576,13 +569,16 @@ fu! g:AnyJumpHandlePreview() abort
         if filtered_line == action_item.text
           let items        = []
           let cur_text     = line
-          let kw           = ui.CreateItem("preview_text", ui.keyword, "Operator", { "link": action_item, "no_padding": v:true })
           let first_kw_pos = match(cur_text, '\<' . ui.keyword . '\>')
 
           while cur_text != ''
-
             if first_kw_pos == 0
-              call add(items, deepcopy(kw))
+              let cur_kw = ui.CreateItem("preview_text",
+                    \ cur_text[first_kw_pos : first_kw_pos + len(ui.keyword) - 1],
+                    \ "Operator",
+                    \ { "link": action_item, "no_padding": v:true })
+
+              call add(items, cur_kw)
               let cur_text = cur_text[first_kw_pos + len(ui.keyword) : -1]
 
             elseif first_kw_pos == -1
@@ -597,7 +593,13 @@ fu! g:AnyJumpHandlePreview() abort
               let head_item = ui.CreateItem("preview_text", head, "Comment", { "link": action_item, "no_padding": v:true })
 
               call add(items, head_item)
-              call add(items, deepcopy(kw))
+
+              let cur_kw = ui.CreateItem("preview_text",
+                    \ cur_text[first_kw_pos : first_kw_pos + len(ui.keyword) -1 ],
+                    \ "Operator",
+                    \ { "link": action_item, "no_padding": v:true })
+
+              call add(items, cur_kw)
 
               let cur_text = cur_text[first_kw_pos + len(ui.keyword) : -1]
             endif
@@ -615,7 +617,6 @@ fu! g:AnyJumpHandlePreview() abort
 
       let ui.preview_opened = v:true
     elseif action_item.type == 'help_link'
-      echo "link text"
     endif
   endif
 

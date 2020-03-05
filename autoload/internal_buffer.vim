@@ -395,12 +395,10 @@ fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
         \{ "path": gr.path, "line_number": gr.line_number,
         \"layer": a:layer, "original_link": v:true }
 
-  if g:any_jump_list_numbers
-    let prefix_text = a:current_idx + 1
-    let prefix = self.CreateItem("link", prefix_text, "Comment", options)
+  let prefix_text = gr.line_number
+  let prefix = self.CreateItem("link", prefix_text, "Comment", options)
 
-    call add(items, prefix)
-  endif
+  call add(items, prefix)
 
   let matched_text = self.CreateItem("link", gr.text, "Statement", original_link_options)
 
