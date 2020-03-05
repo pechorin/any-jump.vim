@@ -2,7 +2,7 @@
 
 **— IDE madness without overhead for 40+ languages**
 
-_Vim plugin for jumping to defitinitions⚒ and usages🔬 through nice ui._
+_Vim plugin for jumping to defitinitions⚒ and references/usages🔬 through nice ui._
 
 **nvim 0.4+ or vim 8.2+ required**
 
@@ -30,7 +30,7 @@ Just place you cursor on any variable/class/constant/name/symbol and press `<lea
 
 - **keyword definitions**: find files where keyword defined
 
-- **keyword usages**: find files where keyword used
+- **keyword references/usages**: find files where keyword used and referenced
 
 - _ctags: not implemeneted now, but planned_
 
