@@ -25,6 +25,7 @@ let s:InternalBuffer.MethodsList = [
       \'len',
       \'GetItemByPos',
       \'GetItemLineNumber',
+      \'GetItemLineNumberByData',
       \'GetFirstItemOfType',
       \'TryFindOriginalLinkFromPos',
       \'TryRestoreCursorForItem',
@@ -37,12 +38,14 @@ let s:InternalBuffer.MethodsList = [
       \'RemoveGarbagedLines',
       \'JumpToFirstOfType',
       \'ClearBuffer',
+      \'BufferLnum',
       \]
 
 " Produce new Render Buffer
 fu! s:InternalBuffer.New() abort
   let object = {
         \"items":                    [],
+        \"current_page":             0,
         \"gc":                       v:false,
         \"preview_opened":           v:false,
         \"usages_opened":            v:false,
@@ -209,19 +212,49 @@ endfu
 " not optimal, but ok for current ui with around ~100/200 lines
 " COMPLEXITY: O(1)
 fu! s:InternalBuffer.GetItemLineNumber(item) dict abort
-  let i = 1
+  let i = 0
+  let found = 0
 
   for line in self.items
+    let i += 1
+
     for item in line
       if item == a:item
-        return i
+        let found = i
+        break
       endif
     endfor
 
-    let i += 1
+    if found > 0
+      break
+    endif
   endfor
 
-  return 0
+  return found
+endfu
+
+" not optimal, but ok for current ui with around ~100/200 lines
+" COMPLEXITY: O(1)
+fu! s:InternalBuffer.GetItemLineNumberByData(data) dict abort
+  let i = 0
+  let found = 0
+
+  for line in self.items
+    let i += 1
+
+    for item in line
+      if item.data == a:data
+        let found = i
+        break
+      endif
+    endfor
+
+    if found > 0
+      break
+    endif
+  endfor
+
+  return found
 endfu
 
 fu! s:InternalBuffer.GetFirstItemOfType(type, ...) dict abort
@@ -276,22 +309,34 @@ fu! s:InternalBuffer.TryFindOriginalLinkFromPos() dict abort
   return cursor_item
 endfu
 
-fu! s:InternalBuffer.TryRestoreCursorForItem(item) dict abort
+fu! s:InternalBuffer.TryRestoreCursorForItem(item,...) dict abort
+  let opts = {}
+  if a:0 == 1 && type(a:1) == v:t_dict
+    let opts = a:1
+  endif
+
   if type(a:item) == v:t_dict
         \ && a:item.type == "link"
-        \ && type(a:item.data) == v:t_dict
         \ && !has_key(a:item.data, 'group_header')
 
-    let new_ln = self.GetItemLineNumber(a:item)
+      let new_ln = self.GetItemLineNumberByData(a:item.data)
 
-    " item removed
-    if new_ln == 0
-      call self.JumpToFirstOfType('link')
-    else
-      call cursor(new_ln, 2)
-    endif
+      " item removed
+      if new_ln == 0
+        call self.JumpToFirstOfType('link')
+      else
+        call cursor(new_ln, 2)
+      endif
   else
-    call self.JumpToFirstOfType('link')
+    if has_key(opts, 'last_ln_nr')
+      if opts.last_ln_nr > self.len()
+        call self.JumpToFirstOfType('link')
+      else
+        call cursor(opts.last_ln_nr, 2)
+      endif
+    else
+      call self.JumpToFirstOfType('link')
+    endif
   endif
 endfu
 
@@ -306,6 +351,10 @@ endfu
 
 fu! s:InternalBuffer.ClearBuffer(buf) dict abort
   call deletebufline(a:buf, 1, self.len() + 1)
+endfu
+
+fu! s:InternalBuffer.BufferLnum() dict abort
+  return getbufinfo(self.vim_bufnr)[0]['lnum']
 endfu
 
 fu! s:InternalBuffer.StartUiTransaction(buf) dict abort
@@ -371,12 +420,10 @@ fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
         \{ "path": gr.path, "line_number": gr.line_number,
         \"layer": a:layer, "original_link": v:true }
 
-  if g:any_jump_list_numbers
-    let prefix_text = a:current_idx + 1
-    let prefix = self.CreateItem("link", prefix_text, "Comment", options)
+  let prefix_text = gr.line_number
+  let prefix = self.CreateItem("link", prefix_text, "Comment", options)
 
-    call add(items, prefix)
-  endif
+  call add(items, prefix)
 
   let matched_text = self.CreateItem("link", gr.text, "Statement", original_link_options)
 
@@ -393,8 +440,12 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   if type(g:any_jump_max_search_results) == v:t_number
         \ && g:any_jump_max_search_results > 0
         \ && self.overmaxed_results_hidden == v:true
-    let collection = self.usages_grep_results[0 : g:any_jump_max_search_results - 1]
-    let hidden_count = len(self.usages_grep_results[g:any_jump_max_search_results : -1])
+
+    let cp = self.current_page ? self.current_page : 1
+    let to = (cp * g:any_jump_max_search_results) - 1
+
+    let collection   = self.usages_grep_results[0 : to]
+    let hidden_count = len(self.usages_grep_results[to : -1])
   else
     let collection = self.usages_grep_results
   endif
@@ -402,7 +453,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   call self.AddLineAt([
     \self.CreateItem("text", ">", "Function", {'layer': 'usages'}),
     \self.CreateItem("text", self.keyword, "Identifier", {'layer': 'usages'}),
-    \self.CreateItem("text", "usages", "Function", {'layer': 'usages'}),
+    \self.CreateItem("text", len(self.usages_grep_results) . " usages", "Function", {'layer': 'usages'}),
     \], start_ln)
 
 
@@ -431,7 +482,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
       let opts     = {
             \"path":         path,
             \"line_number":  first_gr.line_number,
-            \"layer":        "definitions",
+            \"layer":        "usages",
             \"group_header": v:true,
             \}
 
@@ -443,7 +494,7 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
       let start_ln += 1
 
       for gr in render_map[path]
-        let items = self.GrepResultToGroupedItems(gr, idx, "definitions")
+        let items = self.GrepResultToGroupedItems(gr, idx, "usages")
         call self.AddLineAt(items, start_ln)
 
         let start_ln += 1
@@ -472,7 +523,10 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
     call self.AddLineAt([ self.CreateItem("text", "", "Comment", {"layer": "usages"}) ], start_ln)
     let start_ln += 1
 
-    call self.AddLineAt([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Function", {"layer": "usages"}) ], start_ln)
+    call self.AddLineAt([
+          \self.CreateItem("more_button", '[ ' . hidden_count . ' more ]', "Operator", {"layer": "usages"}),
+          \self.CreateItem("more_button", '— [a] load more results [A] load all', "Comment", {"layer": "usages"}),
+          \], start_ln)
     let start_ln += 1
   endif
 
@@ -490,7 +544,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([
     \self.CreateItem("text", ">", "Function"),
     \self.CreateItem("text", self.keyword, "Identifier"),
-    \self.CreateItem("text", "definitions", "Function"),
+    \self.CreateItem("text", len(self.definitions_grep_results) . " definitions", "Function"),
     \])
 
   call self.AddLine([ self.CreateItem("text", "", "Comment") ])
@@ -503,8 +557,12 @@ fu! s:InternalBuffer.RenderUi() dict abort
   if type(g:any_jump_max_search_results) == v:t_number
         \ && g:any_jump_max_search_results > 0
         \ && self.overmaxed_results_hidden == v:true
-    let collection   = self.definitions_grep_results[0 : g:any_jump_max_search_results - 1]
-    let hidden_count = len(self.definitions_grep_results[g:any_jump_max_search_results : -1])
+
+    let cp = self.current_page ? self.current_page : 1
+    let to = (cp * g:any_jump_max_search_results) - 1
+
+    let collection   = self.definitions_grep_results[0 : to]
+    let hidden_count = len(self.definitions_grep_results[to : -1])
   else
     let collection = self.definitions_grep_results
   endif
@@ -567,7 +625,10 @@ fu! s:InternalBuffer.RenderUi() dict abort
   endif
 
   if hidden_count > 0
-    call self.AddLine([ self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Function") ])
+    call self.AddLine([
+          \self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Operator"),
+          \self.CreateItem("more_button", '— [a] load more results [A] load all', "Comment"),
+          \])
     call self.AddLine([ self.CreateItem("text", "", "Comment") ])
   endif
 
@@ -578,9 +639,11 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([ self.CreateItem("help_link", "> Help", "Function") ])
 
   call self.AddLine([ self.CreateItem("help_text", "", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[enter/o] open file   [tab/p] preview file   [esc/q] close ", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[T] toggle grouping   [a] show all results   [b] back to first result in list", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[u] show usages", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[o] open file          [p] preview file       [b] scroll to first result", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[a] load more results  [A] load all results", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[u] show usages        [T] group by file", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "    results ui style", "Comment") ])
 endfu
 
 fu! s:InternalBuffer.RemoveGarbagedLines() dict abort

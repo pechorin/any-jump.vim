@@ -1,36 +1,17 @@
 " TODO:
-" - after [a] keyword not hl in preview (sometimes, lol)
-" - add search results count for each group
-"
-" - ignore language comments
-"
-" - >> если нажать [a] show all results потом промотать потом снова [a] то приходится назад мотать долго - мб как то в начало списка кидать в таком кейсе?
-"
-" - добавить возможность открывать окно не только в текущем window, но и
-"   делать vsplit/split относительного него
-"
-" - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
-"
-" - >> it is a good practice to augroup your aucmds
-" - add namespace id for nvim hl
-"
-" - add ability to change list styles by keybind
 " - create doc
-"
-" - handle many search results
-"
-" - cursor keyword search modes
-"
 " - paths priorities for better search results
 "
 " TODO_THINK:
 " - rg and ag results sometimes very differenet
 " - after pressing p jump to next result
 " - add auto preview option
-" - impl VimL rules
 " - fzf
+" - добавить возможность открывать окно не только в текущем window, но и
+"   делать vsplit/split относительного него
 "
 " TODO_FUTURE_RELEASES:
+" - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
 " - AnyJumpPreview
 " - AnyJumpFirst
 " - jumps history & jumps work flow
@@ -117,10 +98,15 @@ call s:set_plugin_global_option('any_jump_window_width_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_height_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_top_offset', 2)
 
-" TODO: NOT_IMPLEMENTED:
+" Remove comments line from search results (default: 1)
+call s:set_plugin_global_option('any_jump_remove_comments_from_results', v:true)
 
-" Preview next available search result after pressing preview button
-" let g:any_jump_follow_previews = v:true
+
+" ----------------------------------------------
+" Public customization methods
+" ----------------------------------------------
+
+" TODO: implement
 
 " ----------------------------------------------
 " Functions
@@ -190,44 +176,22 @@ fu! s:VimPopupFilter(popup_winid, key) abort
   let ib    = s:GetCurrentInternalBuffer()
 
   if a:key == "j"
-    let buf_info = getbufinfo(bufnr)[0]
-    let idx      = buf_info['lnum']
-    let lnum     = getbufvar(bufnr, 'current_lnum', 1)
-
-    if lnum == buf_info['linecount']
-      let new_lnum = lnum
-    else
-      let new_lnum = lnum + 1
-    endif
-
-    call setbufvar(bufnr, 'current_lnum', new_lnum)
-
-    let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
-    call win_execute(a:popup_winid, eval_string)
-
+    call popup_filter_menu(a:popup_winid, a:key)
     return 1
 
   elseif a:key == "k"
-    let idx  = getbufinfo(bufnr)[0]['lnum']
-    let lnum = getbufvar(bufnr, 'current_lnum', 2)
-
-    if lnum == 1
-      let new_lnum = 1
-    else
-      let new_lnum = lnum - 1
-    endif
-
-    call setbufvar(bufnr, 'current_lnum', new_lnum)
-
-    let eval_string = "call setpos('.', [0, " . new_lnum . ", 1])"
-    call win_execute(a:popup_winid, eval_string)
+    call popup_filter_menu(a:popup_winid, a:key)
     return 1
 
   elseif a:key == "p" || a:key == "\<TAB>"
     call g:AnyJumpHandlePreview()
     return 1
 
-  elseif a:key == "a" || a:key == "A"
+  elseif a:key ==# "a"
+    call g:AnyJumpLoadNextBatchResults()
+    return 1
+
+  elseif a:key ==# "A"
     call g:AnyJumpToggleAllResults()
     return 1
 
@@ -235,11 +199,15 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpHandleUsages()
     return 1
 
-  elseif a:key == "T"
+  elseif a:key ==# "T"
     call g:AnyJumpToggleGrouping()
     return 1
 
-  elseif a:key == "\<CR>" || a:key == 'o' || a:key == 'O'
+  elseif a:key ==# "L"
+    call g:AnyJumpToggleListStyle()
+    return 1
+
+  elseif a:key == "\<CR>" || a:key ==# 'o' || a:key ==# 'O'
     let item = t:any_jump.TryFindOriginalLinkFromPos()
 
     if type(item) == v:t_dict
@@ -257,6 +225,7 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     return 1
   endif
 
+  call g:AnyJumpHandleClose()
   return 1
 endfu
 
@@ -275,7 +244,11 @@ fu! s:Jump() abort
   let cur_mode   = mode()
 
   if cur_mode == 'n'
-    let keyword = expand('<cword>')
+    if g:any_jump_keyword_match_cursor_mode == 'word'
+      let keyword = expand('<cword>')
+    else
+      let keyword = expand('<cWORD>')
+    end
   else
     " THINK: implement visual mode selection?
     " https://stackoverflow.com/a/6271254/190454
@@ -375,6 +348,7 @@ endfu
 
 fu! g:AnyJumpHandleClose() abort
   let ui = s:GetCurrentInternalBuffer()
+  let ui.current_page = 1
 
   if s:nvim
     close!
@@ -383,11 +357,26 @@ fu! g:AnyJumpHandleClose() abort
   endif
 endfu
 
+fu! g:AnyJumpToggleListStyle() abort
+  let ui = s:GetCurrentInternalBuffer()
+  let next_style = g:any_jump_results_ui_style == 'filename_first' ? 'filename_last' : 'filename_first'
+  let g:any_jump_results_ui_style = next_style
+
+  let cursor_item = ui.TryFindOriginalLinkFromPos()
+  let last_ln_nr  = ui.BufferLnum()
+
+  call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.ClearBuffer(ui.vim_bufnr)
+  call ui.RenderUi()
+  call ui.EndUiTransaction(ui.vim_bufnr)
+
+  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+endfu
+
 fu! g:AnyJumpHandleUsages() abort
   let ui = s:GetCurrentInternalBuffer()
 
   " close current opened usages
-  " TODO: move to method
   if ui.usages_opened
     let ui.usages_opened = v:false
 
@@ -471,6 +460,7 @@ fu! g:AnyJumpToggleGrouping() abort
   let ui = s:GetCurrentInternalBuffer()
 
   let cursor_item = ui.TryFindOriginalLinkFromPos()
+  let last_ln_nr  = ui.BufferLnum()
 
   call ui.StartUiTransaction(ui.vim_bufnr)
   call ui.ClearBuffer(ui.vim_bufnr)
@@ -481,7 +471,29 @@ fu! g:AnyJumpToggleGrouping() abort
   call ui.RenderUi()
   call ui.EndUiTransaction(ui.vim_bufnr)
 
-  call ui.TryRestoreCursorForItem(cursor_item)
+  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+endfu
+
+fu! g:AnyJumpLoadNextBatchResults() abort
+  let ui = s:GetCurrentInternalBuffer()
+
+  if ui.overmaxed_results_hidden == v:false
+    return
+  endif
+
+  let cursor_item = ui.TryFindOriginalLinkFromPos()
+  let last_ln_nr  = ui.BufferLnum()
+
+  call ui.StartUiTransaction(ui.vim_bufnr)
+  call ui.ClearBuffer(ui.vim_bufnr)
+
+  let ui.preview_opened = v:false
+  let ui.current_page   = ui.current_page ? ui.current_page + 1 : 2
+
+  call ui.RenderUi()
+  call ui.EndUiTransaction(ui.vim_bufnr)
+
+  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
 
 fu! g:AnyJumpToggleAllResults() abort
@@ -493,6 +505,7 @@ fu! g:AnyJumpToggleAllResults() abort
   call ui.StartUiTransaction(ui.vim_bufnr)
 
   let cursor_item = ui.TryFindOriginalLinkFromPos()
+  let last_ln_nr  = ui.BufferLnum()
 
   call ui.ClearBuffer(ui.vim_bufnr)
 
@@ -501,7 +514,7 @@ fu! g:AnyJumpToggleAllResults() abort
   call ui.RenderUi()
   call ui.EndUiTransaction(ui.vim_bufnr)
 
-  call ui.TryRestoreCursorForItem(cursor_item)
+  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
 
 fu! g:AnyJumpHandlePreview() abort
@@ -510,7 +523,7 @@ fu! g:AnyJumpHandlePreview() abort
   call ui.StartUiTransaction(ui.vim_bufnr)
 
   let current_previewed_links = []
-  let action_item = ui.GetItemByPos()
+  let action_item = ui.TryFindOriginalLinkFromPos()
 
   " dispatch to other items handler
   if type(action_item) == v:t_dict && action_item.type == 'more_button'
@@ -581,13 +594,16 @@ fu! g:AnyJumpHandlePreview() abort
         if filtered_line == action_item.text
           let items        = []
           let cur_text     = line
-          let kw           = ui.CreateItem("preview_text", ui.keyword, "String", { "link": action_item, "no_padding": v:true })
           let first_kw_pos = match(cur_text, '\<' . ui.keyword . '\>')
 
           while cur_text != ''
-
             if first_kw_pos == 0
-              call add(items, kw)
+              let cur_kw = ui.CreateItem("preview_text",
+                    \ cur_text[first_kw_pos : first_kw_pos + len(ui.keyword) - 1],
+                    \ "Operator",
+                    \ { "link": action_item, "no_padding": v:true })
+
+              call add(items, cur_kw)
               let cur_text = cur_text[first_kw_pos + len(ui.keyword) : -1]
 
             elseif first_kw_pos == -1
@@ -602,7 +618,13 @@ fu! g:AnyJumpHandlePreview() abort
               let head_item = ui.CreateItem("preview_text", head, "Comment", { "link": action_item, "no_padding": v:true })
 
               call add(items, head_item)
-              call add(items, kw)
+
+              let cur_kw = ui.CreateItem("preview_text",
+                    \ cur_text[first_kw_pos : first_kw_pos + len(ui.keyword) -1 ],
+                    \ "Operator",
+                    \ { "link": action_item, "no_padding": v:true })
+
+              call add(items, cur_kw)
 
               let cur_text = cur_text[first_kw_pos + len(ui.keyword) : -1]
             endif
@@ -620,7 +642,6 @@ fu! g:AnyJumpHandlePreview() abort
 
       let ui.preview_opened = v:true
     elseif action_item.type == 'help_link'
-      echo "link text"
     endif
   endif
 
@@ -671,19 +692,26 @@ command! AnyJumpBack call s:JumpBack()
 command! AnyJumpLastResults call s:JumpLastResults()
 command! AnyJumpRunSpecs call s:RunSpecs()
 
-" KeyBindings
-au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
-au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
-au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
-au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
-au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
-au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
-au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
-au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
-au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
-au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
-au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
-au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
+" Window KeyBindings
+if s:nvim
+  augroup anyjump
+    au!
+    au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
+    au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
+    au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
+    au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
+    au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>
+    au FileType any-jump nnoremap <buffer> <esc> :call g:AnyJumpHandleClose()<cr>
+    au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
+    au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
+    au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
+    au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
+    au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
+    au FileType any-jump nnoremap <buffer> a :call g:AnyJumpLoadNextBatchResults()<cr>
+    au FileType any-jump nnoremap <buffer> L :call g:AnyJumpToggleListStyle()<cr>
+  augroup END
+end
+
 
 if g:any_jump_disable_default_keybindings == v:false
   nnoremap <leader>j  :AnyJump<CR>
