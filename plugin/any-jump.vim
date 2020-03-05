@@ -1,7 +1,5 @@
 " TODO:
-" - [vim] after start cursor ln is -1
 " - [vim] может стоит перепрыгивать пустые строки? при j/k
-" - [vim] ui cursor blinking but after j/k position is okay
 "
 " - preview as text not comment (configurable)
 "
