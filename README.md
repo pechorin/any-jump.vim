@@ -126,7 +126,7 @@ let g:any_jump_keyword_match_cursor_mode', 'word'
 
 ## Features
 
-### open definitions and usages list
+### open definitions and references/usages list
 
 ![screenshot](/usages.png)
 
@@ -204,4 +204,4 @@ Comes from dumb-jump.el emacs package
 
 ## Issues and contibutions
 
-Please open issue on any question and problem
+Please open issue on any question / problem / feedback / idea.
