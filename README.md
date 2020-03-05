@@ -142,7 +142,7 @@ let g:any_jump_keyword_match_cursor_mode', 'word'
 
 ![screenshot](/group_by_file.png)
 
-### search results without line numbers and different ui style
+### search results with line numbers
 
 ![screenshot](/no_ln.png)
 
