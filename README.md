@@ -68,8 +68,9 @@ au FileType any-jump nnoremap <buffer> u :call g:AnyJumpHandleUsages()<cr>
 au FileType any-jump nnoremap <buffer> U :call g:AnyJumpHandleUsages()<cr>
 au FileType any-jump nnoremap <buffer> b :call g:AnyJumpToFirstLink()<cr>
 au FileType any-jump nnoremap <buffer> T :call g:AnyJumpToggleGrouping()<cr>
-au FileType any-jump nnoremap <buffer> a :call g:AnyJumpToggleAllResults()<cr>
 au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
+au FileType any-jump nnoremap <buffer> a :call g:AnyJumpLoadNextBatchResults()<cr>
+au FileType any-jump nnoremap <buffer> L :call g:AnyJumpToggleListStyle()<cr>
 ```
 
 ## Settings
