@@ -482,7 +482,11 @@ fu! g:AnyJumpToggleGrouping() abort
   call ui.RenderUi()
   call ui.EndUiTransaction()
 
-  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+  if s:nvim
+    call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+  else
+    call ui.RestorePopupCursor()
+  endif
 endfu
 
 fu! g:AnyJumpLoadNextBatchResults() abort
@@ -504,7 +508,11 @@ fu! g:AnyJumpLoadNextBatchResults() abort
   call ui.RenderUi()
   call ui.EndUiTransaction()
 
-  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+  if s:nvim
+    call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+  else
+    call ui.RestorePopupCursor()
+  endif
 endfu
 
 fu! g:AnyJumpToggleAllResults() abort
@@ -525,7 +533,11 @@ fu! g:AnyJumpToggleAllResults() abort
   call ui.RenderUi()
   call ui.EndUiTransaction()
 
-  call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+  if s:nvim
+    call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+  else
+    call ui.RestorePopupCursor()
+  endif
 endfu
 
 fu! g:AnyJumpHandlePreview() abort

@@ -39,6 +39,7 @@ let s:InternalBuffer.MethodsList = [
       \'JumpToFirstOfType',
       \'ClearBuffer',
       \'BufferLnum',
+      \'RestorePopupCursor',
       \]
 
 " Produce new Render Buffer
@@ -333,6 +334,7 @@ fu! s:InternalBuffer.TryRestoreCursorForItem(item,...) dict abort
         call self.JumpToFirstOfType('link')
       else
         call cursor(opts.last_ln_nr, 2)
+        call cursor(opts.last_ln_nr, 2)
       endif
     else
       call self.JumpToFirstOfType('link')
@@ -355,6 +357,12 @@ endfu
 
 fu! s:InternalBuffer.BufferLnum() dict abort
   return getbufinfo(self.vim_bufnr)[0]['lnum']
+endfu
+
+fu! s:InternalBuffer.RestorePopupCursor() dict abort
+  if !s:nvim
+    call popup_filter_menu(self.popup_winid, 'j')
+  endif
 endfu
 
 fu! s:InternalBuffer.StartUiTransaction() dict abort
