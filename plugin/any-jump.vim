@@ -349,7 +349,7 @@ fu! g:AnyJumpHandleOpen() abort
       execute "edit " . action_item.data.path . '|:' . string(action_item.data.line_number)
     endif
   elseif action_item.type == 'more_button'
-    call g:AnyJumpToggleAllResults()
+    call g:AnyJumpLoadNextBatchResults()
   endif
 endfu
 
@@ -546,7 +546,7 @@ fu! g:AnyJumpHandlePreview() abort
 
   " dispatch to other items handler
   if type(action_item) == v:t_dict && action_item.type == 'more_button'
-    call g:AnyJumpToggleAllResults()
+    call g:AnyJumpLoadNextBatchResults()
     return
   endif
 
