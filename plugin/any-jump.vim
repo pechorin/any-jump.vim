@@ -234,7 +234,6 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     return 1
   endif
 
-  call g:AnyJumpHandleClose()
   return 1
 endfu
 
