@@ -61,6 +61,7 @@ let g:any_jump_disable_default_keybindings = 1
 
 Mappings for popup search window
 
+```
 o/<CR>     open link
 p/<tab>    preview
 q/x        exit
@@ -70,6 +71,7 @@ T          group by file
 a          load next N results
 A          load all results
 L          toggle results lists ui style
+```
 
 ## Settings
 
