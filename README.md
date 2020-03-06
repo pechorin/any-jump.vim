@@ -34,8 +34,12 @@ Just place you cursor on any variable/class/constant/name/symbol and press `<lea
 
 - **keyword references/usages**: find files where keyword used and referenced
 
-- _ctags: not implemeneted now, but planned_
+## Roadmap
 
+- [ ] visual selection jump
+- [ ] ctags & gutentags support
+- [ ] show latest N search keywords in popup to save jumping history
+- [ ] basic refactoring support
 - ...
 
 ## Keybindings
