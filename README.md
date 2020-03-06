@@ -89,7 +89,7 @@ let g:any_jump_grouping_enabled = 0
 let g:any_jump_preview_lines_count = 5
 
 " Max search results, other results can be opened via [a]
-let g:any_jump_max_search_results = 7
+let g:any_jump_max_search_results = 10
 
 " Prefered search engine: rg or ag
 let g:any_jump_search_prefered_engine = 'rg'
