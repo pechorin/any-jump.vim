@@ -287,7 +287,7 @@ fu! s:RunRgUsagesSearch(language, keyword) abort
 endfu
 
 fu! s:RunAgUsagesSearch(language, keyword) abort
-  let cmd          = s:ag_base_cmd . ' --' . a:language . ' -w ' . a:leyword
+  let cmd          = s:ag_base_cmd . ' --' . a:language . ' -w ' . a:keyword
   let raw_results  = system(cmd)
 
   let grep_results = s:ParseAgResults(raw_results)
