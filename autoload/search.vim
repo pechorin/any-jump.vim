@@ -131,10 +131,23 @@ fu! search#GetSearchEngineFileTypeSpecifier(engine, language) abort
   return cmd
 endfu
 
+fu! search#GetCurrentSearchEngine() abort
+  let search_engine = g:any_jump_search_prefered_engine
+  let engine_ok     = executable(search_engine)
+
+  if !engine_ok
+    let search_engine = search_engine == 'rg' ? 'ag' : 'rg'
+  endif
+
+  return search_engine
+endfu
+
 fu! search#SearchUsages(internal_buffer) abort
-  if g:any_jump_search_prefered_engine == 'rg'
+  let search_engine = search#GetCurrentSearchEngine()
+
+  if search_engine == 'rg'
     let grep_results = s:RunRgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
-  elseif g:any_jump_search_prefered_engine == 'ag'
+  elseif search_engine == 'ag'
     let grep_results = s:RunAgUsagesSearch(a:internal_buffer.language, a:internal_buffer.keyword)
   end
 
@@ -144,10 +157,19 @@ endfu
 fu! search#SearchDefinitions(lang, keyword) abort
   let patterns      = []
   let lang          = lang_map#find_definitions(a:lang)
-  let search_engine = g:any_jump_search_prefered_engine
+  let search_engine = search#GetCurrentSearchEngine()
 
+  " if lang regexp doesn't support prefered search engine
   if index(lang[0].supports, search_engine) == -1
+    " try to change selected engine
     let search_engine = (search_engine == 'rg' ? 'ag' : 'rg')
+
+    " end error of changed engine not installed
+    if !executable(search_engine)
+      echoe "please install " . search_engine . " to run " . a:lang . " any-jump.vim search"
+    endif
+
+    return 0
   endif
 
   for rule in lang
@@ -287,7 +309,7 @@ fu! s:RunRgUsagesSearch(language, keyword) abort
 endfu
 
 fu! s:RunAgUsagesSearch(language, keyword) abort
-  let cmd          = s:ag_base_cmd . ' --' . a:language . ' -w ' . a:keyword
+  let cmd          = s:ag_base_cmd . ' -w ' . a:keyword
   let raw_results  = system(cmd)
 
   let grep_results = s:ParseAgResults(raw_results)
@@ -382,4 +404,3 @@ fu! s:ParseAgResults(raw_results) abort
 
   return grep_results
 endfu
-
