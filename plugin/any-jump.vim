@@ -1,4 +1,5 @@
 " TODO:
+" - [nvim] ability to jump through preview text (and another keyword)
 " - visual mode keyword selection
 " - [vim] может стоит перепрыгивать пустые строки? при j/k
 "
@@ -13,6 +14,7 @@
 " - fzf
 " - добавить возможность открывать окно не только в текущем window, но и
 "   делать vsplit/split относительного него
+" - ability to scroll preview
 "
 " TODO_FUTURE_RELEASES:
 " - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
@@ -105,12 +107,20 @@ call s:set_plugin_global_option('any_jump_window_top_offset', 2)
 " Remove comments line from search results (default: 1)
 call s:set_plugin_global_option('any_jump_remove_comments_from_results', v:true)
 
+" Search references only for current file type
+" (default: false, so will find keyword in all filetypes)
+call s:set_plugin_global_option('any_jump_references_only_for_current_filetype', v:false)
+
 
 " ----------------------------------------------
 " Public customization methods
 " ----------------------------------------------
 
-" TODO: implement
+let g:any_jump_ignored_files = []
+
+fu! g:AnyJumpAddIgnoredFile(mask) abort
+  call add(g:any_jump_ignored_files, a:mask)
+endfu
 
 " ----------------------------------------------
 " Functions
@@ -748,3 +758,6 @@ if g:any_jump_disable_default_keybindings == v:false
   nnoremap <leader>ab :AnyJumpBack<CR>
   nnoremap <leader>al :AnyJumpLastResults<CR>
 end
+
+call g:AnyJumpAddIgnoredFile('*.tmp')
+call g:AnyJumpAddIgnoredFile('*.temp')

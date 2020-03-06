@@ -116,3 +116,12 @@ let g:any_jump_remove_comments_from_results = 1
 " 'full' - will match 'MyNamespace::MyClass'
 
 let g:any_jump_keyword_match_cursor_mode', 'word'
+
+" Add ignore files
+call g:AnyJumpAddIgnoredFile('*.tmp')
+call g:AnyJumpAddIgnoredFile('*.temp')
+call g:AnyJumpAddIgnoredFile('tags')
+
+" Search references only for current file type
+" (default: false, so will find keyword in all filetypes)
+let g:any_jump_references_only_for_current_filetype = 0

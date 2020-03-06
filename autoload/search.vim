@@ -131,6 +131,26 @@ fu! search#GetSearchEngineFileTypeSpecifier(engine, language) abort
   return cmd
 endfu
 
+fu! s:GetRgIgnoreSpecifier() abort
+  let result = ''
+
+  for glob in g:any_jump_ignored_files
+    let result = result . ' -g !' . glob
+  endfor
+
+  return result
+endfu
+
+fu! s:GetAgIgnoreSpecifier() abort
+  let result = ''
+
+  for glob in g:any_jump_ignored_files
+    let result = result . ' --ignore ' . string(glob)
+  endfor
+
+  return result
+endfu
+
 fu! search#GetCurrentSearchEngine() abort
   let search_engine = g:any_jump_search_prefered_engine
   let engine_ok     = executable(search_engine)
@@ -280,7 +300,10 @@ endfu
 
 fu! s:RunRgDefinitionSearch(language, patterns) abort
   let rg_ft = s:GetRgFiletype(a:language)
-  let cmd   = s:rg_base_cmd . ' -t ' . rg_ft . ' ' . a:patterns
+
+  let cmd = s:rg_base_cmd . ' -t ' . rg_ft
+  let cmd = cmd . s:GetRgIgnoreSpecifier()
+  let cmd = cmd . ' ' . a:patterns
 
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
@@ -290,7 +313,10 @@ endfu
 
 fu! s:RunAgDefinitionSearch(language, patterns) abort
   let ag_ft = s:GetAgFiletype(a:language)
-  let cmd   = s:ag_base_cmd . ' --' . ag_ft . ' ' . a:patterns
+
+  let cmd = s:ag_base_cmd . ' --' . ag_ft
+  let cmd = cmd . s:GetAgIgnoreSpecifier()
+  let cmd = cmd . ' ' . a:patterns
 
   let raw_results  = system(cmd)
   let grep_results = s:ParseAgResults(raw_results)
@@ -300,8 +326,16 @@ endfu
 
 fu! s:RunRgUsagesSearch(language, keyword) abort
   let cmd = s:rg_base_cmd . ' -w ' . a:keyword
-  let raw_results  = system(cmd)
+  let cmd = cmd . s:GetRgIgnoreSpecifier()
 
+  if g:any_jump_references_only_for_current_filetype
+        \ && type(a:language) == v:t_string
+
+    let rg_ft = s:GetRgFiletype(a:language)
+    let cmd   = cmd . ' -t ' . rg_ft
+  endif
+
+  let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
   let grep_results = s:FilterGrepResults(a:language, grep_results)
 
@@ -310,8 +344,16 @@ endfu
 
 fu! s:RunAgUsagesSearch(language, keyword) abort
   let cmd          = s:ag_base_cmd . ' -w ' . a:keyword
-  let raw_results  = system(cmd)
+  let cmd          = cmd . s:GetAgIgnoreSpecifier()
 
+  if g:any_jump_references_only_for_current_filetype
+        \ && type(a:language) == v:t_string
+
+    let ag_ft = s:GetAgFiletype(a:language)
+    let cmd   = cmd . ' --' . ag_ft
+  endif
+
+  let raw_results  = system(cmd)
   let grep_results = s:ParseAgResults(raw_results)
   let grep_results = s:FilterGrepResults(a:language, grep_results)
 
