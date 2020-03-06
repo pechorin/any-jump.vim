@@ -1,4 +1,5 @@
 " TODO:
+" - visual mode keyword selection
 " - [vim] может стоит перепрыгивать пустые строки? при j/k
 "
 " - preview as text not comment (configurable)
@@ -145,7 +146,8 @@ fu! s:CreateNvimUi(internal_buffer) abort
         \ 'height': height
         \ }
 
-  call nvim_open_win(buf, v:true, opts)
+  let winid = nvim_open_win(buf, v:true, opts)
+  call nvim_win_set_option(winid, 'number', v:false)
 
   let t:any_jump.vim_bufnr = buf
 
