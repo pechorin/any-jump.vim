@@ -205,3 +205,9 @@ Comes from dumb-jump.el emacs package
 ## Issues and contibutions
 
 Please open issue on any question / problem / feedback / idea.
+
+```
+ /~~||/~\\  /---   ||   ||/~\ /~\ |~~\
+ \__||   |\/       | \_/||   |   ||__/
+         _/     \__|              |
+```
