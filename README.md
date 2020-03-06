@@ -8,6 +8,8 @@ _Vim plugin for jumping to defitinitions⚒ and references/usages🔬 through ni
 
 Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
 
+**Currently rg results is much better, please use rg. Will try to fix this soon.**
+
 <p align="center">
   <img src="https://github.com/pechorin/any-jump.vim/raw/master/main.gif"/>
 </p>
