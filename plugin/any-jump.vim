@@ -111,6 +111,9 @@ call s:set_plugin_global_option('any_jump_remove_comments_from_results', v:true)
 " (default: false, so will find keyword in all filetypes)
 call s:set_plugin_global_option('any_jump_references_only_for_current_filetype', v:false)
 
+" Disable search engine ignore vcs untracked files
+" (default: false, search engine will ignore vcs untracked files)
+call s:set_plugin_global_option('any_jump_disable_vcs_ignore', v:false)
 
 " ----------------------------------------------
 " Public customization methods
