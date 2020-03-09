@@ -8,7 +8,7 @@
                           — IDE madness without overhead for 40+ languages
 
 Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag.
-Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
+Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance.
 
 *Searches*
 
