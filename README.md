@@ -41,8 +41,6 @@ You can also use visaul mode to select proper keyword (<leader>j also works in v
 
 ## Current roadmap
 
-- [X] visual selection jump
-- [ ] configurable ui colors
 - [ ] paths priorities for better search results
 - [ ] [nvim] ability to jump through preview text (and another keyword)
 - [ ] show latest N search keywords in popup to save jumping history
