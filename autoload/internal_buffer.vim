@@ -654,7 +654,8 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([ self.CreateItem("help_link", "> Help", "Function") ])
 
   call self.AddLine([ self.CreateItem("help_text", "", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[o] open file          [p] preview file       [b] scroll to first result", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[o] open               [t] open in tab        [s] open in split   [v] open in vsplit", "Comment") ])
+  call self.AddLine([ self.CreateItem("help_text", "[p/tab] preview file   [b] scroll to first result", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[a] load more results  [A] load all results", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[r] show references    [T] group by file", "Comment") ])
   call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", "Comment") ])
