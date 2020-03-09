@@ -96,6 +96,11 @@ fu! s:InternalBuffer.RenderLine(items, line) dict abort
     let idx            += 1
   endfor
 
+  " filter out empty whitespaces
+  if text =~ '^\s\+$'
+    let text = ''
+  endif
+
   " write final text to buffer
   call appendbufline(self.vim_bufnr, a:line - 1, text)
 
@@ -668,6 +673,7 @@ fu! s:InternalBuffer.RemoveGarbagedLines() dict abort
 
   let self.items = new_items
 endfu
+
 
 " Public api
 fu! internal_buffer#GetClass() abort
