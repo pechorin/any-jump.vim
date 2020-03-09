@@ -4,17 +4,19 @@
 
 _Vim plugin for jumping to defitinitions⚒ and references/usages🔬 through nice ui._
 
-**nvim 0.4+ or vim 8.2+ required**
-
-Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance (can be implemented in future releases).
-
-**Currently rg results is much better, please use rg. Will try to fix this soon.**
+Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. 
 
 <p align="center">
   <img src="https://github.com/pechorin/any-jump.vim/raw/master/main.gif"/>
 </p>
+<p align="center"><i>On screen: jumping through source code of Discourse project</i></p>
 
-_On screen: jumping through source code of Discourse project_
+
+## Requirements
+
+- `nvim 0.4+` or `vim 8.2`
+- `ripgrep` or `ag` 
+- _some languages requires rg with PCRE2 support_
 
 ## Installation
 
