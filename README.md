@@ -4,7 +4,7 @@
 
 _Vim plugin for jumping to defitinitions⚒ and references/usages🔬 through nice ui._
 
-Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag. 
+Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag.
 
 <p align="center">
   <img src="https://github.com/pechorin/any-jump.vim/raw/master/main.gif"/>
@@ -15,7 +15,7 @@ Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep 
 ## Requirements
 
 - `nvim 0.4+` or `vim 8.2`
-- `ripgrep` or `ag` 
+- `ripgrep` or `ag`
 - _some languages requires rg with PCRE2 support_
 
 ## Installation
@@ -140,6 +140,8 @@ call g:AnyJumpAddIgnoredFile('tags')
 " (default: false, so will find keyword in all filetypes)
 let g:any_jump_references_only_for_current_filetype = 0
 
+" Disable search engine ignore vcs untracked files (default: false, search engine will ignore vcs untracked files)
+let g:any_jump_disable_vcs_ignore = 0
 ```
 
 ## Features
