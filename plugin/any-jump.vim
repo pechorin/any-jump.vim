@@ -111,8 +111,7 @@ call s:set_plugin_global_option('any_jump_remove_comments_from_results', v:true)
 " (default: false, so will find keyword in all filetypes)
 call s:set_plugin_global_option('any_jump_references_only_for_current_filetype', v:false)
 
-" Disable search engine ignore vcs untracked files
-" (default: false, search engine will ignore vcs untracked files)
+" Disable search engine ignore vcs untracked files (default: false, search engine will ignore vcs untracked files)
 call s:set_plugin_global_option('any_jump_disable_vcs_ignore', v:false)
 
 " ----------------------------------------------
@@ -229,15 +228,20 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpToFirstLink()
     return 1
 
-  elseif a:key == "\<CR>" || a:key ==# 'o' || a:key ==# 'O'
-    let item = t:any_jump.TryFindOriginalLinkFromPos()
+  elseif a:key == "\<CR>" || a:key ==# 'o'
+    call g:AnyJumpHandleOpen()
+    return 1
 
-    if type(item) == v:t_dict
-      call g:AnyJumpHandleOpen()
-      return 1
-    else
-      return 1
-    endif
+  elseif a:key == "t"
+    call g:AnyJumpHandleOpen('tab')
+    return 1
+
+  elseif a:key == "s"
+    call g:AnyJumpHandleOpen('split')
+    return 1
+
+  elseif a:key == "v"
+    call g:AnyJumpHandleOpen('vsplit')
 
   elseif a:key == "q"
         \ || a:key == '\<ESC>'
@@ -330,9 +334,21 @@ endfu
 " Event Handlers
 " ----------------------------------------------
 
-fu! g:AnyJumpHandleOpen() abort
+let s:available_open_actions = [ 'open', 'split', 'vsplit', 'tab' ]
+
+fu! g:AnyJumpHandleOpen(...) abort
   let ui = s:GetCurrentInternalBuffer()
   let action_item = ui.GetItemByPos()
+
+  let open_action = 'open'
+
+  if a:0
+    let open_action = a:1
+  endif
+
+  if index(s:available_open_actions, open_action) == -1
+    throw "invalid open action " . string(open_action)
+  endif
 
   if type(action_item) != v:t_dict
     return 0
@@ -359,8 +375,17 @@ fu! g:AnyJumpHandleOpen() abort
       " save opened buffer for back-history
       let ui.previous_bufnr = bufnr()
 
+      if open_action == 'open'
+      elseif open_action == 'split'
+        execute 'split'
+      elseif open_action == 'vsplit'
+        execute 'vsplit'
+      elseif open_action == 'tab'
+        execute 'tabnew'
+      endif
+
       " open new file
-      execute "edit " . action_item.data.path . '|:' . action_item.data.line_number
+      execute 'edit ' . action_item.data.path . '|:' . action_item.data.line_number
     endif
   elseif action_item.type == 'more_button'
     call g:AnyJumpLoadNextBatchResults()
@@ -742,6 +767,10 @@ if s:nvim
     au!
     au FileType any-jump nnoremap <buffer> o :call g:AnyJumpHandleOpen()<cr>
     au FileType any-jump nnoremap <buffer><CR> :call g:AnyJumpHandleOpen()<cr>
+    au FileType any-jump nnoremap <buffer> t :call g:AnyJumpHandleOpen('tab')<cr>
+    au FileType any-jump nnoremap <buffer> s :call g:AnyJumpHandleOpen('split')<cr>
+    au FileType any-jump nnoremap <buffer> v :call g:AnyJumpHandleOpen('vsplit')<cr>
+
     au FileType any-jump nnoremap <buffer> p :call g:AnyJumpHandlePreview()<cr>
     au FileType any-jump nnoremap <buffer> <tab> :call g:AnyJumpHandlePreview()<cr>
     au FileType any-jump nnoremap <buffer> q :call g:AnyJumpHandleClose()<cr>

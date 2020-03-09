@@ -67,7 +67,10 @@ let g:any_jump_disable_default_keybindings = 1
 Mappings for popup search window
 
 ```
-o/<CR>     open link
+o/<CR>     open
+s          open in split
+v          open in vsplit
+t          open in new tab
 p/<tab>    preview
 q/x        exit
 r          references
