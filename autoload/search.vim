@@ -135,7 +135,7 @@ fu! s:GetRgIgnoreSpecifier() abort
   let result = ''
 
   for glob in g:any_jump_ignored_files
-    let result = result . ' -g !' . glob
+    let result = result . ' -g !' . string(glob)
   endfor
 
   return result
