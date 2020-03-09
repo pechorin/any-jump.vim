@@ -28,7 +28,10 @@ Plug 'pechorin/any-jump.vim'
 
 ## Usage
 
+In normal or visual mode.
+
 Just place you cursor on any variable/class/constant/name/symbol and press `<leader>j` or execute `:AnyJump` in normal mode.
+You can also use visaul mode to select proper keyword (<leader>j also works in vusual mode)
 
 ## Searches
 
@@ -36,12 +39,18 @@ Just place you cursor on any variable/class/constant/name/symbol and press `<lea
 
 - **keyword references/usages**: find files where keyword used and referenced
 
-## Roadmap
+## Current roadmap
 
-- [ ] visual selection jump
-- [ ] ctags & gutentags support
+- [*] visual selection jump
+- [ ] configurable ui colors
+- [ ] paths priorities for better search results
+- [ ] [nvim] ability to jump through preview text (and another keyword)
 - [ ] show latest N search keywords in popup to save jumping history
+
+## 2.0+ roadmap
+
 - [ ] basic refactoring support
+- [ ] ctags support
 
 ## Keybindings
 
@@ -50,6 +59,9 @@ Default global mappings for normal mode:
 ```viml
 " Jump to definition under cursore
 nnoremap <leader>j :AnyJump<CR>
+
+" Visual mode: jump to selected text in visual mode
+xnoremap <leader>j :AnyJumpVisual<CR>
 
 " open previous opened file (after jump)
 nnoremap <leader>ab :AnyJumpBack<CR>

@@ -26,8 +26,8 @@ CONTENTS                                           *any-jump-contents*
 ====================================================================
 Section 1: Usage                                      *any-jump-usage*
 
-Just place you cursor on any variable/class/constant/name/symbol
-and press `<leader>j` or execute `:AnyJump` in normal mode.
+Just place you cursor on any variable/class/constant/name/symbol and press `<leader>j` or execute `:AnyJump` in normal mode.
+You can also use visaul mode to select proper keyword (<leader>j also works in visual mode)
 
 
 ====================================================================
@@ -38,6 +38,9 @@ Default global mappings for normal mode:
 ```viml
 " Jump to definition under cursore
 nnoremap <leader>j :AnyJump<CR>
+
+" Visual mode: jump to selected text in visual mode
+xnoremap <leader>j :AnyJumpVisual<CR>
 
 " open previous opened file (after jump)
 nnoremap <leader>ab :AnyJumpBack<CR>

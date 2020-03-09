@@ -1,29 +1,19 @@
 " TODO:
-" - [nvim] ability to jump through preview text (and another keyword)
-" - visual mode keyword selection
-" - [vim] может стоит перепрыгивать пустые строки? при j/k
-"
-" - preview as text not comment (configurable)
-"
-" - paths priorities for better search results
+" - auto preview first result
 "
 " TODO_THINK:
 " - rg and ag results sometimes very differenet
 " - after pressing p jump to next result
-" - add auto preview option
 " - fzf
-" - добавить возможность открывать окно не только в текущем window, но и
-"   делать vsplit/split относительного него
 " - ability to scroll preview
+" - [vim] может стоит перепрыгивать пустые строки? при j/k
 "
 " TODO_FUTURE_RELEASES:
 " - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
 " - AnyJumpPreview
 " - AnyJumpFirst
-" - jumps history & jumps work flow
-" - add tags file search support (ctags)
-" - "save jump" button
-" - jumps list
+" - "save jump" button ??
+" - jumps list ??
 
 " === Vim version check
 let s:nvim = has('nvim')
@@ -262,22 +252,22 @@ fu! s:GetCurrentInternalBuffer() abort
   endif
 endfu
 
-fu! s:Jump() abort
+fu! s:Jump(...) abort range
   let lang = lang_map#get_language_from_filetype(&l:filetype)
+  let keyword = ''
 
-  let keyword    = ''
-  let cur_mode   = mode()
+  let opts = {}
+  if a:0
+    let opts = a:1
+  endif
 
-  if cur_mode == 'n'
-    if g:any_jump_keyword_match_cursor_mode == 'word'
-      let keyword = expand('<cword>')
-    else
-      let keyword = expand('<cWORD>')
-    end
+  if has_key(opts, 'is_visual')
+    let x = getpos("'<")[2]
+    let y = getpos("'>")[2]
+
+    let keyword = getline(line('.'))[ x - 1 : y - 1]
   else
-    " THINK: implement visual mode selection?
-    " https://stackoverflow.com/a/6271254/190454
-    call s:log_debug("not implemented for mode " . cur_mode)
+    let keyword = expand('<cword>')
   endif
 
   if len(keyword) == 0
@@ -337,9 +327,8 @@ endfu
 let s:available_open_actions = [ 'open', 'split', 'vsplit', 'tab' ]
 
 fu! g:AnyJumpHandleOpen(...) abort
-  let ui = s:GetCurrentInternalBuffer()
+  let ui          = s:GetCurrentInternalBuffer()
   let action_item = ui.GetItemByPos()
-
   let open_action = 'open'
 
   if a:0
@@ -757,6 +746,7 @@ endfu
 
 " Commands
 command! AnyJump call s:Jump()
+command! -range AnyJumpVisual call s:Jump({"is_visual": v:true})
 command! AnyJumpBack call s:JumpBack()
 command! AnyJumpLastResults call s:JumpLastResults()
 command! AnyJumpRunSpecs call s:RunSpecs()
@@ -784,9 +774,9 @@ if s:nvim
   augroup END
 end
 
-
 if g:any_jump_disable_default_keybindings == v:false
   nnoremap <leader>j  :AnyJump<CR>
+  xnoremap <leader>j  :AnyJumpVisual<CR>
   nnoremap <leader>ab :AnyJumpBack<CR>
   nnoremap <leader>al :AnyJumpLastResults<CR>
 end
