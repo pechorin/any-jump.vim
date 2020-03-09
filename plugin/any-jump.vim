@@ -357,7 +357,7 @@ fu! g:AnyJumpHandleOpen() abort
       let ui.previous_bufnr = bufnr()
 
       " open new file
-      execute "edit " . action_item.data.path . '|:' . string(action_item.data.line_number)
+      execute "edit " . action_item.data.path . '|:' . action_item.data.line_number
     endif
   elseif action_item.type == 'more_button'
     call g:AnyJumpLoadNextBatchResults()
