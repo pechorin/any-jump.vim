@@ -134,6 +134,10 @@ endfu
 fu! s:GetRgIgnoreSpecifier() abort
   let result = ''
 
+  if g:any_jump_disable_vcs_ignore
+    let result .= " --no-ignore-vcs"
+  endif
+
   for glob in g:any_jump_ignored_files
     let result = result . ' -g !' . string(glob)
   endfor
@@ -143,6 +147,10 @@ endfu
 
 fu! s:GetAgIgnoreSpecifier() abort
   let result = ''
+
+  if g:any_jump_disable_vcs_ignore
+    let result .= " --skip-vcs-ignores"
+  endif
 
   for glob in g:any_jump_ignored_files
     let result = result . ' --ignore ' . string(glob)
