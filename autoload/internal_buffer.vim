@@ -398,23 +398,23 @@ fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
 
   if g:any_jump_list_numbers
     let prefix_text = a:current_idx + 1
-    let prefix = self.CreateItem("link", prefix_text, "Comment", options)
+    let prefix = self.CreateItem("link", prefix_text, g:AnyJumpGetColor('result_line_number'), options)
 
     call add(items, prefix)
   endif
 
   if g:any_jump_results_ui_style == 'filename_first'
     let path_text    = '' .  gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", gr.text, "Statement", original_link_options)
-    let file_path    = self.CreateItem("link", path_text, "String", options)
+    let matched_text = self.CreateItem("link", gr.text, g:AnyJumpGetColor('result_text'), original_link_options)
+    let file_path    = self.CreateItem("link", path_text, g:AnyJumpGetColor('result_path'), options)
 
     call add(items, matched_text)
     call add(items, file_path)
 
   elseif g:any_jump_results_ui_style == 'filename_last'
     let path_text    = gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", "" . gr.text, "Statement", original_link_options)
-    let file_path    = self.CreateItem("link", path_text, "String", options)
+    let matched_text = self.CreateItem("link", "" . gr.text, g:AnyJumpGetColor('result_text'), original_link_options)
+    let file_path    = self.CreateItem("link", path_text, g:AnyJumpGetColor('result_path'), options)
 
     call add(items, file_path)
     call add(items, matched_text)
@@ -434,11 +434,11 @@ fu! s:InternalBuffer.GrepResultToGroupedItems(gr, current_idx, layer) dict abort
         \"layer": a:layer, "original_link": v:true }
 
   let prefix_text = gr.line_number
-  let prefix = self.CreateItem("link", prefix_text, "Comment", options)
+  let prefix = self.CreateItem("link", prefix_text, g:AnyJumpGetColor('result_line_number'), options)
 
   call add(items, prefix)
 
-  let matched_text = self.CreateItem("link", gr.text, "Statement", original_link_options)
+  let matched_text = self.CreateItem("link", gr.text, g:AnyJumpGetColor('result_text'), original_link_options)
 
   call add(items, matched_text)
 
@@ -464,9 +464,9 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
   endif
 
   call self.AddLineAt([
-    \self.CreateItem("text", ">", "Function", {'layer': 'usages'}),
-    \self.CreateItem("text", self.keyword, "Identifier", {'layer': 'usages'}),
-    \self.CreateItem("text", len(self.usages_grep_results) . " references", "Function", {'layer': 'usages'}),
+    \self.CreateItem("text", ">", g:AnyJumpGetColor('heading_text'), {'layer': 'usages'}),
+    \self.CreateItem("text", self.keyword, g:AnyJumpGetColor('heading_keyword'), {'layer': 'usages'}),
+    \self.CreateItem("text", len(self.usages_grep_results) . " references", g:AnyJumpGetColor('heading_text'), {'layer': 'usages'}),
     \], start_ln)
 
 
@@ -499,8 +499,8 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
             \"group_header": v:true,
             \}
 
-      let prefix     = self.CreateItem("link", ">", "Comment", opts)
-      let group_name = self.CreateItem("link", path,  "Function", opts)
+      let prefix     = self.CreateItem("link", ">", g:AnyJumpGetColor('group_text'), opts)
+      let group_name = self.CreateItem("link", path, g:AnyJumpGetColor('group_name'), opts)
       let line       = [ prefix, group_name ]
 
       call self.AddLineAt(line, start_ln)
@@ -537,8 +537,8 @@ fu! s:InternalBuffer.RenderUiUsagesList(grep_results, start_ln) dict abort
     let start_ln += 1
 
     call self.AddLineAt([
-          \self.CreateItem("more_button", '[ ' . hidden_count . ' more ]', "Operator", {"layer": "usages"}),
-          \self.CreateItem("more_button", '— [a] load more results [A] load all', "Comment", {"layer": "usages"}),
+          \self.CreateItem("more_button", '[ ' . hidden_count . ' more ]', g:AnyJumpGetColor('more_button'), {"layer": "usages"}),
+          \self.CreateItem("more_button", '— [a] load more results [A] load all', g:AnyJumpGetColor('more_explain'), {"layer": "usages"}),
           \], start_ln)
     let start_ln += 1
   endif
@@ -555,9 +555,9 @@ fu! s:InternalBuffer.RenderUi() dict abort
   call self.AddLine([ self.CreateItem("text", "", "Comment") ])
 
   call self.AddLine([
-    \self.CreateItem("text", ">", "Function"),
-    \self.CreateItem("text", self.keyword, "Identifier"),
-    \self.CreateItem("text", len(self.definitions_grep_results) . " definitions", "Function"),
+    \self.CreateItem("text", ">", g:AnyJumpGetColor('heading_text')),
+    \self.CreateItem("text", self.keyword, g:AnyJumpGetColor('heading_keyword')),
+    \self.CreateItem("text", len(self.definitions_grep_results) . " definitions", g:AnyJumpGetColor('heading_text')),
     \])
 
   call self.AddLine([ self.CreateItem("text", "", "Comment") ])
@@ -603,8 +603,8 @@ fu! s:InternalBuffer.RenderUi() dict abort
             \"group_header": v:true,
             \}
 
-      let prefix     = self.CreateItem("link", ">", "Comment", opts)
-      let group_name = self.CreateItem("link", path, "Function", opts)
+      let prefix     = self.CreateItem("link", ">", g:AnyJumpGetColor('group_text'), opts)
+      let group_name = self.CreateItem("link", path, g:AnyJumpGetColor('group_name'), opts)
       let line       = [ prefix, group_name ]
 
       call self.AddLine(line)
@@ -633,7 +633,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
         let idx += 1
       endfor
     else
-      call self.AddLine([ self.CreateItem("text", "No definitions results", "Comment") ])
+      call self.AddLine([ self.CreateItem("text", "No definitions results", g:AnyJumpGetColor('plain_text')) ])
     endif
 
     call self.AddLine([ self.CreateItem("text", "", "Comment") ])
@@ -641,8 +641,8 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
   if hidden_count > 0
     call self.AddLine([
-          \self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', "Operator"),
-          \self.CreateItem("more_button", '— [a] load more results [A] load all', "Comment"),
+          \self.CreateItem("more_button", '[ + ' . hidden_count . ' more ]', g:AnyJumpGetColor('more_button')),
+          \self.CreateItem("more_button", '— [a] load more results [A] load all', g:AnyJumpGetColor('more_explain')),
           \])
     call self.AddLine([ self.CreateItem("text", "", "Comment") ])
   endif
@@ -651,15 +651,17 @@ fu! s:InternalBuffer.RenderUi() dict abort
     call self.RenderUiUsagesList(self.usages_grep_results, self.len() + 1)
   endif
 
-  call self.AddLine([ self.CreateItem("help_link", "> Help", "Function") ])
+  call self.AddLine([ self.CreateItem("help_link", "> Help", g:AnyJumpGetColor('heading_text')) ])
 
-  call self.AddLine([ self.CreateItem("help_text", "", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[o] open               [t] open in tab        [s] open in split   [v] open in vsplit", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[p/tab] preview file   [b] scroll to first result", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[a] load more results  [A] load all results", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[r] show references    [T] group by file", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", "Comment") ])
-  call self.AddLine([ self.CreateItem("help_text", "    results ui style", "Comment") ])
+  let color = g:AnyJumpGetColor('help_color')
+
+  call self.AddLine([ self.CreateItem("help_text", "", color) ])
+  call self.AddLine([ self.CreateItem("help_text", "[o] open               [t] open in tab        [s] open in split   [v] open in vsplit", color) ])
+  call self.AddLine([ self.CreateItem("help_text", "[p/tab] preview file   [b] scroll to first result", color) ])
+  call self.AddLine([ self.CreateItem("help_text", "[a] load more results  [A] load all results", color) ])
+  call self.AddLine([ self.CreateItem("help_text", "[r] show references    [T] group by file", color) ])
+  call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", color) ])
+  call self.AddLine([ self.CreateItem("help_text", "    results ui style", color) ])
 endfu
 
 fu! s:InternalBuffer.RemoveGarbagedLines() dict abort

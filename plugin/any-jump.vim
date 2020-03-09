@@ -108,10 +108,45 @@ call s:set_plugin_global_option('any_jump_disable_vcs_ignore', v:false)
 " Public customization methods
 " ----------------------------------------------
 
-let g:any_jump_ignored_files = []
+call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp'])
 
 fu! g:AnyJumpAddIgnoredFile(mask) abort
-  call add(g:any_jump_ignored_files, a:mask)
+  if index(g:any_jump_ignored_files, a:mask) == -1
+    call add(g:any_jump_ignored_files, a:mask)
+  endif
+endfu
+
+call s:set_plugin_global_option('any_jump_colors', {
+      \"plain_text": "Comment",
+      \"preview": 'Comment',
+      \"preview_keyword": "Operator",
+      \"heading_text": "Function",
+      \"heading_keyword": "Identifier",
+      \"group_text": "Comment",
+      \"group_name": "Function",
+      \"more_button": "Operator",
+      \"more_explain": "Comment",
+      \"result_line_number": "Comment",
+      \"result_text": "Statement",
+      \"result_path": "String",
+      \"help": "Comment"
+      \})
+
+fu! g:AnyJumpSetColors(colors) abort
+  if type(a:colors) == v:t_dict
+    let g:any_jump_colors = a:colors
+  else
+    echoe "invalid color map"
+  endif
+endfu
+
+fu! g:AnyJumpGetColor(name) abort
+  if has_key(g:any_jump_colors, a:name)
+    return g:any_jump_colors[a:name]
+  else
+    echo "any-jump color not found: " . a:name
+    return 'Comment'
+  endif
 endfu
 
 " ----------------------------------------------
@@ -658,7 +693,7 @@ fu! g:AnyJumpHandlePreview() abort
             if first_kw_pos == 0
               let cur_kw = ui.CreateItem("preview_text",
                     \ cur_text[first_kw_pos : first_kw_pos + len(ui.keyword) - 1],
-                    \ "Operator",
+                    \ g:AnyJumpGetColor("preview_keyword"),
                     \ { "link": action_item, "no_padding": v:true })
 
               call add(items, cur_kw)
@@ -666,14 +701,14 @@ fu! g:AnyJumpHandlePreview() abort
 
             elseif first_kw_pos == -1
               let tail = cur_text
-              let item = ui.CreateItem("preview_text", tail, "Comment", { "link": action_item, "no_padding": v:true })
+              let item = ui.CreateItem("preview_text", tail, g:AnyJumpGetColor('preview'), { "link": action_item, "no_padding": v:true })
 
               call add(items, item)
               let cur_text = ''
 
             else
               let head = cur_text[0 : first_kw_pos - 1]
-              let head_item = ui.CreateItem("preview_text", head, "Comment", { "link": action_item, "no_padding": v:true })
+              let head_item = ui.CreateItem("preview_text", head, g:AnyJumpGetColor('preview'), { "link": action_item, "no_padding": v:true })
 
               call add(items, head_item)
 
@@ -690,7 +725,7 @@ fu! g:AnyJumpHandlePreview() abort
             let first_kw_pos = match(cur_text, '\<' . ui.keyword . '\>')
           endwhile
         else
-          let items = [ ui.CreateItem("preview_text", line, "Comment", { "link": action_item } ) ]
+          let items = [ ui.CreateItem("preview_text", line, g:AnyJumpGetColor('preview'), { "link": action_item } ) ]
         endif
 
         call ui.AddLineAt(items, render_ln + 1)
@@ -780,6 +815,3 @@ if g:any_jump_disable_default_keybindings == v:false
   nnoremap <leader>ab :AnyJumpBack<CR>
   nnoremap <leader>al :AnyJumpLastResults<CR>
 end
-
-call g:AnyJumpAddIgnoredFile('*.tmp')
-call g:AnyJumpAddIgnoredFile('*.temp')
