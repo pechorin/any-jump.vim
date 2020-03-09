@@ -140,7 +140,8 @@ call g:AnyJumpAddIgnoredFile('tags')
 " (default: false, so will find keyword in all filetypes)
 let g:any_jump_references_only_for_current_filetype = 0
 
-" Disable search engine ignore vcs untracked files (default: false, search engine will ignore vcs untracked files)
+" Disable search engine ignore vcs untracked files 
+" (default: false, search engine will ignore vcs untracked files)
 let g:any_jump_disable_vcs_ignore = 0
 ```
 
