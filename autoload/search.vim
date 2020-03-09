@@ -39,51 +39,54 @@ let s:non_standard_ft_extensions_map = {
       \}
 
 let s:filetypes_comments_map = {
-      \"cpp":           "//",
-      \"elisp":         ";",
-      \"commonlisp":    ";",
-      \"javascript":    "//",
-      \"typescript":    "//",
-      \"dart":          "//",
-      \"haskell":       "--",
-      \"lua":           "--",
-      \"rust":          "//",
-      \"julia":         "#" ,
-      \"objc":          "//",
-      \"csharp":        "//",
-      \"java":          "//",
-      \"clojure":       ";" ,
-      \"coffeescript":  "#" ,
-      \"faust":         "//",
-      \"fortran":       "!" ,
-      \"go":            "//",
-      \"perl":          "#" ,
-      \"php":           "//",
-      \"python":        "#" ,
-      \"matlab":        "%" ,
-      \"r":             "#" ,
-      \"racket":        ";" ,
-      \"ruby":          "#" ,
-      \"crystal":       "#" ,
-      \"nim":           "#" ,
-      \"nix":           "#" ,
-      \"scala":         "//",
-      \"scheme":        ";" ,
-      \"shell":         "#" ,
-      \"swift":         "//",
-      \"elixir":        "#" ,
-      \"erlang":        "%" ,
-      \"tex":           "%" ,
-      \"systemverilog": "//",
-      \"vhdl":          "--",
-      \"scss":          "//",
-      \"pascal":        "//",
-      \"protobuf":      "//",
-      \"zig":           "//",
+      \"cpp":           ["//"],
+      \"elisp":         [";"],
+      \"commonlisp":    [";"],
+      \"javascript":    ["//"],
+      \"typescript":    ["//"],
+      \"dart":          ["//"],
+      \"haskell":       ["--"],
+      \"lua":           ["--"],
+      \"rust":          ["//"],
+      \"julia":         ["#"] ,
+      \"objc":          ["//"],
+      \"csharp":        ["//"],
+      \"java":          ["//"],
+      \"clojure":       [";"] ,
+      \"coffeescript":  ["#"] ,
+      \"faust":         ["//"],
+      \"fortran":       ["!"] ,
+      \"go":            ["//"],
+      \"perl":          ["#"] ,
+      \"php":           ["//", "#"],
+      \"python":        ["#"] ,
+      \"matlab":        ["%"] ,
+      \"r":             ["#"] ,
+      \"racket":        [";"] ,
+      \"ruby":          ["#"] ,
+      \"crystal":       ["#"] ,
+      \"nim":           ["#"] ,
+      \"nix":           ["#"] ,
+      \"scala":         ["//"],
+      \"scheme":        [";"] ,
+      \"shell":         ["#"] ,
+      \"swift":         ["//"],
+      \"elixir":        ["#"] ,
+      \"erlang":        ["%"] ,
+      \"tex":           ["%"] ,
+      \"systemverilog": ["//"],
+      \"vhdl":          ["--"],
+      \"scss":          ["//"],
+      \"pascal":        ["//"],
+      \"protobuf":      ["//"],
+      \"zig":           ["//"],
       \}
 
-
+" Compiled expressions to avoid recompilation
 let s:non_standard_ft_extensions_map_compiled = {}
+let s:filetypes_comments_map_compiled         = {}
+
+" Do compilation
 for lang in keys(s:non_standard_ft_extensions_map)
   let rules  = s:non_standard_ft_extensions_map[lang]
   let regexp = map(rules, { _, pattern -> '(' . pattern . ')' })
@@ -92,6 +95,14 @@ for lang in keys(s:non_standard_ft_extensions_map)
 
   let s:non_standard_ft_extensions_map_compiled[lang] = regexp
 endfor
+
+for lang in keys(s:filetypes_comments_map)
+  let rules = s:filetypes_comments_map[lang]
+  let compiled_rules = map(copy(rules), "'^\s*' . v:val")
+  let s:filetypes_comments_map_compiled[lang] = compiled_rules
+endfor
+
+" End of compilation
 
 fu! s:GetRgFiletype(lang) abort
   if has_key(s:rg_filetype_convertion_map, a:lang)
@@ -315,6 +326,7 @@ fu! s:RunRgDefinitionSearch(language, patterns) abort
 
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
+  let grep_results = s:FilterGrepResults(a:language, grep_results)
 
   return grep_results
 endfu
@@ -328,6 +340,7 @@ fu! s:RunAgDefinitionSearch(language, patterns) abort
 
   let raw_results  = system(cmd)
   let grep_results = s:ParseAgResults(raw_results)
+  let grep_results = s:FilterGrepResults(a:language, grep_results)
 
   return grep_results
 endfu
@@ -373,23 +386,19 @@ fu! s:FilterGrepResults(language, grep_results) abort
     return a:grep_results
   endif
 
-  if g:any_jump_remove_comments_from_results && has_key(s:filetypes_comments_map, a:language)
-    let comment_pattern = s:filetypes_comments_map[a:language]
-    let comment_pattern = '^\s*' . comment_pattern
+  if g:any_jump_remove_comments_from_results
+        \ && has_key(s:filetypes_comments_map_compiled, a:language)
 
-    let filtered = []
-    for gr in a:grep_results
-      if match(gr.text, comment_pattern) == -1
-        call add(filtered, gr)
-      endif
+    let filtered = copy(a:grep_results)
+
+    for comment_pattern in s:filetypes_comments_map_compiled[a:language]
+      call filter(filtered, 'v:val.text !~# comment_pattern')
     endfor
 
     return filtered
   else
     return a:grep_results
   endif
-
-  " let comment_pattern = s:filetypes_comments_map
 endfu
 
 fu! s:ParseRgResults(raw_results) abort
