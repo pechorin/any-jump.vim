@@ -42,7 +42,6 @@ Just place you cursor on any variable/class/constant/name/symbol and press `<lea
 - [ ] ctags & gutentags support
 - [ ] show latest N search keywords in popup to save jumping history
 - [ ] basic refactoring support
-- ...
 
 ## Keybindings
 
