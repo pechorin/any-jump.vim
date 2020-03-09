@@ -104,17 +104,13 @@ call s:set_plugin_global_option('any_jump_references_only_for_current_filetype',
 " Disable search engine ignore vcs untracked files (default: false, search engine will ignore vcs untracked files)
 call s:set_plugin_global_option('any_jump_disable_vcs_ignore', v:false)
 
+" Custom ignore files
+" default is: ['*.tmp', '*.temp']
+call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp'])
+
 " ----------------------------------------------
 " Public customization methods
 " ----------------------------------------------
-
-call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp'])
-
-fu! g:AnyJumpAddIgnoredFile(mask) abort
-  if index(g:any_jump_ignored_files, a:mask) == -1
-    call add(g:any_jump_ignored_files, a:mask)
-  endif
-endfu
 
 call s:set_plugin_global_option('any_jump_colors', {
       \"plain_text": "Comment",
@@ -132,14 +128,7 @@ call s:set_plugin_global_option('any_jump_colors', {
       \"help": "Comment"
       \})
 
-fu! g:AnyJumpSetColors(colors) abort
-  if type(a:colors) == v:t_dict
-    let g:any_jump_colors = a:colors
-  else
-    echoe "invalid color map"
-  endif
-endfu
-
+" TODO: change to private# api
 fu! g:AnyJumpGetColor(name) abort
   if has_key(g:any_jump_colors, a:name)
     return g:any_jump_colors[a:name]

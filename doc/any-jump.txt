@@ -124,10 +124,9 @@ let g:any_jump_disable_default_keybindings = 1
 " Remove comments line from search results (default: 1)
 let g:any_jump_remove_comments_from_results = 1
 
-" Add ignore files
-call g:AnyJumpAddIgnoredFile('*.tmp')
-call g:AnyJumpAddIgnoredFile('*.temp')
-call g:AnyJumpAddIgnoredFile('tags')
+" Custom ignore files
+" default is: ['*.tmp', '*.temp']
+let g:any_jump_ignored_files = ['*.tmp', '*.temp']
 
 " Search references only for current file type
 " (default: false, so will find keyword in all filetypes)

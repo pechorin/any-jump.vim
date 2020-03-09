@@ -39,16 +39,13 @@ You can also use visaul mode to select proper keyword (<leader>j also works in v
 
 - **keyword references/usages**: find files where keyword used and referenced
 
-## Current roadmap
+## version 1.0 roadmap
 
 - [ ] paths priorities for better search results
 - [ ] [nvim] ability to jump through preview text (and another keyword)
 - [ ] show latest N search keywords in popup to save jumping history
-
-## 2.0+ roadmap
-
-- [ ] basic refactoring support
 - [ ] ctags support
+- [ ] basic refactoring support
 
 ## Keybindings
 
@@ -146,10 +143,9 @@ let g:any_jump_disable_default_keybindings = 1
 " Remove comments line from search results (default: 1)
 let g:any_jump_remove_comments_from_results = 1
 
-" Add ignore files
-call g:AnyJumpAddIgnoredFile('*.tmp')
-call g:AnyJumpAddIgnoredFile('*.temp')
-call g:AnyJumpAddIgnoredFile('tags')
+" Custom ignore files
+" default is: ['*.tmp', '*.temp']
+let g:any_jump_ignored_files = ['*.tmp', '*.temp']
 
 " Search references only for current file type
 " (default: false, so will find keyword in all filetypes)
