@@ -1064,10 +1064,10 @@ call s:add_definition('php', {
 
 call s:add_definition('php', {
 	\"type": 'class',
-	\"pcre2_regexp": 'class\s*KEYWORD\s*(extends|implements|\{)',
+	\"pcre2_regexp": 'class\s*KEYWORD\s*(extends|implements|\{|$)',
 	\"emacs_regexp": 'class\s*JJJ\s*(extends|implements|\{)',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["class test{","class test {","class test extends foo","class test implements foo"],
+	\"spec_success": ["class test{","class test {", "class test\n{\n", "class test extends foo","class test implements foo"],
 	\"spec_failed": [],
 	\})
 
