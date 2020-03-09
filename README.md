@@ -225,6 +225,8 @@ Comes from dumb-jump.el emacs package
 
 Please open issue on any question / problem / feedback / idea.
 
+Garanteed contribution feedback: 3-5 days, but it's stable.
+
 ```
  /~~||/~\\  /---   ||   ||/~\ /~\ |~~\
  \__||   |\/       | \_/||   |   ||__/
