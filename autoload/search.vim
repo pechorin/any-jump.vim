@@ -39,47 +39,47 @@ let s:non_standard_ft_extensions_map = {
       \}
 
 let s:filetypes_comments_map = {
-      \"cpp":           "//",
-      \"elisp":         ";",
-      \"commonlisp":    ";",
-      \"javascript":    "//",
-      \"typescript":    "//",
-      \"dart":          "//",
-      \"haskell":       "--",
-      \"lua":           "--",
-      \"rust":          "//",
-      \"julia":         "#" ,
-      \"objc":          "//",
-      \"csharp":        "//",
-      \"java":          "//",
-      \"clojure":       ";" ,
-      \"coffeescript":  "#" ,
-      \"faust":         "//",
-      \"fortran":       "!" ,
-      \"go":            "//",
-      \"perl":          "#" ,
-      \"php":           "//",
-      \"python":        "#" ,
-      \"matlab":        "%" ,
-      \"r":             "#" ,
-      \"racket":        ";" ,
-      \"ruby":          "#" ,
-      \"crystal":       "#" ,
-      \"nim":           "#" ,
-      \"nix":           "#" ,
-      \"scala":         "//",
-      \"scheme":        ";" ,
-      \"shell":         "#" ,
-      \"swift":         "//",
-      \"elixir":        "#" ,
-      \"erlang":        "%" ,
-      \"tex":           "%" ,
-      \"systemverilog": "//",
-      \"vhdl":          "--",
-      \"scss":          "//",
-      \"pascal":        "//",
-      \"protobuf":      "//",
-      \"zig":           "//",
+      \"cpp":           ["//"],
+      \"elisp":         [";"],
+      \"commonlisp":    [";"],
+      \"javascript":    ["//"],
+      \"typescript":    ["//"],
+      \"dart":          ["//"],
+      \"haskell":       ["--"],
+      \"lua":           ["--"],
+      \"rust":          ["//"],
+      \"julia":         ["#"] ,
+      \"objc":          ["//"],
+      \"csharp":        ["//"],
+      \"java":          ["//"],
+      \"clojure":       [";"] ,
+      \"coffeescript":  ["#"] ,
+      \"faust":         ["//"],
+      \"fortran":       ["!"] ,
+      \"go":            ["//"],
+      \"perl":          ["#"] ,
+      \"php":           ["//", "#"],
+      \"python":        ["#"] ,
+      \"matlab":        ["%"] ,
+      \"r":             ["#"] ,
+      \"racket":        [";"] ,
+      \"ruby":          ["#"] ,
+      \"crystal":       ["#"] ,
+      \"nim":           ["#"] ,
+      \"nix":           ["#"] ,
+      \"scala":         ["//"],
+      \"scheme":        [";"] ,
+      \"shell":         ["#"] ,
+      \"swift":         ["//"],
+      \"elixir":        ["#"] ,
+      \"erlang":        ["%"] ,
+      \"tex":           ["%"] ,
+      \"systemverilog": ["//"],
+      \"vhdl":          ["--"],
+      \"scss":          ["//"],
+      \"pascal":        ["//"],
+      \"protobuf":      ["//"],
+      \"zig":           ["//"],
       \}
 
 
@@ -374,14 +374,11 @@ fu! s:FilterGrepResults(language, grep_results) abort
   endif
 
   if g:any_jump_remove_comments_from_results && has_key(s:filetypes_comments_map, a:language)
-    let comment_pattern = s:filetypes_comments_map[a:language]
-    let comment_pattern = '^\s*' . comment_pattern
+    let comment_patterns = map(copy(s:filetypes_comments_map[a:language]), "'^\\s*' . v:val")
+    let filtered = copy(a:grep_results)
 
-    let filtered = []
-    for gr in a:grep_results
-      if match(gr.text, comment_pattern) == -1
-        call add(filtered, gr)
-      endif
+    for comment_pattern in comment_patterns
+      call filter(filtered, 'v:val.text !~# comment_pattern')
     endfor
 
     return filtered
