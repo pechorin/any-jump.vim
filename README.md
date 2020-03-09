@@ -144,6 +144,7 @@ let g:any_jump_remove_comments_from_results = 1
 " 'word' - will match 'MyClass'
 " 'full' - will match 'MyNamespace::MyClass'
 
+" DEPRECATED:
 let g:any_jump_keyword_match_cursor_mode', 'word'
 
 " Add ignore files

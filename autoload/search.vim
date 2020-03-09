@@ -346,7 +346,10 @@ fu! s:RunAgDefinitionSearch(language, patterns) abort
 endfu
 
 fu! s:RunRgUsagesSearch(language, keyword) abort
-  let cmd = s:rg_base_cmd . ' -w ' . a:keyword
+  let kw = a:keyword
+  let kw = substitute(kw, "\-", "\\\\-", "g") " shell escape
+
+  let cmd = s:rg_base_cmd . ' -w ' . string(kw)
   let cmd = cmd . s:GetRgIgnoreSpecifier()
 
   if g:any_jump_references_only_for_current_filetype
@@ -364,8 +367,8 @@ fu! s:RunRgUsagesSearch(language, keyword) abort
 endfu
 
 fu! s:RunAgUsagesSearch(language, keyword) abort
-  let cmd          = s:ag_base_cmd . ' -w ' . a:keyword
-  let cmd          = cmd . s:GetAgIgnoreSpecifier()
+  let cmd = s:ag_base_cmd . ' -w ' . string(a:keyword)
+  let cmd = cmd . s:GetAgIgnoreSpecifier()
 
   if g:any_jump_references_only_for_current_filetype
         \ && type(a:language) == v:t_string
@@ -375,6 +378,7 @@ fu! s:RunAgUsagesSearch(language, keyword) abort
   endif
 
   let raw_results  = system(cmd)
+
   let grep_results = s:ParseAgResults(raw_results)
   let grep_results = s:FilterGrepResults(a:language, grep_results)
 
@@ -446,7 +450,25 @@ fu! s:ParseAgResults(raw_results) abort
         continue
       endif
 
-      let res         = split(line, ':')
+      let max_splits = 3
+      let head = 0
+      let tail = line
+      let res  = []
+
+      while len(tail) != 0
+        let midx = match(tail, ':')
+
+        if midx >= 0 && len(res) != (max_splits - 1)
+          let head = tail[0 : midx - 1]
+          let tail = tail[midx + 1 : -1]
+
+          call add(res, head)
+        else
+          call add(res, tail)
+          let tail = ''
+        endif
+      endwhile
+
       let grep_result = s:NewGrepResult()
 
       if len(res) != 3
