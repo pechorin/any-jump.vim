@@ -2,6 +2,8 @@
 
 **— IDE madness without overhead for 40+ languages**
 
+Any-jump can be used with any language, but definitions search only available for supported languages. This is not a problem in general, so use any-jump freely on any code project.
+
 _Vim code inspection plugin for finding defitinitions⚒ and references/usages🔬._
 
 _next: tags definitions and refactoring support_
