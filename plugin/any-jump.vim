@@ -709,7 +709,7 @@ fu! g:AnyJumpHandlePreview() abort
 
               let cur_kw = ui.CreateItem("preview_text",
                     \ cur_text[first_kw_pos : first_kw_pos + len(ui.keyword) -1 ],
-                    \ "Operator",
+                    \ g:AnyJumpGetColor("preview_keyword"),
                     \ { "link": action_item, "no_padding": v:true })
 
               call add(items, cur_kw)
