@@ -112,7 +112,7 @@ call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp'])
 " Public customization methods
 " ----------------------------------------------
 
-call s:set_plugin_global_option('any_jump_colors', {
+let s:default_colors = {
       \"plain_text": "Comment",
       \"preview": 'Comment',
       \"preview_keyword": "Operator",
@@ -126,12 +126,18 @@ call s:set_plugin_global_option('any_jump_colors', {
       \"result_text": "Statement",
       \"result_path": "String",
       \"help": "Comment"
-      \})
+      \}
+
+let g:any_jump_colors_compiled = s:default_colors
+
+if exists('g:any_jump_colors')
+  call extend(g:any_jump_colors_compiled, g:any_jump_colors)
+endif
 
 " TODO: change to private# api
 fu! g:AnyJumpGetColor(name) abort
-  if has_key(g:any_jump_colors, a:name)
-    return g:any_jump_colors[a:name]
+  if has_key(g:any_jump_colors_compiled, a:name)
+    return g:any_jump_colors_compiled[a:name]
   else
     echo "any-jump color not found: " . a:name
     return 'Comment'
