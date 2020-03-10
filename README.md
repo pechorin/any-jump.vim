@@ -124,7 +124,7 @@ let g:any_jump_window_height_ratio = 0.6
 let g:any_jump_window_top_offset   = 4
 
 " Customize any-jump colors with extending default color scheme:
-let g:any_jump_colors = { "help": "Function" }
+let g:any_jump_colors = { "help": "Comment" }
 
 " Or override all default colors
 let g:any_jump_colors = {
