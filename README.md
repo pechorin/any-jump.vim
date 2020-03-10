@@ -53,19 +53,19 @@ You can also use visaul mode to select proper keyword (<leader>j also works in v
 
 ## Keybindings
 
-Default global mappings for normal mode:
+Default global mappings for normal and visual modes:
 
 ```viml
-" Jump to definition under cursore
+" Normal mode: Jump to definition under cursore
 nnoremap <leader>j :AnyJump<CR>
 
 " Visual mode: jump to selected text in visual mode
 xnoremap <leader>j :AnyJumpVisual<CR>
 
-" open previous opened file (after jump)
+" Normal mode: open previous opened file (after jump)
 nnoremap <leader>ab :AnyJumpBack<CR>
 
-" open last closed search window again
+" Normal mode: open last closed search window again
 nnoremap <leader>al :AnyJumpLastResults<CR>
 ```
 
