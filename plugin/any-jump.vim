@@ -206,15 +206,15 @@ fu! s:VimPopupFilter(popup_winid, key) abort
   let bufnr = winbufnr(a:popup_winid)
   let ib    = s:GetCurrentInternalBuffer()
 
-  if a:key == "j"
+  if a:key ==# "j"
     call popup_filter_menu(a:popup_winid, a:key)
     return 1
 
-  elseif a:key == "k"
+  elseif a:key ==# "k"
     call popup_filter_menu(a:popup_winid, a:key)
     return 1
 
-  elseif a:key == "p" || a:key == "\<TAB>"
+  elseif a:key ==# "p" || a:key ==# "\<TAB>"
     call g:AnyJumpHandlePreview()
     return 1
 
@@ -226,7 +226,7 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpToggleAllResults()
     return 1
 
-  elseif a:key == "r"
+  elseif a:key ==# "r"
     call g:AnyJumpHandleReferences()
     return 1
 
@@ -242,25 +242,25 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call g:AnyJumpToFirstLink()
     return 1
 
-  elseif a:key == "\<CR>" || a:key ==# 'o'
+  elseif a:key ==# "\<CR>" || a:key ==# 'o'
     call g:AnyJumpHandleOpen()
     return 1
 
-  elseif a:key == "t"
+  elseif a:key ==# "t"
     call g:AnyJumpHandleOpen('tab')
     return 1
 
-  elseif a:key == "s"
+  elseif a:key ==# "s"
     call g:AnyJumpHandleOpen('split')
     return 1
 
-  elseif a:key == "v"
+  elseif a:key ==# "v"
     call g:AnyJumpHandleOpen('vsplit')
+    return 1
 
-  elseif a:key == "q"
-        \ || a:key == '\<ESC>'
-        \ || a:key == 'Q'
-        \ || a:key == 'x'
+  elseif a:key ==# "q"
+        \ || a:key ==# "\<ESC>"
+        \ || a:key ==# 'x'
     call g:AnyJumpHandleClose()
     return 1
   endif
