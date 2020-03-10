@@ -653,7 +653,7 @@ fu! s:InternalBuffer.RenderUi() dict abort
 
   call self.AddLine([ self.CreateItem("help_link", "> Help", g:AnyJumpGetColor('heading_text')) ])
 
-  let color = g:AnyJumpGetColor('help_color')
+  let color = g:AnyJumpGetColor('help')
 
   call self.AddLine([ self.CreateItem("help_text", "", color) ])
   call self.AddLine([ self.CreateItem("help_text", "[o] open               [t] open in tab        [s] open in split   [v] open in vsplit", color) ])
