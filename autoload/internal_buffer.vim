@@ -404,20 +404,19 @@ fu! s:InternalBuffer.GrepResultToItems(gr, current_idx, layer) dict abort
   endif
 
   if g:any_jump_results_ui_style == 'filename_first'
-    let path_text    = '' .  gr.path .  ":" . gr.line_number
-    let matched_text = self.CreateItem("link", gr.text, g:AnyJumpGetColor('result_text'), original_link_options)
-    let file_path    = self.CreateItem("link", path_text, g:AnyJumpGetColor('result_path'), options)
-
-    call add(items, matched_text)
-    call add(items, file_path)
-
-  elseif g:any_jump_results_ui_style == 'filename_last'
     let path_text    = gr.path .  ":" . gr.line_number
     let matched_text = self.CreateItem("link", "" . gr.text, g:AnyJumpGetColor('result_text'), original_link_options)
     let file_path    = self.CreateItem("link", path_text, g:AnyJumpGetColor('result_path'), options)
 
     call add(items, file_path)
     call add(items, matched_text)
+  elseif g:any_jump_results_ui_style == 'filename_last'
+    let path_text    = '' .  gr.path .  ":" . gr.line_number
+    let matched_text = self.CreateItem("link", gr.text, g:AnyJumpGetColor('result_text'), original_link_options)
+    let file_path    = self.CreateItem("link", path_text, g:AnyJumpGetColor('result_path'), options)
+
+    call add(items, matched_text)
+    call add(items, file_path)
   endif
 
   return items

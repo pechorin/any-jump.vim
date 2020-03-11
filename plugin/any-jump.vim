@@ -1,5 +1,6 @@
 " TODO:
-" - auto preview first result
+" - support for old vims via opening buffer in split
+" - [option] auto preview first result
 "
 " TODO_THINK:
 " - rg and ag results sometimes very differenet
