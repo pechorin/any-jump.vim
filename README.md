@@ -18,7 +18,7 @@ Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep 
 ## Requirements
 
 - `nvim 0.4+` or `vim 8.2`
-- `ripgrep` or `ag`
+- `ripgrep 11.0.0+` or `ag`
 - _some languages requires rg with PCRE2 support_
 
 ## Installation
