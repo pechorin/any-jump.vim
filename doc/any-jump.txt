@@ -1,19 +1,19 @@
-*any-jump.vim* — Vim plugin for "jump to defitinition⚒" and "find usages🔬" feature through nice popup ui.
+*any-jump.vim* - Vim plugin for "jump to defitinition" and "find usages" feature through nice popup ui.
 
 
                               /~~||/~\\  /---   ||   ||/~\ /~\ |~~\
                               \__||   |\/       | \_/||   |   ||__/
                                       _/     \__|              |
 
-                          — IDE madness without overhead for 40+ languages
+                          - IDE madness without overhead for 40+ languages
 
 Based on syntax rules for 40 languages and **fast regexp engines** like ripgrep and ag.
 Required `rg` or `ag` to be installed. GNU grep support dropped for flavor of blazing perfomance.
 
 *Searches*
 
-- [*] keyword definitions — find files where keyword defined
-- [*] keyword usages — find files where keyword used
+- [*] keyword definitions - find files where keyword defined
+- [*] keyword usages - find files where keyword used
 - [ ] ctags
 
 ====================================================================
