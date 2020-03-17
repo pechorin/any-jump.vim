@@ -27,7 +27,7 @@ CONTENTS                                           *any-jump-contents*
 Section 1: Usage                                      *any-jump-usage*
 
 Just place you cursor on any variable/class/constant/name/symbol and press `<leader>j` or execute `:AnyJump` in normal mode.
-You can also use visaul mode to select proper keyword (<leader>j also works in visual mode)
+You can also use visual mode to select proper keyword (<leader>j also works in visual mode)
 
 
 ====================================================================

@@ -34,7 +34,7 @@ Plug 'pechorin/any-jump.vim'
 In normal or visual mode.
 
 Just place you cursor on any variable/class/constant/name/symbol and press `<leader>j` or execute `:AnyJump` in normal mode.
-You can also use visaul mode to select proper keyword (<leader>j also works in vusual mode)
+You can also use visual mode to select proper keyword (<leader>j also works in vusual mode)
 
 ## Searches
 
