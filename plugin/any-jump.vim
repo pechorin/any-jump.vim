@@ -1,18 +1,28 @@
 " TODO:
-" - support for old vims via opening buffer in split
+" - add definitions rules for rails meta expressions in ruby like `has_many :users`
+" - better default syntax (which works for some N popular themes) rules
+" - hl keyword in result line also
+" - ability to jumps and lookups for library source codes paths
+" - [hot] display type of definition
+" - [option] cut long lines
+" - guide on how to add language
+" - AnyJumpFirst - if found result from prefered dirs of only one result
+"   then jump to it, othrewise open ui
 " - [option] auto preview first result
+" - is tags cupport really needed?
+"   i think it cool for perfomance reasons, but sometimes our engine is deeper
 "
 " TODO_THINK:
-" - rg and ag results sometimes very differenet
+" - [recheck] rg and ag results sometimes very differenet
 " - after pressing p jump to next result
 " - fzf
 " - ability to scroll preview
 " - [vim] может стоит перепрыгивать пустые строки? при j/k
+" - support for old vims via opening buffer in split (?)
 "
 " TODO_FUTURE_RELEASES:
 " - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
 " - AnyJumpPreview
-" - AnyJumpFirst
 " - "save jump" button ??
 " - jumps list ??
 
