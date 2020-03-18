@@ -213,6 +213,11 @@ fu! search#SearchDefinitions(lang, keyword) abort
 
   for rule in lang
     let regexp = substitute(rule.pcre2_regexp, s:regexp_keyword_word, a:keyword, "g")
+
+    if match(&shell, 'fish') != -1
+      let regexp = substitute(regexp, '\$', '\\$', 'g')
+    endif
+
     call add(patterns, regexp)
   endfor
 
