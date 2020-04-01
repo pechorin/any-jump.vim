@@ -1,4 +1,13 @@
 " TODO:
+" - add scope :symbol to ruby syntax
+" - add lightline integration ?
+" - add rerun search button (first step to refuctoring) (first `R` - rerun
+"   search and just show diff only; `RR` -> rerun search and show new results)
+" - add mouse-click evets support
+" - any-jump-lust should also restore cursor position
+" - add multiple priview mode
+" - ability to toggle help
+" - ability to make help hidden by default
 " - add definitions rules for rails meta expressions in ruby like `has_many :users`
 " - better default syntax (which works for some N popular themes) rules
 " - hl keyword in result line also
