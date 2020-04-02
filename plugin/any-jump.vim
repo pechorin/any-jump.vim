@@ -1,4 +1,5 @@
 " TODO:
+" - fix bg in NeoSolorized theme (add bg set color support)
 " - [more] button should append N items only on current collection
 " - add scope :symbol to ruby syntax
 " - add lightline integration ?
@@ -211,7 +212,9 @@ fu! s:CreateNvimUi(internal_buffer) abort
         \ }
 
   let winid = nvim_open_win(buf, v:true, opts)
+
   call nvim_win_set_option(winid, 'number', v:false)
+  call nvim_win_set_option(winid, 'wrap', v:false)
 
   let t:any_jump.vim_bufnr = buf
 
