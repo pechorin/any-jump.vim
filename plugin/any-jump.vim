@@ -2,8 +2,6 @@
 " - [more] button should append N items only on current collection
 " - add scope :symbol to ruby syntax
 " - add lightline integration ?
-" - add rerun search button (first step to refuctoring) (first `R` - rerun
-"   search and just show diff only; `RR` -> rerun search and show new results)
 " - add mouse-click evets support
 " - any-jump-last should also restore cursor position
 " - add multiple priview mode
@@ -22,13 +20,26 @@
 " - is tags cupport really needed?
 "   i think it cool for perfomance reasons, but sometimes our engine is deeper
 "
+" TAGS_SUPPORT:
+" - use tags definitions engine if prefered
+" - what kind of additional data we can provide if tags enabled? (besides
+"   definitions)A
+"
+" UI:
+" - add rerun search button (first step to refuctoring) (first `R` - rerun
+"   search and just show diff only; `RR` -> rerun search and show new results)
+"
 " TODO_THINK:
-" - [recheck] rg and ag results sometimes very differenet
 " - after pressing p jump to next result
 " - fzf
 " - ability to scroll preview
 " - [vim] может стоит перепрыгивать пустые строки? при j/k
 " - support for old vims via opening buffer in split (?)
+"
+" WILL_NEVER:
+" - fzf or quickfix, because any-jump ui is some sort of qf
+"   but if you wish to provide any-jump definitions/references search results
+"   to fzf or quickfix please create pull request with this core modification.
 "
 " TODO_FUTURE_RELEASES:
 " - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
