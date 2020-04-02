@@ -1,4 +1,5 @@
 " TODO:
+" - wrap for nvim should be configurable
 " - fix bg in NeoSolorized theme (add bg set color support)
 " - [more] button should append N items only on current collection
 " - add scope :symbol to ruby syntax
