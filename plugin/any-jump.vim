@@ -215,6 +215,9 @@ fu! s:CreateNvimUi(internal_buffer) abort
   let winid = nvim_open_win(buf, v:true, opts)
 
   call nvim_win_set_option(winid, 'number', v:false)
+  call nvim_win_set_option(winid, 'relativenumber', v:false)
+  call nvim_win_set_option(winid, 'foldcolumn', '0')
+  call nvim_win_set_option(winid, 'signcolumn', 'no')
   call nvim_win_set_option(winid, 'wrap', v:false)
 
   let t:any_jump.vim_bufnr = buf
