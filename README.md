@@ -35,6 +35,7 @@ In normal or visual mode.
 
 Just place you cursor on any variable/class/constant/name/symbol and press `<leader>j` or execute `:AnyJump` in normal mode.
 You can also use visual mode to select proper keyword (<leader>j also works in vusual mode)
+With `:AnyJumpArg` command you can manually write what you want to be searched for.
 
 ## Searches
 

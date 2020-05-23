@@ -332,6 +332,8 @@ fu! s:Jump(...) abort range
     let y = getpos("'>")[2]
 
     let keyword = getline(line('.'))[ x - 1 : y - 1]
+  elseif has_key(opts, 'is_arg')
+    let keyword = opts['is_arg']
   else
     let keyword = expand('<cword>')
   endif
@@ -813,6 +815,7 @@ endfu
 " Commands
 command! AnyJump call s:Jump()
 command! -range AnyJumpVisual call s:Jump({"is_visual": v:true})
+command! -nargs=1 AnyJumpArg call s:Jump({"is_arg": <f-args>})
 command! AnyJumpBack call s:JumpBack()
 command! AnyJumpLastResults call s:JumpLastResults()
 command! AnyJumpRunSpecs call s:RunSpecs()
