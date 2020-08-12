@@ -209,7 +209,8 @@ fu! s:CreateNvimUi(internal_buffer) abort
         \ 'row': vertical,
         \ 'col': horizontal,
         \ 'width': width,
-        \ 'height': height
+        \ 'height': height,
+        \ 'style': 'minimal',
         \ }
 
   let winid = nvim_open_win(buf, v:true, opts)
