@@ -192,12 +192,11 @@ endfu
 
 fu! s:CreateNvimUi(internal_buffer) abort
   let kw  = a:internal_buffer.keyword
-  let buf = bufadd('any-jump lookup ' . kw)
+  let buf = nvim_create_buf(1, 0)
 
-  call setbufvar(buf, '&filetype', 'any-jump')
-  call setbufvar(buf, '&bufhidden', 'delete')
-  call setbufvar(buf, '&buftype', 'nofile')
-  call setbufvar(buf, '&modifiable', 1)
+  call nvim_buf_set_option(buf, 'bufhidden', 'delete')
+  call nvim_buf_set_option(buf, 'buftype', 'nofile')
+  call nvim_buf_set_option(buf, 'modifiable', v:true)
 
   let height     = float2nr(&lines * g:any_jump_window_height_ratio)
   let width      = float2nr(&columns * g:any_jump_window_width_ratio)
@@ -213,6 +212,9 @@ fu! s:CreateNvimUi(internal_buffer) abort
         \ }
 
   let winid = nvim_open_win(buf, v:true, opts)
+
+  " Set filetype after window appearance for proper event propagation
+  call nvim_buf_set_option(buf, 'filetype', 'any-jump')
 
   call nvim_win_set_option(winid, 'number', v:false)
   call nvim_win_set_option(winid, 'wrap', v:false)
