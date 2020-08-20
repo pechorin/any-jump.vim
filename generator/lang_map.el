@@ -137,6 +137,21 @@
          :tests ("typedef struct test {" "enum test {" "} test;" "union test {" "class test final: public Parent1, private Parent2{" "class test : public std::vector<int> {")
          :not("union test var;" "struct test function() {"))
 
+  ;; d
+  (:type "function" :supports ("ag" "rg" "git-grep") :language "d"
+          :regex "\\bJJJ(\\s|\\))*\\((\\w|[,&*.<>]|\\s)*(\\))\\s*(const|->|\\{|$)|typedef\\s+(\\w|[(*]|\\s)+JJJ(\\)|\\s)*\\("
+          :tests ("int test(){" "my_struct (*test)(int a, int b){" "auto MyClass::test ( Builder& reference, ) -> decltype( builder.func() ) {" "int test( int *random_argument) const {" "test::test() {" "typedef int (*test)(int);")
+          :not ("return test();)" "int test(a, b);" "if( test() ) {" "else test();"))
+
+  (:type "variable" :supports ("ag" "rg") :language "d"
+          :regex "\\b(?!(class\\b|struct\\b|return\\b|else\\b|delete\\b))(\\w+|[,>])([*&]|\\s)+JJJ\\s*(\\[(\\d|\\s)*\\])*\\s*([=,(){;]|:\\s*\\d)|#define\\s+JJJ\\b"
+          :tests ("int test=2;" "char *test;" "int x = 1, test = 2" "int test[20];" "#define test" "typedef int test;" "unsigned int test:2")
+          :not ("return test;" "#define NOT test" "else test=2;"))
+
+  (:type "type" :supports ("ag" "rg" "git-grep") :language "d"
+          :regex "\\b(mixin|template|class|struct|enum|union)\\b\\s*JJJ\\b\\s*?(:((\\s*\\w+\\s*::)*\\s*\\w*\\s*<?(\\s*\\w+\\s*::)*\\w+>?\\s*,*)+)?((\\{|$))|}\\s*JJJ\\b\\s*;"
+          :tests ("typedef struct test {" "enum test {" "} test;" "union test {" "class test final: public Parent1, private Parent2{" "class test : public std::vector<int> {")
+          :not("union test var;" "struct test function() {"))
   ;; clojure
   (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "clojure"
          :regex "\\(def\\s+JJJ\\j"
