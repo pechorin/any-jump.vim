@@ -288,6 +288,42 @@ call s:add_definition('cpp', {
 	\"spec_failed": ["union test var;","struct test function() {"],
 	\})
 
+call s:add_definition('d', {
+	\"type": 'function',
+	\"pcre2_regexp": '\bKEYWORD(\s|\))*\((\w|[,&*.<>]|\s)*(\))\s*(const|->|\{|$)|typedef\s+(\w|[(*]|\s)+KEYWORD(\)|\s)*\(',
+	\"emacs_regexp": '\bJJJ(\s|\))*\((\w|[,&*.<>]|\s)*(\))\s*(const|->|\{|$)|typedef\s+(\w|[(*]|\s)+JJJ(\)|\s)*\(',
+	\"supports": ["ag", "rg", "git-grep"],
+	\"spec_success": ["int test(){","my_struct (*test)(int a, int b){","auto MyClass::test ( Builder& reference, ) -> decltype( builder.func() ) {","int test( int *random_argument) const {","test::test() {","typedef int (*test)(int);"],
+	\"spec_failed": ["return test();)","int test(a, b);","if( test() ) {","else test();"],
+	\})
+
+call s:add_definition('d', {
+	\"type": 'variable',
+	\"pcre2_regexp": '(\b\w+|[,>])([*&]|\s)+KEYWORD\s*(\[([0-9]|\s)*\])*\s*([=,){;]|:\s*[0-9])|#define\s+KEYWORD\b',
+	\"emacs_regexp": '(\b\w+|[,>])([*&]|\s)+JJJ\s*(\[([0-9]|\s)*\])*\s*([=,){;]|:\s*[0-9])|#define\s+JJJ\b',
+	\"supports": ["grep"],
+	\"spec_success": ["int test=2;","char *test;","int x = 1, test = 2","int test[20];","#define test","unsigned int test:2;"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('d', {
+	\"type": 'variable',
+	\"pcre2_regexp": '\b(?!(template\b|class\b|struct\b|return\b|else\b|delete\b))(\w+|[,>])([*&]|\s)+KEYWORD\s*(\[(\d|\s)*\])*\s*([=,(){;]|:\s*\d)|#define\s+KEYWORD\b',
+	\"emacs_regexp": '\b(?!(template\b|class\b|struct\b|return\b|else\b|delete\b))(\w+|[,>])([*&]|\s)+JJJ\s*(\[(\d|\s)*\])*\s*([=,(){;]|:\s*\d)|#define\s+JJJ\b',
+	\"supports": ["ag", "rg"],
+	\"spec_success": ["int test=2;","char *test;","int x = 1, test = 2","int test[20];","#define test","typedef int test;","unsigned int test:2"],
+	\"spec_failed": ["return test;","#define NOT test","else test=2;"],
+	\})
+
+call s:add_definition('d', {
+	\"type": 'type',
+	\"pcre2_regexp": '\b(template|class|struct|enum|union)\b\s*KEYWORD\b\s*(final\s*)?(:((\s*\w+\s*::)*\s*\w*\s*<?(\s*\w+\s*::)*\w+>?\s*,*)+)?((\{|$))|}\s*KEYWORD\b\s*;',
+	\"emacs_regexp": '\b(template|class|struct|enum|union)\b\s*JJJ\b\s*(final\s*)?(:((\s*\w+\s*::)*\s*\w*\s*<?(\s*\w+\s*::)*\w+>?\s*,*)+)?((\{|$))|}\s*JJJ\b\s*;',
+	\"supports": ["ag", "rg", "git-grep"],
+	\"spec_success": ["typedef struct test {","enum test {","} test;","union test {","class test final: public Parent1, private Parent2{","class test : public std::vector<int> {"],
+	\"spec_failed": ["union test var;","struct test function() {"],
+	\})
+
 call s:add_definition('clojure', {
 	\"type": 'variable',
 	\"pcre2_regexp": '\(def\s+KEYWORD($|[^a-zA-Z0-9\?\*-])',
