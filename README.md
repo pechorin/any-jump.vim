@@ -124,7 +124,7 @@ let g:any_jump_window_height_ratio = 0.6
 let g:any_jump_window_top_offset   = 4
 
 " Customize any-jump colors with extending default color scheme:
-let g:any_jump_colors = { "help": "Comment" }
+" let g:any_jump_colors = { "help": "Comment" }
 
 " Or override all default colors
 let g:any_jump_colors = {
@@ -161,6 +161,39 @@ let g:any_jump_references_only_for_current_filetype = 0
 " (default: false, search engine will ignore vcs untracked files)
 let g:any_jump_disable_vcs_ignore = 0
 ```
+
+## Theme configuration
+
+Where are default theme configuration based on standard Vim hightlight groups,
+you can override any setting:
+
+```
+let g:any_jump_colors = {
+      \"plain_text":         "Comment",
+      \"preview":            "Comment",
+      \"preview_keyword":    "Operator",
+      \"heading_text":       "Function",
+      \"heading_keyword":    "Identifier",
+      \"group_text":         "Comment",
+      \"group_name":         "Function",
+      \"more_button":        "Operator",
+      \"more_explain":       "Comment",
+      \"result_line_number": "Comment",
+      \"result_text":        "Statement",
+      \"result_path":        "String",
+      \"help":               "Comment"
+      \}
+```
+
+### Background settings
+
+You can set non-theme background by set Pmenu hl group like this:
+
+```
+hi Pmenu guibg=#1b1b1b ctermbg=Black
+```
+
+Where are also `PmenuSel`, `PmenuSbar`, `PmenuThumb` groups for configuring.
 
 ## Features
 
