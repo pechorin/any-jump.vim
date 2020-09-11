@@ -193,6 +193,7 @@ endfu
 fu! s:CreateNvimUi(internal_buffer) abort
   let kw  = a:internal_buffer.keyword
   let buf = nvim_create_buf(1, 0)
+  call nvim_buf_set_name(buf, 'any-jump lookup ' . kw)
 
   call nvim_buf_set_option(buf, 'bufhidden', 'delete')
   call nvim_buf_set_option(buf, 'buftype', 'nofile')
