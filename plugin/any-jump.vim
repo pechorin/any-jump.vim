@@ -213,7 +213,22 @@ fu! s:CreateNvimUi(internal_buffer) abort
         \ 'style': 'minimal',
         \ }
 
+  let top = '╭' . repeat('─', width - 2) . '╮'
+  let mid = '│' . repeat(' ', width - 2) . '│'
+  let bot = '╰' . repeat('─', width - 2) . '╯'
+  let lines = [top] + repeat([mid], height - 2) + [bot]
+  let s:border_buf = nvim_create_buf(0, 1)
+  call nvim_buf_set_lines(s:border_buf, 0, -1, v:true, lines)
+  call nvim_open_win(s:border_buf, v:false, opts)
+
+  let opts.row += 1
+  let opts.height -= 2
+  let opts.col += 2
+  let opts.width -= 4
+
   let winid = nvim_open_win(buf, v:true, opts)
+
+  au anyjump BufUnload <buffer> exe 'bw '.s:border_buf
 
   " Set filetype after window appearance for proper event propagation
   call nvim_buf_set_option(buf, 'filetype', 'any-jump')
