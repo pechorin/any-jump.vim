@@ -246,7 +246,7 @@ fu! s:CreateVimUi(internal_buffer) abort
   let a:internal_buffer.vim_bufnr   = winbufnr(popup_winid)
 
   call a:internal_buffer.RenderUi()
-  call a:internal_buffer.SetCursorToNextLink()
+  call a:internal_buffer.JumpToFirstOfType('link', 'definitions')
 endfu
 
 fu! s:VimPopupFilter(popup_winid, key) abort

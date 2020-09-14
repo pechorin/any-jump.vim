@@ -390,7 +390,12 @@ fu! s:InternalBuffer.JumpToFirstOfType(type, ...) dict abort
 
   if type(item) == v:t_dict
     let ln = self.GetItemLineNumber(item)
-    call cursor(ln, 2)
+    if s:nvim
+      call cursor(ln, 2)
+    else
+      let cmd = printf('call cursor(%d, 2)', ln)
+      call win_execute(self.popup_winid, cmd)
+    endif
   endif
 endfu
 
