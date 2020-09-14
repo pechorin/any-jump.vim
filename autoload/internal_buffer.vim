@@ -40,6 +40,9 @@ let s:InternalBuffer.MethodsList = [
       \'ClearBuffer',
       \'BufferLnum',
       \'RestorePopupCursor',
+      \'SetCursorToNextLink',
+      \'SetCursorToPreviousLink',
+      \'GetCurLine',
       \]
 
 " Produce new Render Buffer
@@ -182,17 +185,52 @@ fu! s:InternalBuffer.CreateItem(type, text, hl_group, ...) dict abort
   return item
 endfu
 
-
-fu! s:InternalBuffer.GetItemByPos() dict abort
+fu! s:InternalBuffer.GetCurLine() dict abort
   if s:nvim
-    let idx = getbufinfo(self.vim_bufnr)[0]['lnum']
+    return getbufinfo(self.vim_bufnr)[0]['lnum']
   else
     " vim popup buffer doesn't have current line info inside getbufinfo()
     " so extract line nr from win
     let l:popup_pos = 0
     call win_execute(self.popup_winid, 'let l:popup_pos = getcurpos()')
-    let idx = l:popup_pos[1]
+    return l:popup_pos[1]
   end
+endfu
+
+fu! s:InternalBuffer.SetCursorToNextLink() dict abort
+  let idx = self.GetCurLine()
+
+  while idx < len(self.items)
+    let line = self.items[idx]
+    for item in line
+      if item.type == 'link' || item.type == 'button'
+        let cmd = printf("call setpos('.', [%d, %d, 1, 0])", self.vim_bufnr, idx + 1)
+        call win_execute(self.popup_winid, cmd)
+        return
+      endif
+    endfor
+    let idx += 1
+  endwhile
+endfu
+
+fu! s:InternalBuffer.SetCursorToPreviousLink() dict abort
+  let idx = self.GetCurLine() - 2
+
+  while idx >= 0
+    let line = self.items[idx]
+    for item in line
+      if item.type == 'link' || item.type == 'button'
+        let cmd = printf("call setpos('.', [%d, %d, 1, 0])", self.vim_bufnr, idx + 1)
+        call win_execute(self.popup_winid, cmd)
+        return
+      endif
+    endfor
+    let idx -= 1
+  endwhile
+endfu
+
+fu! s:InternalBuffer.GetItemByPos() dict abort
+  let idx = self.GetCurLine()
 
   if idx > len(self.items)
     return 0

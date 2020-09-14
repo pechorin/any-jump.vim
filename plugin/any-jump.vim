@@ -246,6 +246,7 @@ fu! s:CreateVimUi(internal_buffer) abort
   let a:internal_buffer.vim_bufnr   = winbufnr(popup_winid)
 
   call a:internal_buffer.RenderUi()
+  call a:internal_buffer.SetCursorToNextLink()
 endfu
 
 fu! s:VimPopupFilter(popup_winid, key) abort
@@ -253,11 +254,11 @@ fu! s:VimPopupFilter(popup_winid, key) abort
   let ib    = s:GetCurrentInternalBuffer()
 
   if a:key ==# "j"
-    call popup_filter_menu(a:popup_winid, a:key)
+    call ib.SetCursorToNextLink()
     return 1
 
   elseif a:key ==# "k"
-    call popup_filter_menu(a:popup_winid, a:key)
+    call ib.SetCursorToPreviousLink()
     return 1
 
   elseif a:key ==# "p" || a:key ==# "\<TAB>"
