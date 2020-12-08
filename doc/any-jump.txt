@@ -137,3 +137,7 @@ let g:any_jump_references_only_for_current_filetype = 0
 
 " Disable search engine ignore vcs untracked files (default: false, search engine will ignore vcs untracked files)
 let g:any_jump_disable_vcs_ignore = 0
+
+" Borders for neovim floating window, list of strings in this order
+" top left corner, top right corner, bottom left corner, bottom right corner, top/bottom, left/right
+let g:any_jump_neovim_border = ['╭', '╮','╰', '╯', '─', '│']

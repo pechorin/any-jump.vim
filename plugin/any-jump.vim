@@ -142,6 +142,8 @@ call s:set_plugin_global_option('any_jump_disable_vcs_ignore', v:false)
 " default is: ['*.tmp', '*.temp']
 call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp'])
 
+call s:set_plugin_global_option('any_jump_neovim_border', ['╭', '╮','╰', '╯', '─', '│'])
+
 " ----------------------------------------------
 " Public customization methods
 " ----------------------------------------------
@@ -213,9 +215,10 @@ fu! s:CreateNvimUi(internal_buffer) abort
         \ 'style': 'minimal',
         \ }
 
-  let top = '╭' . repeat('─', width - 2) . '╮'
-  let mid = '│' . repeat(' ', width - 2) . '│'
-  let bot = '╰' . repeat('─', width - 2) . '╯'
+  let [topleft_b, topright_b, botleft_b, botright_b, horizontal_b, vertical_b] = g:any_jump_neovim_border
+  let top = topleft_b . repeat(horizontal_b, width - 2) . topright_b
+  let mid = vertical_b . repeat(' ', width - 2) . vertical_b
+  let bot = botleft_b . repeat(horizontal_b, width - 2) . botright_b
   let lines = [top] + repeat([mid], height - 2) + [bot]
   let s:border_buf = nvim_create_buf(0, 1)
   call nvim_buf_set_lines(s:border_buf, 0, -1, v:true, lines)
