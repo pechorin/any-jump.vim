@@ -139,8 +139,8 @@ call s:set_plugin_global_option('any_jump_references_only_for_current_filetype',
 call s:set_plugin_global_option('any_jump_disable_vcs_ignore', v:false)
 
 " Custom ignore files
-" default is: ['*.tmp', '*.temp']
-call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp'])
+" default is: ['*.tmp', '*.temp', 'tags']
+call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp', 'tags'])
 
 " ----------------------------------------------
 " Public customization methods

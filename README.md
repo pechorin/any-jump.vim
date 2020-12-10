@@ -152,8 +152,7 @@ let g:any_jump_disable_default_keybindings = 1
 let g:any_jump_remove_comments_from_results = 1
 
 " Custom ignore files
-" default is: ['*.tmp', '*.temp']
-let g:any_jump_ignored_files = ['*.tmp', '*.temp']
+let g:any_jump_ignored_files = ['*.tmp', '*.temp', 'tags']
 
 " Search references only for current file type
 " (default: false, so will find keyword in all filetypes)
