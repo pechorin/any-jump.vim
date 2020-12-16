@@ -230,13 +230,16 @@ endfu
 fu! s:CreateVimUi(internal_buffer) abort
   let l:Filter   = function("s:VimPopupFilter")
 
+  let height = float2nr(&lines * g:any_jump_window_height_ratio)
+  let width  = float2nr(&columns * g:any_jump_window_width_ratio)
+
   let popup_winid = popup_menu([], {
         \"wrap":       0,
         \"cursorline": 1,
-        \"minheight":  20,
-        \"maxheight":  30,
-        \"minwidth":   90,
-        \"maxwidth":   90,
+        \"minheight":  height,
+        \"maxheight":  height,
+        \"minwidth":   width,
+        \"maxwidth":   width,
         \"border":     [0,0,0,0],
         \"padding":    [0,1,1,1],
         \"filter":     Filter,
