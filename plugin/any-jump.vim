@@ -264,6 +264,14 @@ fu! s:VimPopupFilter(popup_winid, key) abort
     call popup_filter_menu(a:popup_winid, a:key)
     return 1
 
+  elseif a:key ==# "\<Up>"
+    call popup_filter_menu(a:popup_winid, "k")
+    return 1
+
+  elseif a:key ==# "\<Down>"
+    call popup_filter_menu(a:popup_winid, "j")
+    return 1
+
   elseif a:key ==# "p" || a:key ==# "\<TAB>"
     call g:AnyJumpHandlePreview()
     return 1
