@@ -722,8 +722,8 @@ fu! g:AnyJumpHandlePreview() abort
       let preview_end_ln        = file_ln + preview_after_offset
 
       let path = join([getcwd(), action_item.data.path], '/')
-      let cmd  = 'head -n ' . string(preview_end_ln) . ' ' . path
-            \ . ' | tail -n ' . string(preview_after_offset + 1 + preview_before_offset)
+      let cmd  = 'head -n ' . string(preview_end_ln) . ' "' . path
+            \ . '" | tail -n ' . string(preview_after_offset + 1 + preview_before_offset)
 
       let preview = split(system(cmd), "\n")
       let render_ln = ui.GetItemLineNumber(action_item)
