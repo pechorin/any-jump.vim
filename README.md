@@ -2,7 +2,7 @@
 
 **— IDE madness without overhead for 40+ languages**
 
-_Vim code inspection plugin for finding defitinitions⚒ and references/usages🔬._
+_Vim code inspection plugin for finding definitions⚒ and references/usages🔬._
 
 Any-jump can be used with any language, but definitions search only available for supported languages. This is not a problem in general, so use any-jump freely on any code project.
 
@@ -166,7 +166,7 @@ let g:any_jump_disable_vcs_ignore = 0
 
 ## Theme configuration
 
-Where are default theme configuration based on standard Vim hightlight groups,
+There are default theme configuration based on standard Vim highlight groups,
 you can override any setting:
 
 ```
@@ -275,11 +275,11 @@ Where are also `PmenuSel`, `PmenuSbar`, `PmenuThumb` groups for configuring.
 
 Comes from dumb-jump.el emacs package
 
-## Issues and contibutions
+## Issues and contributions
 
 Please open issue on any question / problem / feedback / idea.
 
-Garanteed contribution feedback: 3-5 days, but it's stable.
+Guaranteed contribution feedback: 3-5 days, but it's stable.
 
 ```
  /~~||/~\\  /---   ||   ||/~\ /~\ |~~\
