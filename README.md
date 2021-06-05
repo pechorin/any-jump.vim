@@ -57,7 +57,7 @@ With `:AnyJumpArg myKeyword` command you can manually write what you want to be 
 Default global mappings for normal and visual modes:
 
 ```viml
-" Normal mode: Jump to definition under cursore
+" Normal mode: Jump to definition under cursor
 nnoremap <leader>j :AnyJump<CR>
 
 " Visual mode: jump to selected text in visual mode
