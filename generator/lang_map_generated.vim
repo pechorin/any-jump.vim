@@ -1399,7 +1399,7 @@ call s:add_definition('haskell', {
 	\"type": 'module',
 	\"pcre2_regexp": '^module\s+KEYWORD\s+',
 	\"emacs_regexp": '^module\s+JJJ\s+',
-	\"supports": ["ag"],
+	\"supports": ["ag", "rg"],
 	\"spec_success": ["module Test (exportA, exportB) where"],
 	\"spec_failed": [],
 	\})
@@ -1408,7 +1408,7 @@ call s:add_definition('haskell', {
 	\"type": 'top level function',
 	\"pcre2_regexp": '^\bKEYWORD(?!(\s+::))\s+((.|\s)*?)=\s+',
 	\"emacs_regexp": '^\bJJJ(?!(\s+::))\s+((.|\s)*?)=\s+',
-	\"supports": ["ag"],
+	\"supports": ["ag", "rg"],
 	\"spec_success": ["test n = n * 2","test X{..} (Y a b c) \n bcd \n =\n x * y","test ab cd e@Datatype {..} (Another thing, inTheRow) = \n undefined","test = runRealBasedMode @ext @ctx identity identity","test unwrap wrap nr@Naoeu {..} (Action action, specSpecs) = \n    undefined"],
 	\"spec_failed": ["nottest n = n * 2","let testnot x y = x * y","test $ y z","let test a o = mda","test :: Sometype -> AnotherType aoeu kek = undefined"],
 	\})
@@ -1417,7 +1417,7 @@ call s:add_definition('haskell', {
 	\"type": 'type-like',
 	\"pcre2_regexp": '^\s*((data(\s+family)?)|(newtype)|(type(\s+family)?))\s+KEYWORD\s+',
 	\"emacs_regexp": '^\s*((data(\s+family)?)|(newtype)|(type(\s+family)?))\s+JJJ\s+',
-	\"supports": ["ag"],
+	\"supports": ["ag", "rg"],
 	\"spec_success": ["newtype Test a = Something { b :: Kek }","data Test a b = Somecase a | Othercase b","type family Test (x :: *) (xs :: [*]) :: Nat where","data family Test ","type Test = TestAlias"],
 	\"spec_failed": ["newtype NotTest a = NotTest (Not a)","data TestNot b = Aoeu"],
 	\})
@@ -1426,7 +1426,7 @@ call s:add_definition('haskell', {
 	\"type": '(data)type constructor 1',
 	\"pcre2_regexp": '(data|newtype)\s{1,3}(?!KEYWORD\s+)([^=]{1,40})=((\s{0,3}KEYWORD\s+)|([^=]{0,500}?((?<!(-- ))\|\s{0,3}KEYWORD\s+)))',
 	\"emacs_regexp": '(data|newtype)\s{1,3}(?!JJJ\s+)([^=]{1,40})=((\s{0,3}JJJ\s+)|([^=]{0,500}?((?<!(-- ))\|\s{0,3}JJJ\s+)))',
-	\"supports": ["ag"],
+	\"supports": ["ag", "rg"],
 	\"spec_success": ["data Something a = Test { b :: Kek }","data Mem a = TrueMem { b :: Kek } | Test (Mem Int) deriving Mda","newtype SafeTest a = Test (Kek a) deriving (YonedaEmbedding)"],
 	\"spec_failed": ["data Test = Test { b :: Kek }"],
 	\})
@@ -1435,7 +1435,7 @@ call s:add_definition('haskell', {
 	\"type": 'data/newtype record field',
 	\"pcre2_regexp": '(data|newtype)([^=]*)=[^=]*?({([^=}]*?)(\bKEYWORD)\s+::[^=}]+})',
 	\"emacs_regexp": '(data|newtype)([^=]*)=[^=]*?({([^=}]*?)(\bJJJ)\s+::[^=}]+})',
-	\"supports": ["ag"],
+	\"supports": ["ag", "rg"],
 	\"spec_success": ["data Mem = Mem { \n mda :: A \n  , test :: Kek \n , \n aoeu :: E \n }","data Mem = Mem { \n test :: A \n  , mda :: Kek \n , \n aoeu :: E \n }","data Mem = Mem { \n mda :: A \n  , aoeu :: Kek \n , \n test :: E \n }","data Mem = Mem { test :: Kek } deriving Mda","data Mem = Mem { \n test :: Kek \n } deriving Mda","newtype Mem = Mem { \n test :: Kek \n } deriving (Eq)","newtype Mem = Mem { -- | Some docs \n test :: Kek -- ^ More docs } deriving Eq","newtype Mem = Mem { test :: Kek } deriving (Eq,Monad)","newtype NewMem = OldMem { test :: [Tx] }","newtype BlockHeaderList ssc = BHL\n { test :: ([Aoeu a], [Ssss])\n    } deriving (Eq)"],
 	\"spec_failed": ["data Heh = Mda { sometest :: Kek, testsome :: Mem }"],
 	\})
@@ -1444,7 +1444,7 @@ call s:add_definition('haskell', {
 	\"type": 'typeclass',
 	\"pcre2_regexp": '^class\s+(.+=>\s*)?KEYWORD\s+',
 	\"emacs_regexp": '^class\s+(.+=>\s*)?JJJ\s+',
-	\"supports": ["ag"],
+	\"supports": ["ag", "rg"],
 	\"spec_success": ["class (Constr1 m, Constr 2) => Test (Kek a) where","class  Test  (Veryovka a)  where "],
 	\"spec_failed": ["class Test2 (Kek a) where","class MakeTest (AoeuTest x y z) where"],
 	\})
