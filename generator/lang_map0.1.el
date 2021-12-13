@@ -119,8 +119,8 @@
 
   ;; c++
   (:type "function" :supports ("ag" "rg" "git-grep") :language "c++"
-         :regex "\\bJJJ(\\s|\\))*\\((\\w|[,&*.<>:]|\\s)*(\\))\\s*(const|->|\\{|$)|typedef\\s+(\\w|[(*]|\\s)+JJJ(\\)|\\s)*\\("
-         :tests ("int test(){" "my_struct (*test)(int a, int b){" "auto MyClass::test ( Builder::Builder& reference, ) -> decltype( builder.func() ) {" "int test( int *random_argument) const {" "test::test() {" "typedef int (*test)(int);")
+         :regex "\\bJJJ(\\s|\\))*\\((\\w|[,&*.<>]|\\s)*(\\))\\s*(const|->|\\{|$)|typedef\\s+(\\w|[(*]|\\s)+JJJ(\\)|\\s)*\\("
+         :tests ("int test(){" "my_struct (*test)(int a, int b){" "auto MyClass::test ( Builder& reference, ) -> decltype( builder.func() ) {" "int test( int *random_argument) const {" "test::test() {" "typedef int (*test)(int);")
          :not ("return test();)" "int test(a, b);" "if( test() ) {" "else test();"))
 
   ;; (:type "variable" :supports ("grep") :language "c++"
@@ -221,24 +221,17 @@
   ;; swift
   (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "swift"
          :regex "(let|var)\\s*JJJ\\s*(=|:)[^=:\\n]+"
-         :tests ("let test = 1234" "var test = 1234" "private lazy var test: UITapGestureRecognizer")
-         :not ("if test == 1234:"))
+         :tests ("let test = 1234" "var test = 1234" "private lazy var test: UITapGestureRecognizer") :not ("if test == 1234:"))
 
   (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "swift"
-         :regex "func\\s+JJJ\\b\\s*(<[^>]*>)?\\s*\\("
-         :tests ("func test(asdf)" "func test()" "func test<Value: Protocol>()")
+         :regex "func\\s*JJJ\\b\\s*\\\("
+         :tests ("func test(asdf)" "func test()")
          :not ("func testnot(asdf)" "func testnot()"))
 
   (:type "type" :supports ("ag" "grep" "rg" "git-grep") :language "swift"
-         :regex "(class|struct|protocol|enum)\\s+JJJ\\b\\s*?"
-         :tests ("struct test" "struct test: Codable" "struct test<Value: Codable>"
-                 "class test:" "class test: UIWindow" "class test<Value: Codable>")
-         :not ("class testnot:" "class testnot(object):" "struct testnot(object)"))
-
-  (:type "type" :supports ("ag" "grep" "rg" "git-grep") :language "swift"
-         :regex "(typealias)\\s+JJJ\\b\\s*?="
-         :tests ("typealias test =")
-         :not ("typealias testnot"))
+         :regex "(class|struct)\\s*JJJ\\b\\s*?"
+         :tests ("class test:" "class test: UIWindow")
+         :not ("class testnot:" "class testnot(object):"))
 
   ;; c#
   (:type "function" :supports ("ag" "rg") :language "csharp"
@@ -355,7 +348,7 @@
          :not ("for test = 1:2:" "_test = 1234"))
 
   (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "matlab"
-         :regex "^\\s*function\\s*[^=]+\\s*=\\s*JJJ\\b"
+           :regex "^\\s*function\\s*[^=]+\\s*=\\s*JJJ\\b"
          :tests ("\tfunction y = test(asdf)" "function x = test()" "function [x, losses] = test(A, y, lambda, method, qtile)")
          :not ("\tfunction testnot(asdf)" "function testnot()"))
 
@@ -366,18 +359,18 @@
 
   ;; nim
   (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "nim"
-         :regex "(const|let|var)\\s*JJJ\\*?\\s*(=|:)[^=:\\n]+"
-         :tests ("let test = 1234" "var test = 1234" "var test: Stat" "const test = 1234" "const test* = 1234")
+         :regex "(const|let|var)\\s*JJJ\\s*(=|:)[^=:\\n]+"
+         :tests ("let test = 1234" "var test = 1234" "var test: Stat" "const test = 1234")
          :not ("if test == 1234:"))
 
   (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "nim"
-         :regex "(proc|func|macro|template)\\s*`?JJJ`?\\b\\*?\\s*\\\("
-         :tests ("\tproc test(asdf)" "proc test()" "func test()" "macro test()" "template test()" "proc test*()")
+         :regex "(proc|func|macro|template)\\s*`?JJJ`?\\b\\s*\\\("
+         :tests ("\tproc test(asdf)" "proc test()" "func test()" "macro test()" "template test()")
          :not ("\tproc testnot(asdf)" "proc testnot()"))
 
   (:type "type" :supports ("ag" "grep" "rg" "git-grep") :language "nim"
-         :regex "type\\s*JJJ\\b\\*?\\s*(\\{[^}]+\\})?\\s*=\\s*\\w+"
-         :tests ("type test = object" "type test {.pure.} = enum" "type test* = ref object")
+         :regex "type\\s*JJJ\\b\\s*(\\{[^}]+\\})?\\s*=\\s*\\w+"
+         :tests ("type test = object" "type test {.pure.} = enum")
          :not ("type testnot = object"))
 
   ;; nix
@@ -503,23 +496,6 @@
          :regex "object\\s*JJJ\\s*\\\(?"
          :tests ("object test(object)"))
 
-  ;; solidity
-  (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "solidity"
-         :regex  "function\\s*JJJ\\s*\\\("
-         :tests ("function test() internal" "function test (uint x, address y)" "function test() external"))
-
-  (:type "modifier" :supports ("ag" "grep" "rg" "git-grep") :language "solidity"
-         :regex  "modifier\\s*JJJ\\s*\\\("
-         :tests ("modifier test()" "modifier test ()"))
-
-  (:type "event" :supports ("ag" "grep" "rg" "git-grep") :language "solidity"
-         :regex  "event\\s*JJJ\\s*\\\("
-         :tests ("event test();" "event test (uint indexed x)" "event test(uint x, address y)"))
-
-  (:type "error" :supports ("ag" "grep" "rg" "git-grep") :language "solidity"
-         :regex  "error\\s*JJJ\\s*\\\("
-         :tests ("error test();" "error test (uint x)" "error test(uint x, address y)"))
-
   ;; R
   (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "r"
          :regex "\\bJJJ\\s*=[^=><]" :tests ("test = 1234") :not ("if (test == 1234)"))
@@ -537,19 +513,6 @@
   (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "perl"
          :regex "JJJ\\s*=\\s*"
          :tests ("$test = 1234"))
-
-  ;; Tcl
-  (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "tcl"
-         :regex "proc\\s+JJJ\\s*\\{"
-         :tests ("proc test{" "proc test {"))
-
-  (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "tcl"
-         :regex "set\\s+JJJ"
-         :tests ("set test 1234"))
-
-  (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "tcl"
-         :regex "(variable|global)\\s+JJJ"
-         :tests ("variable test" "global test"))
 
   ;; shell
   (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "shell"
@@ -572,7 +535,7 @@
          :tests ("function test()" "function test ()"))
 
   (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "php"
-         :regex "\\*\\s@method\\s+[^ \t]+\\s+JJJ\\("
+         :regex "\\*\\s@method\\s+[^ 	]+\\s+JJJ\\("
          :tests ("/** @method string|false test($a)" " * @method bool test()"))
 
   (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "php"
@@ -580,7 +543,7 @@
          :tests ("$test = 1234" "$foo->test = 1234"))
 
   (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "php"
-         :regex "\\*\\s@property(-read|-write)?\\s+([^ \t]+\\s+)&?\\$JJJ(\\s+|$)"
+         :regex "\\*\\s@property(-read|-write)?\\s+([^ 	]+\\s+)&?\\$JJJ(\\s+|$)"
          :tests ("/** @property string $test" "/** @property string $test description for $test property"  " * @property-read bool|bool $test" " * @property-write \\ArrayObject<string,resource[]> $test"))
   (:type "trait" :supports ("ag" "grep" "rg" "git-grep") :language "php"
          :regex "trait\\s*JJJ\\s*\\\{"
@@ -607,21 +570,6 @@
   (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "faust"
          :regex "\\bJJJ\(\\\(.+\\\)\)*\\s*="
          :tests ("test = osc + 0.5;" "test(freq) = osc(freq) + 0.5;"))
-
-  ;; fennel
-  (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "fennel"
-         :regex "\\((local|var)\\s+JJJ\\j"
-         :tests ("(local test (foo)"
-                 "(var test (foo)"))
-
-  (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "fennel"
-         :regex "\\(fn\\s+JJJ\\j"
-         :tests ("(fn test [foo]")
-         :not ("(fn test? [foo]"))
-
-  (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "fennel"
-         :regex "\\(macro\\s+JJJ\\j"
-         :tests ("(macro test [foo]"))
 
   ;; fortran
   (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "fortran"
@@ -711,18 +659,6 @@
          :regex "\\bJJJ\\s*=\\s*function\\s*\\\("
          :tests ("test = function()"))
 
-  ;; hcl terraform
-  (:type "block" :supports ("ag" "grep" "rg" "git-grep") :language "hcl"
-         :regex "(variable|output|module)\\s*\"JJJ\"\\s*\\\{"
-         :tests ("variable \"test\" {"
-                 "output \"test\" {"
-                 "module \"test\" {"))
-
-  (:type "block" :supports ("ag" "grep" "rg" "git-grep") :language "hcl"
-         :regex "(data|resource)\\s*\"\\w+\"\\s*\"JJJ\"\\s*\\\{"
-         :tests ("data \"openstack_images_image_v2\" \"test\" {"
-                 "resource \"google_compute_instance\" \"test\" {"))
-
   ;; typescript
   (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "typescript"
          :regex "(service|factory)\\\(['\"]JJJ['\"]" :tags ("angular")
@@ -798,7 +734,7 @@
          :regex "^module\\s+JJJ\\s+"
          :tests ("module Test (exportA, exportB) where"))
 
-                                      ; TODO Doesn't support any '=' in arguments. E.g. 'foo A{a = b,..} = bar'.
+  ; TODO Doesn't support any '=' in arguments. E.g. 'foo A{a = b,..} = bar'.
   (:type "top level function" :supports ("ag" "rg") :language "haskell"
          :regex "^\\bJJJ(?!(\\s+::))\\s+((.|\\s)*?)=\\s+"
          :tests ("test n = n * 2"
@@ -820,7 +756,7 @@
          :not ("newtype NotTest a = NotTest (Not a)"
                "data TestNot b = Aoeu"))
 
-                                      ; datatype contstuctor that doesn't match type definition.
+  ; datatype contstuctor that doesn't match type definition.
   (:type "(data)type constructor 1" :supports ("ag" "rg") :language "haskell"
          :regex "(data|newtype)\\s{1,3}(?!JJJ\\s+)([^=]{1,40})=((\\s{0,3}JJJ\\s+)|([^=]{0,500}?((?<!(-- ))\\|\\s{0,3}JJJ\\s+)))"
          :tests ("data Something a = Test { b :: Kek }"
@@ -1146,7 +1082,7 @@
          :tests ("function Matrix test ;" "function Matrix test;")
          :not ("function test blah"))
 
-  ;; matches SV class handle declarations
+      ;; matches SV class handle declarations
   (:type "function" :supports ("ag" "rg" "git-grep") :language "systemverilog"
          :regex "^\\s*[^\\s]*\\s*[^\\s]+\\s+\\bJJJ\\b"
          :tests ("some_class_name test" "  another_class_name  test ;" "some_class test[];" "some_class #(1) test")
@@ -1205,19 +1141,19 @@
 
   ;; f#
   (:type "variable" :supports ("ag" "grep" "git-grep") :language "fsharp"
-         :regex "let\\s+JJJ\\b.*\\\="
-         :tests ("let test = 1234" "let test() = 1234" "let test abc def = 1234")
-         :not ("let testnot = 1234" "let testnot() = 1234" "let testnot abc def = 1234"))
+   :regex "let\\s+JJJ\\b.*\\\="
+   :tests ("let test = 1234" "let test() = 1234" "let test abc def = 1234")
+   :not ("let testnot = 1234" "let testnot() = 1234" "let testnot abc def = 1234"))
 
   (:type "interface" :supports ("ag" "grep" "git-grep") :language "fsharp"
-         :regex "member(\\b.+\\.|\\s+)JJJ\\b.*\\\="
-         :tests ("member test = 1234" "member this.test = 1234")
-         :not ("member testnot = 1234" "member this.testnot = 1234"))
+   :regex "member(\\b.+\\.|\\s+)JJJ\\b.*\\\="
+   :tests ("member test = 1234" "member this.test = 1234")
+   :not ("member testnot = 1234" "member this.testnot = 1234"))
 
   (:type "type" :supports ("ag" "grep" "git-grep") :language "fsharp"
-         :regex "type\\s+JJJ\\b.*\\\="
-         :tests ("type test = 1234")
-         :not ("type testnot = 1234"))
+   :regex "type\\s+JJJ\\b.*\\\="
+   :tests ("type test = 1234")
+   :not ("type testnot = 1234"))
 
   ;; kotlin
   (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "kotlin"
@@ -1231,22 +1167,6 @@
          :regex "(class|interface)\\s*JJJ\\b"
          :tests ("class test" "class test : SomeInterface" "interface test"))
 
-  ;; zig
-  (:type "function" :supports ("ag" "grep" "rg" "git-grep") :language "zig"
-         :regex "fn\\s+JJJ\\b"
-         :tests ("fn test() void {"
-                 "fn test(a: i32) i32 {"
-                 "pub fn test(a: i32) i32 {"
-                 "export fn test(a: i32) i32 {"
-                 "extern \"c\" fn test(a: i32) i32 {"
-                 "inline fn test(a: i32) i32 {"))
-
-  (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "zig"
-         :regex "(var|const)\\s+JJJ\\b"
-         :tests ("const test: i32 = 3;"
-                 "var test: i32 = 3;"
-                 "pub const test: i32 = 3;"))
-
   ;; protobuf
   (:type "message" :supports ("ag" "grep" "rg" "git-grep") :language "protobuf"
          :regex "message\\s+JJJ\\s*\\\{"
@@ -1254,20 +1174,4 @@
 
   (:type "enum" :supports ("ag" "grep" "rg" "git-grep") :language "protobuf"
          :regex "enum\\s+JJJ\\s*\\\{"
-         :tests ("enum test{" "enum test {"))
-
-  ;; apex (literally the same regexes as java)
-  (:type "function" :supports ("ag" "rg") :language "apex"
-         :regex "^\\s*(?:[\\w\\[\\]]+\\s+){1,3}JJJ\\s*\\\("
-         :tests ("int test()" "int test(param)" "static int test()" "static int test(param)"
-                 "public static MyType test()" "private virtual SomeType test(param)" "static int test()"
-                 "private foo[] test()")
-         :not ("test()" "testnot()" "blah = new test()" "foo bar = test()"))
-
-  (:type "variable" :supports ("ag" "grep" "rg" "git-grep") :language "apex"
-         :regex "\\s*\\bJJJ\\s*=[^=\\n)]+" :tests ("int test = 1234") :not ("if test == 1234:" "int nottest = 44"))
-
-  (:type "type" :supports ("ag" "grep" "rg" "git-grep") :language "apex"
-         :regex "(class|interface)\\s*JJJ\\b"
-         :tests ("class test:" "public class test implements Something")
-         :not ("class testnot:" "public class testnot implements Something")))
+         :tests ("enum test{" "enum test {")))

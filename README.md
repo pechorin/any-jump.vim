@@ -270,6 +270,13 @@ Where are also `PmenuSel`, `PmenuSbar`, `PmenuThumb` groups for configuring.
 - groovy
 - dart
 - fortran
+- solidity
+- tcl
+- fennel
+- hcl terraform
+- zig
+- apex
+
 
 ## Original idea
 
