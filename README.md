@@ -49,7 +49,6 @@ With `:AnyJumpArg myKeyword` command you can manually write what you want to be 
 - [ ] paths priorities for better search results
 - [ ] [nvim] ability to jump through preview text (and another keyword)
 - [ ] show latest N search keywords in popup to save jumping history
-- [ ] ctags support
 - [ ] basic refactoring support
 
 ## Keybindings
