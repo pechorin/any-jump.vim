@@ -18,6 +18,10 @@ class Generate
     'c++' => 'cpp'
   }
 
+  LANGS_SUPPORTED_ENGINES_OVERRIDES_MAP = {
+    'haskell' => ['rg', 'ag']
+  }
+
   def initialize(input_file_path, output_file_path)
     throw "file not found #{input_file_path}" unless File.exists?(input_file_path)
 
@@ -148,6 +152,11 @@ class Generate
     string.gsub("'", "''")
   end
 
+  def prepare_supported_engines(language, engines)
+    override = LANGS_SUPPORTED_ENGINES_OVERRIDES_MAP[language]
+    (override || engines).to_s
+  end
+
   def convert_definition_to_viml(hash = {})
     language = LANG_NAMES_CONVERTION_MAP[hash[:language]] || hash[:language]
 
@@ -157,7 +166,7 @@ class Generate
     r << "\t" + '\"type": ' + "'" + hash[:type] + "',\n"
     r << "\t" + '\"pcre2_regexp": ' + "'" + format_single_quotes(pcre2_regexp(hash[:emacs_regexp])) + "',\n"
     r << "\t" + '\"emacs_regexp": ' + "'" + format_single_quotes(hash[:emacs_regexp].to_s) + "',\n"
-    r << "\t" + '\"supports": ' + hash[:supports].to_s + ",\n"
+    r << "\t" + '\"supports": ' + prepare_supported_engines(language, hash[:supports]) + ",\n"
     r << "\t" + '\"spec_success": ' + hash[:spec_success].to_a.to_json + ",\n"
     r << "\t" + '\"spec_failed": '  + hash[:spec_failed].to_a.to_json + ",\n"
     r << "\t" + "\\})\n"
