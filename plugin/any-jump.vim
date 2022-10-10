@@ -1,3 +1,8 @@
+" TODO_RELEASE:
+" - sync file types comments
+" - sync file types
+" - add custom lang with hot patches (no el files required) - for viml
+
 " TODO:
 " - wrap for nvim should be configurable
 " - fix bg in NeoSolorized theme (add bg set color support)

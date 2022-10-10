@@ -274,6 +274,17 @@ Where are also `PmenuSel`, `PmenuSbar`, `PmenuThumb` groups for configuring.
 
 Comes from dumb-jump.el emacs package
 
+## Development
+
+### Lang generator
+
+You need ruby to run generator script which actually download language map, parse, extract data and then generate vim representation:
+
+```bash
+cd generator
+bundle exec rake update
+```
+
 ## Issues and contributions
 
 Please open issue on any question / problem / feedback / idea.

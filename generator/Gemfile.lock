@@ -34,7 +34,7 @@ GEM
     unf_ext (0.0.8.2)
 
 PLATFORMS
-  x86_64-darwin-20
+  x86_64-darwin-21
 
 DEPENDENCIES
   http
@@ -42,4 +42,4 @@ DEPENDENCIES
   sxp
 
 BUNDLED WITH
-   2.3.7
+   2.3.3
