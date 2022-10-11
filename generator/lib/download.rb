@@ -1,14 +1,15 @@
 require 'http'
 
 class Download
+  URL = 'https://raw.githubusercontent.com/jacktasia/dumb-jump/master/dumb-jump.el'
   PARSE_PATTERNS = {
     head: '(defcustom dumb-jump-find-rules',
     tail: '"List of regex patttern templates'
   }
 
   def call
-    scp    = HTTP.get('https://raw.githubusercontent.com/jacktasia/dumb-jump/master/dumb-jump.el').to_s
     result = ""
+    scp    = HTTP.get(URL).to_s
     head   = scp.index(PARSE_PATTERNS[:head])
     tail   = scp.index(PARSE_PATTERNS[:tail])
 
@@ -16,7 +17,7 @@ class Download
     extracted = scp[head,tail - head]
 
     # 2. remove definition start
-    extracted.sub!('(defcustom dumb-jump-find-rules', '')
+    extracted.sub!(PARSE_PATTERNS[:head], '')
 
     # 3. remove whitespaces and some syntax elements
     extracted.strip!
