@@ -44,13 +44,6 @@ With `:AnyJumpArg myKeyword` command you can manually write what you want to be 
 
 - **keyword references/usages**: find files where keyword used and referenced
 
-## version 1.0 roadmap
-
-- [ ] paths priorities for better search results
-- [ ] [nvim] ability to jump through preview text (and another keyword)
-- [ ] show latest N search keywords in popup to save jumping history
-- [ ] basic refactoring support
-
 ## Keybindings
 
 Default global mappings for normal and visual modes:

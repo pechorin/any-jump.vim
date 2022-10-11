@@ -2,6 +2,7 @@
 " - sync file types comments
 " - sync file types
 " - add custom lang with hot patches (no el files required) - for viml
+" - remove emacs regexp for compaction
 
 " TODO:
 " - wrap for nvim should be configurable
@@ -37,9 +38,11 @@
 "
 " TODO_FUTURE_RELEASES:
 " - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
+"   add auto-hide option?
+"
 " - AnyJumpPreview
 " - "save jump" button ??
-" - jumps list ??
+" - jumps list ?? (AnyJumps)
 
 " === Vim version check
 let s:nvim = has('nvim')
