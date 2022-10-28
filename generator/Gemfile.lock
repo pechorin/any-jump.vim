@@ -1,21 +1,45 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    concurrent-ruby (1.1.6)
-    hamster (3.0.0)
-      concurrent-ruby (~> 1.0)
+    addressable (2.8.1)
+      public_suffix (>= 2.0.2, < 6.0)
+    domain_name (0.5.20190701)
+      unf (>= 0.0.5, < 1.0.0)
+    ffi (1.15.5)
+    ffi-compiler (1.0.1)
+      ffi (>= 1.0.0)
+      rake
+    http (5.1.0)
+      addressable (~> 2.8)
+      http-cookie (~> 1.0)
+      http-form_data (~> 2.2)
+      llhttp-ffi (~> 0.4.0)
+    http-cookie (1.0.5)
+      domain_name (~> 0.5)
+    http-form_data (2.3.0)
     link_header (0.0.8)
-    rdf (3.1.1)
-      hamster (~> 3.0)
+    llhttp-ffi (0.4.0)
+      ffi-compiler (~> 1.0)
+      rake (~> 13.0)
+    matrix (0.4.2)
+    public_suffix (5.0.0)
+    rake (13.0.6)
+    rdf (3.2.9)
       link_header (~> 0.0, >= 0.0.8)
-    sxp (1.1.0)
-      rdf (~> 3.1)
+    sxp (1.2.2)
+      matrix
+      rdf (~> 3.2)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.8.2)
 
 PLATFORMS
-  ruby
+  x86_64-darwin-21
 
 DEPENDENCIES
+  http
+  rake
   sxp
 
 BUNDLED WITH
-   1.17.2
+   2.3.3

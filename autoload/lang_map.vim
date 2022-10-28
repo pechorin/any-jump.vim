@@ -5,9 +5,9 @@ let s:definitions = {}
 
 " map any-language to concrete internal s:definitions[language]
 let s:filetypes_proxy = {
-      \"javascriptreact": "javascript",
-      \"c": "cpp",
-      \}
+  \"javascriptreact": "javascript",
+  \"c": "cpp",
+  \}
 
 fu! s:add_definition(lang, definition) abort
   if !has_key(s:definitions, a:lang)
@@ -54,6 +54,15 @@ call s:add_definition('elisp', {
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["(defun test (blah)","(defun test\n","(cl-defun test (blah)","(cl-defun test\n"],
 	\"spec_failed": ["(defun test-asdf (blah)","(defun test-blah\n","(cl-defun test-asdf (blah)","(cl-defun test-blah\n","(defun tester (blah)","(defun test? (blah)","(defun test- (blah)"],
+	\})
+
+call s:add_definition('elisp', {
+	\"type": 'function',
+	\"pcre2_regexp": '\(defmacro\s+KEYWORD($|[^a-zA-Z0-9\?\*-])',
+	\"emacs_regexp": '\(defmacro\s+JJJ\j',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["(defmacro test (blah)","(defmacro test\n"],
+	\"spec_failed": ["(defmacro test-asdf (blah)","(defmacro test-blah\n","(defmacro tester (blah)","(defmacro test? (blah)","(defmacro test- (blah)"],
 	\})
 
 call s:add_definition('elisp', {
@@ -160,7 +169,7 @@ call s:add_definition('racket', {
 	\"pcre2_regexp": '(\(|\[)\s*KEYWORD\s+',
 	\"emacs_regexp": '(\(|\[)\s*JJJ\s+',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["(let ((test ''foo","(let [(test ''foo","(let [(test ''foo","(let [[test ''foo","(let ((blah ''foo) (test ''bar)"],
+	\"spec_success": ["(let ((test 'foo","(let [(test 'foo","(let [(test 'foo","(let [[test 'foo","(let ((blah 'foo) (test 'bar)"],
 	\"spec_failed": ["{test foo"],
 	\})
 
@@ -256,10 +265,10 @@ call s:add_definition('scheme', {
 
 call s:add_definition('cpp', {
 	\"type": 'function',
-	\"pcre2_regexp": '\bKEYWORD(\s|\))*\((\w|[,&*.<>]|\s)*(\))\s*(const|->|\{|$)|typedef\s+(\w|[(*]|\s)+KEYWORD(\)|\s)*\(',
-	\"emacs_regexp": '\bJJJ(\s|\))*\((\w|[,&*.<>]|\s)*(\))\s*(const|->|\{|$)|typedef\s+(\w|[(*]|\s)+JJJ(\)|\s)*\(',
+	\"pcre2_regexp": '\bKEYWORD(\s|\))*\((\w|[,&*.<>:]|\s)*(\))\s*(const|->|\{|$)|typedef\s+(\w|[(*]|\s)+KEYWORD(\)|\s)*\(',
+	\"emacs_regexp": '\bJJJ(\s|\))*\((\w|[,&*.<>:]|\s)*(\))\s*(const|->|\{|$)|typedef\s+(\w|[(*]|\s)+JJJ(\)|\s)*\(',
 	\"supports": ["ag", "rg", "git-grep"],
-	\"spec_success": ["int test(){","my_struct (*test)(int a, int b){","auto MyClass::test ( Builder& reference, ) -> decltype( builder.func() ) {","int test( int *random_argument) const {","test::test() {","typedef int (*test)(int);"],
+	\"spec_success": ["int test(){","my_struct (*test)(int a, int b){","auto MyClass::test ( Builder::Builder& reference, ) -> decltype( builder.func() ) {","int test( int *random_argument) const {","test::test() {","typedef int (*test)(int);"],
 	\"spec_failed": ["return test();)","int test(a, b);","if( test() ) {","else test();"],
 	\})
 
@@ -454,20 +463,29 @@ call s:add_definition('swift', {
 
 call s:add_definition('swift', {
 	\"type": 'function',
-	\"pcre2_regexp": 'func\s*KEYWORD\b\s*\(',
-	\"emacs_regexp": 'func\s*JJJ\b\s*\(',
+	\"pcre2_regexp": 'func\s+KEYWORD\b\s*(<[^>]*>)?\s*\(',
+	\"emacs_regexp": 'func\s+JJJ\b\s*(<[^>]*>)?\s*\(',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["func test(asdf)","func test()"],
+	\"spec_success": ["func test(asdf)","func test()","func test<Value: Protocol>()"],
 	\"spec_failed": ["func testnot(asdf)","func testnot()"],
 	\})
 
 call s:add_definition('swift', {
 	\"type": 'type',
-	\"pcre2_regexp": '(class|struct)\s*KEYWORD\b\s*?',
-	\"emacs_regexp": '(class|struct)\s*JJJ\b\s*?',
+	\"pcre2_regexp": '(class|struct|protocol|enum)\s+KEYWORD\b\s*?',
+	\"emacs_regexp": '(class|struct|protocol|enum)\s+JJJ\b\s*?',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["class test:","class test: UIWindow"],
-	\"spec_failed": ["class testnot:","class testnot(object):"],
+	\"spec_success": ["struct test","struct test: Codable","struct test<Value: Codable>","class test:","class test: UIWindow","class test<Value: Codable>"],
+	\"spec_failed": ["class testnot:","class testnot(object):","struct testnot(object)"],
+	\})
+
+call s:add_definition('swift', {
+	\"type": 'type',
+	\"pcre2_regexp": '(typealias)\s+KEYWORD\b\s*?=',
+	\"emacs_regexp": '(typealias)\s+JJJ\b\s*?=',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["typealias test ="],
+	\"spec_failed": ["typealias testnot"],
 	\})
 
 call s:add_definition('csharp', {
@@ -688,28 +706,28 @@ call s:add_definition('matlab', {
 
 call s:add_definition('nim', {
 	\"type": 'variable',
-	\"pcre2_regexp": '(const|let|var)\s*KEYWORD\s*(=|:)[^=:\n]+',
-	\"emacs_regexp": '(const|let|var)\s*JJJ\s*(=|:)[^=:\n]+',
+	\"pcre2_regexp": '(const|let|var)\s*KEYWORD\*?\s*(=|:)[^=:\n]+',
+	\"emacs_regexp": '(const|let|var)\s*JJJ\*?\s*(=|:)[^=:\n]+',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["let test = 1234","var test = 1234","var test: Stat","const test = 1234"],
+	\"spec_success": ["let test = 1234","var test = 1234","var test: Stat","const test = 1234","const test* = 1234"],
 	\"spec_failed": ["if test == 1234:"],
 	\})
 
 call s:add_definition('nim', {
 	\"type": 'function',
-	\"pcre2_regexp": '(proc|func|macro|template)\s*\`?KEYWORD\`?\b\s*\(',
-	\"emacs_regexp": '(proc|func|macro|template)\s*`?JJJ`?\b\s*\(',
+	\"pcre2_regexp": '(proc|func|macro|template)\s*`?KEYWORD`?\b\*?\s*\(',
+	\"emacs_regexp": '(proc|func|macro|template)\s*`?JJJ`?\b\*?\s*\(',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["\tproc test(asdf)","proc test()","func test()","macro test()","template test()"],
+	\"spec_success": ["\tproc test(asdf)","proc test()","func test()","macro test()","template test()","proc test*()"],
 	\"spec_failed": ["\tproc testnot(asdf)","proc testnot()"],
 	\})
 
 call s:add_definition('nim', {
 	\"type": 'type',
-	\"pcre2_regexp": 'type\s*KEYWORD\b\s*(\{[^}]+\})?\s*=\s*\w+',
-	\"emacs_regexp": 'type\s*JJJ\b\s*(\{[^}]+\})?\s*=\s*\w+',
+	\"pcre2_regexp": 'type\s*KEYWORD\b\*?\s*(\{[^}]+\})?\s*=\s*\w+',
+	\"emacs_regexp": 'type\s*JJJ\b\*?\s*(\{[^}]+\})?\s*=\s*\w+',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["type test = object","type test {.pure.} = enum"],
+	\"spec_success": ["type test = object","type test {.pure.} = enum","type test* = ref object"],
 	\"spec_failed": ["type testnot = object"],
 	\})
 
@@ -947,6 +965,42 @@ call s:add_definition('scala', {
 	\"spec_failed": [],
 	\})
 
+call s:add_definition('solidity', {
+	\"type": 'function',
+	\"pcre2_regexp": 'function\s*KEYWORD\s*\(',
+	\"emacs_regexp": 'function\s*JJJ\s*\(',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["function test() internal","function test (uint x, address y)","function test() external"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('solidity', {
+	\"type": 'modifier',
+	\"pcre2_regexp": 'modifier\s*KEYWORD\s*\(',
+	\"emacs_regexp": 'modifier\s*JJJ\s*\(',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["modifier test()","modifier test ()"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('solidity', {
+	\"type": 'event',
+	\"pcre2_regexp": 'event\s*KEYWORD\s*\(',
+	\"emacs_regexp": 'event\s*JJJ\s*\(',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["event test();","event test (uint indexed x)","event test(uint x, address y)"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('solidity', {
+	\"type": 'error',
+	\"pcre2_regexp": 'error\s*KEYWORD\s*\(',
+	\"emacs_regexp": 'error\s*JJJ\s*\(',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["error test();","error test (uint x)","error test(uint x, address y)"],
+	\"spec_failed": [],
+	\})
+
 call s:add_definition('r', {
 	\"type": 'variable',
 	\"pcre2_regexp": '\bKEYWORD\s*=[^=><]',
@@ -979,7 +1033,34 @@ call s:add_definition('perl', {
 	\"pcre2_regexp": 'KEYWORD\s*=\s*',
 	\"emacs_regexp": 'JJJ\s*=\s*',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["\\\$test = 1234"],
+	\"spec_success": ["$test = 1234"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('tcl', {
+	\"type": 'function',
+	\"pcre2_regexp": 'proc\s+KEYWORD\s*\{',
+	\"emacs_regexp": 'proc\s+JJJ\s*\{',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["proc test{","proc test {"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('tcl', {
+	\"type": 'variable',
+	\"pcre2_regexp": 'set\s+KEYWORD',
+	\"emacs_regexp": 'set\s+JJJ',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["set test 1234"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('tcl', {
+	\"type": 'variable',
+	\"pcre2_regexp": '(variable|global)\s+KEYWORD',
+	\"emacs_regexp": '(variable|global)\s+JJJ',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["variable test","global test"],
 	\"spec_failed": [],
 	\})
 
@@ -1030,19 +1111,19 @@ call s:add_definition('php', {
 
 call s:add_definition('php', {
 	\"type": 'variable',
-	\"pcre2_regexp": '(\s|->|\\\$|::)KEYWORD\s*=\s*',
+	\"pcre2_regexp": '(\s|->|\$|::)KEYWORD\s*=\s*',
 	\"emacs_regexp": '(\s|->|\$|::)JJJ\s*=\s*',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["\\\$test = 1234","\\\$foo->test = 1234"],
+	\"spec_success": ["$test = 1234","$foo->test = 1234"],
 	\"spec_failed": [],
 	\})
 
 call s:add_definition('php', {
 	\"type": 'variable',
-	\"pcre2_regexp": '\*\s@property(-read|-write)?\s+([^ 	]+\s+)&?\\\$KEYWORD(\s+|$)',
-	\"emacs_regexp": '\*\s@property(-read|-write)?\s+([^ 	]+\s+)&?\\\$JJJ(\s+|$)',
+	\"pcre2_regexp": '\*\s@property(-read|-write)?\s+([^ 	]+\s+)&?\$KEYWORD(\s+|$)',
+	\"emacs_regexp": '\*\s@property(-read|-write)?\s+([^ 	]+\s+)&?\$JJJ(\s+|$)',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["/** @property string \\\$test","/** @property string \\\$test description for $test property"," * @property-read bool|bool \\\$test"," * @property-write \\ArrayObject<string,resource[]> \\\$test"],
+	\"spec_success": ["/** @property string $test","/** @property string $test description for $test property"," * @property-read bool|bool $test"," * @property-write \\ArrayObject<string,resource[]> $test"],
 	\"spec_failed": [],
 	\})
 
@@ -1066,10 +1147,10 @@ call s:add_definition('php', {
 
 call s:add_definition('php', {
 	\"type": 'class',
-	\"pcre2_regexp": 'class\s*KEYWORD\s*(extends|implements|\{|$)',
+	\"pcre2_regexp": 'class\s*KEYWORD\s*(extends|implements|\{)',
 	\"emacs_regexp": 'class\s*JJJ\s*(extends|implements|\{)',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
-	\"spec_success": ["class test{","class test {", "class test\n{\n", "class test extends foo","class test implements foo"],
+	\"spec_success": ["class test{","class test {","class test extends foo","class test implements foo"],
 	\"spec_failed": [],
 	\})
 
@@ -1097,6 +1178,33 @@ call s:add_definition('faust', {
 	\"emacs_regexp": '\bJJJ(\(.+\))*\s*=',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["test = osc + 0.5;","test(freq) = osc(freq) + 0.5;"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('fennel', {
+	\"type": 'variable',
+	\"pcre2_regexp": '\((local|var)\s+KEYWORD($|[^a-zA-Z0-9\?\*-])',
+	\"emacs_regexp": '\((local|var)\s+JJJ\j',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["(local test (foo)","(var test (foo)"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('fennel', {
+	\"type": 'function',
+	\"pcre2_regexp": '\(fn\s+KEYWORD($|[^a-zA-Z0-9\?\*-])',
+	\"emacs_regexp": '\(fn\s+JJJ\j',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["(fn test [foo]"],
+	\"spec_failed": ["(fn test? [foo]"],
+	\})
+
+call s:add_definition('fennel', {
+	\"type": 'function',
+	\"pcre2_regexp": '\(macro\s+KEYWORD($|[^a-zA-Z0-9\?\*-])',
+	\"emacs_regexp": '\(macro\s+JJJ\j',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["(macro test [foo]"],
 	\"spec_failed": [],
 	\})
 
@@ -1183,7 +1291,7 @@ call s:add_definition('go', {
 
 call s:add_definition('javascript', {
 	\"type": 'function',
-	\"pcre2_regexp": '(service|factory)\s*\(\WKEYWORD\W',
+	\"pcre2_regexp": '(service|factory)\([''"]KEYWORD[''"]',
 	\"emacs_regexp": '(service|factory)\([''"]JJJ[''"]',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["module.factory('test', [\"$rootScope\", function($rootScope) {"],
@@ -1271,9 +1379,27 @@ call s:add_definition('javascript', {
 	\"spec_failed": [],
 	\})
 
+call s:add_definition('hcl', {
+	\"type": 'block',
+	\"pcre2_regexp": '(variable|output|module)\s*"KEYWORD"\s*\{',
+	\"emacs_regexp": '(variable|output|module)\s*"JJJ"\s*\{',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["variable \"test\" {","output \"test\" {","module \"test\" {"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('hcl', {
+	\"type": 'block',
+	\"pcre2_regexp": '(data|resource)\s*"\w+"\s*"KEYWORD"\s*\{',
+	\"emacs_regexp": '(data|resource)\s*"\w+"\s*"JJJ"\s*\{',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["data \"openstack_images_image_v2\" \"test\" {","resource \"google_compute_instance\" \"test\" {"],
+	\"spec_failed": [],
+	\})
+
 call s:add_definition('typescript', {
 	\"type": 'function',
-	\"pcre2_regexp": '(service|factory)\(\WKEYWORD\W',
+	\"pcre2_regexp": '(service|factory)\([''"]KEYWORD[''"]',
 	\"emacs_regexp": '(service|factory)\([''"]JJJ[''"]',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["module.factory('test', [\"$rootScope\", function($rootScope) {"],
@@ -1419,7 +1545,7 @@ call s:add_definition('haskell', {
 	\"type": 'module',
 	\"pcre2_regexp": '^module\s+KEYWORD\s+',
 	\"emacs_regexp": '^module\s+JJJ\s+',
-	\"supports": ["ag", "rg"],
+	\"supports": ["rg", "ag"],
 	\"spec_success": ["module Test (exportA, exportB) where"],
 	\"spec_failed": [],
 	\})
@@ -1428,8 +1554,8 @@ call s:add_definition('haskell', {
 	\"type": 'top level function',
 	\"pcre2_regexp": '^\bKEYWORD(?!(\s+::))\s+((.|\s)*?)=\s+',
 	\"emacs_regexp": '^\bJJJ(?!(\s+::))\s+((.|\s)*?)=\s+',
-	\"supports": ["ag", "rg"],
-	\"spec_success": ["test n = n * 2","test X{..} (Y a b c) \\n bcd \\n =\\n x * y","test ab cd e@Datatype {..} (Another thing, inTheRow) = \\n undefined","test = runRealBasedMode @ext @ctx identity identity","test unwrap wrap nr@Naoeu {..} (Action action, specSpecs) = \\n    undefined"],
+	\"supports": ["rg", "ag"],
+	\"spec_success": ["test n = n * 2","test X{..} (Y a b c) \n bcd \n =\n x * y","test ab cd e@Datatype {..} (Another thing, inTheRow) = \n undefined","test = runRealBasedMode @ext @ctx identity identity","test unwrap wrap nr@Naoeu {..} (Action action, specSpecs) = \n    undefined"],
 	\"spec_failed": ["nottest n = n * 2","let testnot x y = x * y","test $ y z","let test a o = mda","test :: Sometype -> AnotherType aoeu kek = undefined"],
 	\})
 
@@ -1437,7 +1563,7 @@ call s:add_definition('haskell', {
 	\"type": 'type-like',
 	\"pcre2_regexp": '^\s*((data(\s+family)?)|(newtype)|(type(\s+family)?))\s+KEYWORD\s+',
 	\"emacs_regexp": '^\s*((data(\s+family)?)|(newtype)|(type(\s+family)?))\s+JJJ\s+',
-	\"supports": ["ag", "rg"],
+	\"supports": ["rg", "ag"],
 	\"spec_success": ["newtype Test a = Something { b :: Kek }","data Test a b = Somecase a | Othercase b","type family Test (x :: *) (xs :: [*]) :: Nat where","data family Test ","type Test = TestAlias"],
 	\"spec_failed": ["newtype NotTest a = NotTest (Not a)","data TestNot b = Aoeu"],
 	\})
@@ -1446,7 +1572,7 @@ call s:add_definition('haskell', {
 	\"type": '(data)type constructor 1',
 	\"pcre2_regexp": '(data|newtype)\s{1,3}(?!KEYWORD\s+)([^=]{1,40})=((\s{0,3}KEYWORD\s+)|([^=]{0,500}?((?<!(-- ))\|\s{0,3}KEYWORD\s+)))',
 	\"emacs_regexp": '(data|newtype)\s{1,3}(?!JJJ\s+)([^=]{1,40})=((\s{0,3}JJJ\s+)|([^=]{0,500}?((?<!(-- ))\|\s{0,3}JJJ\s+)))',
-	\"supports": ["ag", "rg"],
+	\"supports": ["rg", "ag"],
 	\"spec_success": ["data Something a = Test { b :: Kek }","data Mem a = TrueMem { b :: Kek } | Test (Mem Int) deriving Mda","newtype SafeTest a = Test (Kek a) deriving (YonedaEmbedding)"],
 	\"spec_failed": ["data Test = Test { b :: Kek }"],
 	\})
@@ -1455,8 +1581,8 @@ call s:add_definition('haskell', {
 	\"type": 'data/newtype record field',
 	\"pcre2_regexp": '(data|newtype)([^=]*)=[^=]*?({([^=}]*?)(\bKEYWORD)\s+::[^=}]+})',
 	\"emacs_regexp": '(data|newtype)([^=]*)=[^=]*?({([^=}]*?)(\bJJJ)\s+::[^=}]+})',
-	\"supports": ["ag", "rg"],
-	\"spec_success": ["data Mem = Mem { \\n mda :: A \\n  , test :: Kek \\n , \\n aoeu :: E \\n }","data Mem = Mem { \\n test :: A \\n  , mda :: Kek \\n , \\n aoeu :: E \\n }","data Mem = Mem { \\n mda :: A \\n  , aoeu :: Kek \\n , \\n test :: E \\n }","data Mem = Mem { test :: Kek } deriving Mda","data Mem = Mem { \\n test :: Kek \\n } deriving Mda","newtype Mem = Mem { \\n test :: Kek \\n } deriving (Eq)","newtype Mem = Mem { -- | Some docs \\n test :: Kek -- ^ More docs } deriving Eq","newtype Mem = Mem { test :: Kek } deriving (Eq,Monad)","newtype NewMem = OldMem { test :: [Tx] }","newtype BlockHeaderList ssc = BHL\\n { test :: ([Aoeu a], [Ssss])\\n    } deriving (Eq)"],
+	\"supports": ["rg", "ag"],
+	\"spec_success": ["data Mem = Mem { \n mda :: A \n  , test :: Kek \n , \n aoeu :: E \n }","data Mem = Mem { \n test :: A \n  , mda :: Kek \n , \n aoeu :: E \n }","data Mem = Mem { \n mda :: A \n  , aoeu :: Kek \n , \n test :: E \n }","data Mem = Mem { test :: Kek } deriving Mda","data Mem = Mem { \n test :: Kek \n } deriving Mda","newtype Mem = Mem { \n test :: Kek \n } deriving (Eq)","newtype Mem = Mem { -- | Some docs \n test :: Kek -- ^ More docs } deriving Eq","newtype Mem = Mem { test :: Kek } deriving (Eq,Monad)","newtype NewMem = OldMem { test :: [Tx] }","newtype BlockHeaderList ssc = BHL\n { test :: ([Aoeu a], [Ssss])\n    } deriving (Eq)"],
 	\"spec_failed": ["data Heh = Mda { sometest :: Kek, testsome :: Mem }"],
 	\})
 
@@ -1464,7 +1590,7 @@ call s:add_definition('haskell', {
 	\"type": 'typeclass',
 	\"pcre2_regexp": '^class\s+(.+=>\s*)?KEYWORD\s+',
 	\"emacs_regexp": '^class\s+(.+=>\s*)?JJJ\s+',
-	\"supports": ["ag", "rg"],
+	\"supports": ["rg", "ag"],
 	\"spec_success": ["class (Constr1 m, Constr 2) => Test (Kek a) where","class  Test  (Veryovka a)  where "],
 	\"spec_failed": ["class Test2 (Kek a) where","class MakeTest (AoeuTest x y z) where"],
 	\})
@@ -1579,7 +1705,7 @@ call s:add_definition('lua', {
 
 call s:add_definition('rust', {
 	\"type": 'variable',
-	\"pcre2_regexp": '\blet\s+(\([^=\n]*)?(mut\s+)?KEYWORD([^=\n]*\))?(:\s*[^=\n]+)?\s*=\s*[^=\n]+',
+	\"pcre2_regexp": '\blet\s+(\([^=\n]*)?(muts+)?KEYWORD([^=\n]*\))?(:\s*[^=\n]+)?\s*=\s*[^=\n]+',
 	\"emacs_regexp": '\blet\s+(\([^=\n]*)?(muts+)?JJJ([^=\n]*\))?(:\s*[^=\n]+)?\s*=\s*[^=\n]+',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["let test = 1234;","let test: u32 = 1234;","let test: Vec<u32> = Vec::new();","let mut test = 1234;","let mut test: Vec<u32> = Vec::new();","let (a, test, b) = (1, 2, 3);","let (a, mut test, mut b) = (1, 2, 3);","let (mut a, mut test): (u32, usize) = (1, 2);"],
@@ -1939,7 +2065,7 @@ call s:add_definition('vhdl', {
 
 call s:add_definition('tex', {
 	\"type": 'command',
-	\"pcre2_regexp": '\\\\.*newcommand\*?\s*\{\s*(\\\\)KEYWORD\s*}',
+	\"pcre2_regexp": '\\.*newcommand\*?\s*\{\s*(\\)KEYWORD\s*}',
 	\"emacs_regexp": '\\.*newcommand\*?\s*\{\s*(\\)JJJ\s*}',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["\\newcommand{\\test}","\\renewcommand{\\test}","\\renewcommand*{\\test}","\\newcommand*{\\test}","\\renewcommand{ \\test }"],
@@ -1948,7 +2074,7 @@ call s:add_definition('tex', {
 
 call s:add_definition('tex', {
 	\"type": 'command',
-	\"pcre2_regexp": '\\\\.*newcommand\*?\s*(\\\\)KEYWORD($|[^a-zA-Z0-9\?\*-])',
+	\"pcre2_regexp": '\\.*newcommand\*?\s*(\\)KEYWORD($|[^a-zA-Z0-9\?\*-])',
 	\"emacs_regexp": '\\.*newcommand\*?\s*(\\)JJJ\j',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["\\newcommand\\test {}","\\renewcommand\\test{}","\\newcommand \\test"],
@@ -1957,7 +2083,7 @@ call s:add_definition('tex', {
 
 call s:add_definition('tex', {
 	\"type": 'length',
-	\"pcre2_regexp": '\\\\(s)etlength\s*\{\s*(\\\\)KEYWORD\s*}',
+	\"pcre2_regexp": '\\(s)etlength\s*\{\s*(\\)KEYWORD\s*}',
 	\"emacs_regexp": '\\(s)etlength\s*\{\s*(\\)JJJ\s*}',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["\\setlength { \\test}","\\setlength{\\test}","\\setlength{\\test}{morecommands}"],
@@ -1966,7 +2092,7 @@ call s:add_definition('tex', {
 
 call s:add_definition('tex', {
 	\"type": 'counter',
-	\"pcre2_regexp": '\\\\newcounter\{\s*KEYWORD\s*}',
+	\"pcre2_regexp": '\\newcounter\{\s*KEYWORD\s*}',
 	\"emacs_regexp": '\\newcounter\{\s*JJJ\s*}',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["\\newcounter{test}"],
@@ -2054,6 +2180,24 @@ call s:add_definition('kotlin', {
 	\"spec_failed": [],
 	\})
 
+call s:add_definition('zig', {
+	\"type": 'function',
+	\"pcre2_regexp": 'fn\s+KEYWORD\b',
+	\"emacs_regexp": 'fn\s+JJJ\b',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["fn test() void {","fn test(a: i32) i32 {","pub fn test(a: i32) i32 {","export fn test(a: i32) i32 {","extern \"c\" fn test(a: i32) i32 {","inline fn test(a: i32) i32 {"],
+	\"spec_failed": [],
+	\})
+
+call s:add_definition('zig', {
+	\"type": 'variable',
+	\"pcre2_regexp": '(var|const)\s+KEYWORD\b',
+	\"emacs_regexp": '(var|const)\s+JJJ\b',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["const test: i32 = 3;","var test: i32 = 3;","pub const test: i32 = 3;"],
+	\"spec_failed": [],
+	\})
+
 call s:add_definition('protobuf', {
 	\"type": 'message',
 	\"pcre2_regexp": 'message\s+KEYWORD\s*\{',
@@ -2070,4 +2214,31 @@ call s:add_definition('protobuf', {
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["enum test{","enum test {"],
 	\"spec_failed": [],
+	\})
+
+call s:add_definition('apex', {
+	\"type": 'function',
+	\"pcre2_regexp": '^\s*(?:[\w\[\]]+\s+){1,3}KEYWORD\s*\(',
+	\"emacs_regexp": '^\s*(?:[\w\[\]]+\s+){1,3}JJJ\s*\(',
+	\"supports": ["ag", "rg"],
+	\"spec_success": ["int test()","int test(param)","static int test()","static int test(param)","public static MyType test()","private virtual SomeType test(param)","static int test()","private foo[] test()"],
+	\"spec_failed": ["test()","testnot()","blah = new test()","foo bar = test()"],
+	\})
+
+call s:add_definition('apex', {
+	\"type": 'variable',
+	\"pcre2_regexp": '\s*\bKEYWORD\s*=[^=\n)]+',
+	\"emacs_regexp": '\s*\bJJJ\s*=[^=\n)]+',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["int test = 1234"],
+	\"spec_failed": ["if test == 1234:","int nottest = 44"],
+	\})
+
+call s:add_definition('apex', {
+	\"type": 'type',
+	\"pcre2_regexp": '(class|interface)\s*KEYWORD\b',
+	\"emacs_regexp": '(class|interface)\s*JJJ\b',
+	\"supports": ["ag", "grep", "rg", "git-grep"],
+	\"spec_success": ["class test:","public class test implements Something"],
+	\"spec_failed": ["class testnot:","public class testnot implements Something"],
 	\})

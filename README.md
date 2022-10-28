@@ -44,14 +44,6 @@ With `:AnyJumpArg myKeyword` command you can manually write what you want to be 
 
 - **keyword references/usages**: find files where keyword used and referenced
 
-## version 1.0 roadmap
-
-- [ ] paths priorities for better search results
-- [ ] [nvim] ability to jump through preview text (and another keyword)
-- [ ] show latest N search keywords in popup to save jumping history
-- [ ] ctags support
-- [ ] basic refactoring support
-
 ## Keybindings
 
 Default global mappings for normal and visual modes:
@@ -221,59 +213,76 @@ Where are also `PmenuSel`, `PmenuSbar`, `PmenuThumb` groups for configuring.
 
 ## Supported languages
 
-- ruby
-- elixir
+- apex
+- c++
+- clojure
+- coffeescript
+- commonlisp
+- coq
 - crystal
-- rust
+- csharp
+- dart
+- elisp
+- elixir
+- erlang
+- faust
+- fennel
+- fortran
+- fsharp
+- go
+- groovy
 - haskell
+- hcl
 - java
 - javascript
-- typescript
-- scala
+- julia
 - kotlin
+- lua
+- matlab
+- nim
+- nix
+- objc
+- ocaml
+- pascal
+- perl
 - php
 - protobuf
-- scss
-- fsharp
-- c++
-- coffeescript
-- go
-- lua
-- nim
-- scad
-- elisp
-- nix
-- clojure
-- coq
-- systemverilog
-- objc
-- racket
-- vhdl
-- scheme
-- r
-- sql
-- faust
-- vala
-- matlab
 - python
-- pascal
-- tex
-- swift
+- r
+- racket
+- ruby
+- rust
+- scad
+- scala
+- scheme
+- scss
 - shell
-- perl
-- csharp
-- commonlisp
-- ocaml
-- erlang
-- julia
 - sml
-- groovy
-- dart
-- fortran
+- solidity
+- sql
+- swift
+- systemverilog
+- tcl
+- tex
+- typescript
+- vala
+- vhdl
+- zig
 
 ## Original idea
 
 Comes from dumb-jump.el emacs package
+
+## Development
+
+### Lang generator
+
+You need ruby to run generator script which actually download language map, parse, extract data and then generate vim representation:
+
+```bash
+cd generator
+bundle exec rake update
+```
 
 ## Issues and contributions
 

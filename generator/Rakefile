@@ -1,0 +1,40 @@
+require 'rubygems'
+require 'bundler/setup'
+
+require './lib/download.rb'
+require './lib/generate.rb'
+
+task default: [:update]
+
+task :download do
+  result = Download.new.call
+  file   = File.new('./lang_map_downloaded.el', 'w')
+  bytes  = file.write(result)
+  file.close
+
+  puts "Downloading and extracting lisp language map completed: #{bytes} bytes"
+end
+
+task :generate do
+  in_file_path  = './lang_map_downloaded.el' || ENV['IN']
+  out_file_path = './lang_map_generated.vim' || ENV['OUT']
+
+  Generate.new(in_file_path, out_file_path).call
+
+  puts "lang map generated at #{out_file_path}"
+end
+
+task :install do
+  require 'fileutils'
+
+  in_file_path  = './lang_map_generated.vim' || ENV['IN']
+  out_file_path = '../autoload/lang_map.vim' || ENV['OUT']
+
+  FileUtils.cp(in_file_path, out_file_path)
+
+  puts "lang map installed at #{out_file_path}"
+end
+
+task :update => [ :download, :generate, :install ] do
+  puts "update finished"
+end

@@ -1,16 +1,16 @@
+" TODO_RELEASE:
+" - sync file types comments
+" - sync file types
+" - add custom lang with hot patches (no el files required) - for viml
+" - remove emacs regexp for compaction
+
 " TODO:
 " - wrap for nvim should be configurable
-" - fix bg in NeoSolorized theme (add bg set color support)
 " - [more] button should append N items only on current collection
 " - add scope :symbol to ruby syntax
-" - add lightline integration ?
 " - add mouse-click evets support
 " - any-jump-last should also restore cursor position
-" - add multiple priview mode
-" - ability to toggle help
-" - ability to make help hidden by default
 " - add definitions rules for rails meta expressions in ruby like `has_many :users`
-" - better default syntax (which works for some N popular themes) rules
 " - hl keyword in result line also
 " - ability to jumps and lookups for library source codes paths
 " - [hot] display type of definition
@@ -19,13 +19,6 @@
 " - AnyJumpFirst - if found result from prefered dirs of only one result
 "   then jump to it, othrewise open ui
 " - [option] auto preview first result
-" - is tags cupport really needed?
-"   i think it cool for perfomance reasons, but sometimes our engine is deeper
-"
-" TAGS_SUPPORT:
-" - use tags definitions engine if prefered
-" - what kind of additional data we can provide if tags enabled? (besides
-"   definitions)A
 "
 " UI:
 " - add rerun search button (first step to refuctoring) (first `R` - rerun
@@ -45,9 +38,11 @@
 "
 " TODO_FUTURE_RELEASES:
 " - [nvim] >> Once a focus to the floating window is lost, the window should disappear. Like many other plugins with floating window.
+"   add auto-hide option?
+"
 " - AnyJumpPreview
 " - "save jump" button ??
-" - jumps list ??
+" - jumps list ?? (AnyJumps)
 
 " === Vim version check
 let s:nvim = has('nvim')
