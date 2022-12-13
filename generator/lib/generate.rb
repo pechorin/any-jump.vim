@@ -148,8 +148,10 @@ class Generate
     return string
   end
 
-  def format_single_quotes(string)
-    string.gsub("'", "''")
+  def format_quotes(string)
+    string.gsub("'", "''") \
+          .gsub('"', "\\\\\"")
+          .gsub("`", "\\\\`")
   end
 
   def prepare_supported_engines(language, engines)
@@ -164,8 +166,8 @@ class Generate
     r = "\n"
     r << "call s:add_definition('#{language}', {\n"
     r << "\t" + '\"type": ' + "'" + hash[:type] + "',\n"
-    r << "\t" + '\"pcre2_regexp": ' + "'" + format_single_quotes(pcre2_regexp(hash[:emacs_regexp])) + "',\n"
-    r << "\t" + '\"emacs_regexp": ' + "'" + format_single_quotes(hash[:emacs_regexp].to_s) + "',\n"
+    r << "\t" + '\"pcre2_regexp": ' + "'" + format_quotes(pcre2_regexp(hash[:emacs_regexp])) + "',\n"
+    r << "\t" + '\"emacs_regexp": ' + "'" + format_quotes(hash[:emacs_regexp].to_s) + "',\n"
     r << "\t" + '\"supports": ' + prepare_supported_engines(language, hash[:supports]) + ",\n"
     r << "\t" + '\"spec_success": ' + hash[:spec_success].to_a.to_json + ",\n"
     r << "\t" + '\"spec_failed": '  + hash[:spec_failed].to_a.to_json + ",\n"

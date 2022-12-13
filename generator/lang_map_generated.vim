@@ -715,8 +715,8 @@ call s:add_definition('nim', {
 
 call s:add_definition('nim', {
 	\"type": 'function',
-	\"pcre2_regexp": '(proc|func|macro|template)\s*`?KEYWORD`?\b\*?\s*\(',
-	\"emacs_regexp": '(proc|func|macro|template)\s*`?JJJ`?\b\*?\s*\(',
+	\"pcre2_regexp": '(proc|func|macro|template)\s*\`?KEYWORD\`?\b\*?\s*\(',
+	\"emacs_regexp": '(proc|func|macro|template)\s*\`?JJJ\`?\b\*?\s*\(',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["\tproc test(asdf)","proc test()","func test()","macro test()","template test()","proc test*()"],
 	\"spec_failed": ["\tproc testnot(asdf)","proc testnot()"],
@@ -1291,8 +1291,8 @@ call s:add_definition('go', {
 
 call s:add_definition('javascript', {
 	\"type": 'function',
-	\"pcre2_regexp": '(service|factory)\([''"]KEYWORD[''"]',
-	\"emacs_regexp": '(service|factory)\([''"]JJJ[''"]',
+	\"pcre2_regexp": '(service|factory)\([''\"]KEYWORD[''\"]',
+	\"emacs_regexp": '(service|factory)\([''\"]JJJ[''\"]',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["module.factory('test', [\"$rootScope\", function($rootScope) {"],
 	\"spec_failed": [],
@@ -1381,8 +1381,8 @@ call s:add_definition('javascript', {
 
 call s:add_definition('hcl', {
 	\"type": 'block',
-	\"pcre2_regexp": '(variable|output|module)\s*"KEYWORD"\s*\{',
-	\"emacs_regexp": '(variable|output|module)\s*"JJJ"\s*\{',
+	\"pcre2_regexp": '(variable|output|module)\s*\"KEYWORD\"\s*\{',
+	\"emacs_regexp": '(variable|output|module)\s*\"JJJ\"\s*\{',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["variable \"test\" {","output \"test\" {","module \"test\" {"],
 	\"spec_failed": [],
@@ -1390,8 +1390,8 @@ call s:add_definition('hcl', {
 
 call s:add_definition('hcl', {
 	\"type": 'block',
-	\"pcre2_regexp": '(data|resource)\s*"\w+"\s*"KEYWORD"\s*\{',
-	\"emacs_regexp": '(data|resource)\s*"\w+"\s*"JJJ"\s*\{',
+	\"pcre2_regexp": '(data|resource)\s*\"\w+\"\s*\"KEYWORD\"\s*\{',
+	\"emacs_regexp": '(data|resource)\s*\"\w+\"\s*\"JJJ\"\s*\{',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["data \"openstack_images_image_v2\" \"test\" {","resource \"google_compute_instance\" \"test\" {"],
 	\"spec_failed": [],
@@ -1399,8 +1399,8 @@ call s:add_definition('hcl', {
 
 call s:add_definition('typescript', {
 	\"type": 'function',
-	\"pcre2_regexp": '(service|factory)\([''"]KEYWORD[''"]',
-	\"emacs_regexp": '(service|factory)\([''"]JJJ[''"]',
+	\"pcre2_regexp": '(service|factory)\([''\"]KEYWORD[''\"]',
+	\"emacs_regexp": '(service|factory)\([''\"]JJJ[''\"]',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["module.factory('test', [\"$rootScope\", function($rootScope) {"],
 	\"spec_failed": [],
@@ -2056,8 +2056,8 @@ call s:add_definition('vhdl', {
 
 call s:add_definition('vhdl', {
 	\"type": 'function',
-	\"pcre2_regexp": 'function\s*"?KEYWORD"?\s*\(',
-	\"emacs_regexp": 'function\s*"?JJJ"?\s*\(',
+	\"pcre2_regexp": 'function\s*\"?KEYWORD\"?\s*\(',
+	\"emacs_regexp": 'function\s*\"?JJJ\"?\s*\(',
 	\"supports": ["ag", "grep", "rg", "git-grep"],
 	\"spec_success": ["function test(signal)","function test (signal)","function \"test\" (signal)"],
 	\"spec_failed": ["function testing(signal"],
