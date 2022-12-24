@@ -1,4 +1,9 @@
 " TODO_RELEASE:
+"
+" - add privew_all
+" - add priview expantion
+"
+"
 " - sync file types comments
 " - sync file types
 " - add custom lang with hot patches (no el files required) - for viml
@@ -185,11 +190,31 @@ fu! s:CreateUi(internal_buffer) abort
   endif
 endfu
 
+fu! s:CreateWindowedUi(internal_buffer) abort
+  let kw  = a:internal_buffer.keyword
+
+  let buf = bufnr("any-jump lookup " . kw, v:true)
+  call setbufvar(buf, "&bufhidden", "delete")
+  call setbufvar(buf, "&buftype", "nofile")
+  call setbufvar(buf, "&modifiable", v:true)
+  call setbufvar(buf, "&filetype", 'any-jump')
+  call setbufvar(buf, "&number", v:false)
+  call setbufvar(buf, "&wrap", v:false)
+
+
+  execute 'new'
+  execute 'buffer ' . buf
+
+  let t:any_jump.vim_bufnr = buf
+  call t:any_jump.RenderUi()
+  call t:any_jump.JumpToFirstOfType('link', 'definitions')
+endfu
+
 fu! s:CreateNvimUi(internal_buffer) abort
   let kw  = a:internal_buffer.keyword
+
   let buf = nvim_create_buf(1, 0)
   call nvim_buf_set_name(buf, 'any-jump lookup ' . kw)
-
   call nvim_buf_set_option(buf, 'bufhidden', 'delete')
   call nvim_buf_set_option(buf, 'buftype', 'nofile')
   call nvim_buf_set_option(buf, 'modifiable', v:true)
@@ -338,7 +363,9 @@ fu! s:Jump(...) abort range
     let opts = a:1
   endif
 
-  if has_key(opts, 'is_visual')
+  if has_key(opts, 'keyword')
+    let keyword = opts['keyword']
+  elseif has_key(opts, 'is_visual')
     let x = getpos("'<")[2]
     let y = getpos("'>")[2]
 
@@ -381,7 +408,11 @@ fu! s:Jump(...) abort range
   " assign any-jump internal buffer to current tab
   let t:any_jump = ib
 
-  call s:CreateUi(ib)
+  if has_key(opts, 'windowed')
+    call s:CreateWindowedUi(ib)
+  else
+    call s:CreateUi(ib)
+  endif
 endfu
 
 fu! s:JumpBack() abort
@@ -403,7 +434,10 @@ endfu
 " Event Handlers
 " ----------------------------------------------
 
-let s:available_open_actions = [ 'open', 'split', 'vsplit', 'tab' ]
+let s:available_open_actions = [
+      \'open', 'split', 'vsplit', 'tab',
+      \'bg_open',
+      \]
 
 fu! g:AnyJumpHandleOpen(...) abort
   let ui          = s:GetCurrentInternalBuffer()
@@ -450,6 +484,8 @@ fu! g:AnyJumpHandleOpen(...) abort
         execute 'vsplit'
       elseif open_action == 'tab'
         execute 'tabnew'
+      elseif open_action == 'bg_open'
+        " TODO:
       endif
 
       " open new file
@@ -487,6 +523,33 @@ fu! g:AnyJumpToggleListStyle() abort
   call ui.EndUiTransaction()
 
   call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
+endfu
+
+fu! g:AnyJumpModalToWindow() abort
+  let kw = s:GetCurrentInternalBuffer().keyword
+
+  call g:AnyJumpHandleClose()
+
+  call s:Jump({'windowed': v:true, 'keyword': kw})
+
+  " let ui = s:GetCurrentInternalBuffer()
+
+  " call s:CreateWindowedUi(ui)
+
+  " let next_style = g:any_jump_results_ui_style == 'filename_first' ?
+  "       \'filename_last' : 'filename_first'
+
+  " let g:any_jump_results_ui_style = next_style
+
+  " let cursor_item = ui.TryFindOriginalLinkFromPos()
+  " let last_ln_nr  = ui.BufferLnum()
+
+  " call ui.StartUiTransaction()
+  " call ui.ClearBuffer(ui.vim_bufnr)
+  " call ui.RenderUi()
+  " call ui.EndUiTransaction()
+
+  " call ui.TryRestoreCursorForItem(cursor_item, {"last_ln_nr": last_ln_nr})
 endfu
 
 fu! g:AnyJumpHandleReferences() abort
@@ -851,6 +914,7 @@ if s:nvim
     au FileType any-jump nnoremap <buffer> A :call g:AnyJumpToggleAllResults()<cr>
     au FileType any-jump nnoremap <buffer> a :call g:AnyJumpLoadNextBatchResults()<cr>
     au FileType any-jump nnoremap <buffer> L :call g:AnyJumpToggleListStyle()<cr>
+    au FileType any-jump nnoremap <buffer> mb :call g:AnyJumpModalToWindow()<cr>
   augroup END
 end
 
