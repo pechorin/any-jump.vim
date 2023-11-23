@@ -3,7 +3,8 @@
 let s:regexp_keyword_word = 'KEYWORD'
 let s:engines             = ['rg', 'ag']
 
-let s:rg_base_cmd = "rg -n --auto-hybrid-regex --json"
+" let s:rg_base_cmd = "rg -n --auto-hybrid-regex --json"
+let s:rg_base_cmd = "rg --auto-hybrid-regex --json"
 let s:ag_base_cmd = "ag --nogroup --noheading"
 
 let s:rg_filetype_convertion_map = {
@@ -127,7 +128,7 @@ fu! search#GetSearchEngineFileTypeSpecifier(engine, language) abort
     if a:engine == 'rg'
       let file_lists_cmd = 'rg --files | rg ' . s:non_standard_ft_extensions_map_compiled[a:language]
       let files = split(system(file_lists_cmd), "\n")
-      let cmd   = join(map(files, {_,fname -> ('-f ' . fname)}), ' ')
+      let cmd = join(map(files, {_,fname -> ('-f ' . fname)}), ' ')
     elseif a:engine == 'ag'
       let cmd = '-G ' . s:non_standard_ft_extensions_map_compiled[a:language]
     endif
@@ -150,7 +151,7 @@ fu! s:GetRgIgnoreSpecifier() abort
   endif
 
   for glob in g:any_jump_ignored_files
-    let result = result . ' -g !' . string(glob)
+    let result = result . " -g '!" . string(glob) . "'"
   endfor
 
   return result
@@ -227,6 +228,7 @@ fu! search#SearchDefinitions(lang, keyword) abort
 
   if search_engine == 'rg'
     let grep_results = s:RunRgDefinitionSearch(a:lang, regexp)
+    " let resp = confirm('results: ' . join(grep_results))
   elseif search_engine == 'ag'
     let grep_results = s:RunAgDefinitionSearch(a:lang, regexp)
   end
@@ -325,9 +327,27 @@ endfu
 fu! s:RunRgDefinitionSearch(language, patterns) abort
   let rg_ft = s:GetRgFiletype(a:language)
 
-  let cmd = s:rg_base_cmd . ' -t ' . rg_ft
+  " TODO: instead of disabling the .gitignore filtering
+  " is there some way to just null out any `scan_results`
+  " patterns which match current `.gitignore` patterns?
+  let cmd = s:rg_base_cmd . ' -u' . ' -t ' . rg_ft
+  " let cmd = s:rg_base_cmd . ' -t ' . rg_ft
   let cmd = cmd . s:GetRgIgnoreSpecifier()
-  let cmd = cmd . ' ' . a:patterns
+
+  " NOTE: the `-e` is ok here to be explicit right?
+  let cmd = cmd . ' -e ' . a:patterns
+
+  let scan_cmd = g:any_jump_glob_scanner
+  if strlen(scan_cmd)
+      let scan_results = system(scan_cmd)
+      " echo 'Additional ' a:language . ' PATHs to scan: ' . scan_results
+      let cmd = cmd  . ' ' . scan_results
+  endif
+
+  " TODO: is it more correct to pass `-g <glob>` flags here?
+  " for glob in scan_results
+  "   let cmd = cmd . ' -g ' . string(dir)
+  " endfor
 
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
@@ -361,7 +381,7 @@ fu! s:RunRgUsagesSearch(language, keyword) abort
         \ && type(a:language) == v:t_string
 
     let rg_ft = s:GetRgFiletype(a:language)
-    let cmd   = cmd . ' -t ' . rg_ft
+    let cmd = cmd . ' -t ' . rg_ft
   endif
 
   let raw_results  = system(cmd)
@@ -382,7 +402,7 @@ fu! s:RunAgUsagesSearch(language, keyword) abort
     let cmd   = cmd . ' --' . ag_ft
   endif
 
-  let raw_results  = system(cmd)
+  let raw_results = system(cmd)
 
   let grep_results = s:ParseAgResults(raw_results)
   let grep_results = s:FilterGrepResults(a:language, grep_results)
