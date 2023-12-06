@@ -151,7 +151,8 @@ fu! s:GetRgIgnoreSpecifier() abort
   endif
 
   for glob in g:any_jump_ignored_files
-    let result = result . " -g '!" . string(glob) . "'"
+    " let result = result . " -g '!" . string(glob) . "'"
+    let result = result . " -g !" . string(glob)
   endfor
 
   return result
@@ -339,16 +340,20 @@ fu! s:RunRgDefinitionSearch(language, patterns) abort
 
   let scan_cmd = g:any_jump_glob_scanner
   if strlen(scan_cmd)
-      let scan_results = system(scan_cmd)
-      " echo 'Additional ' a:language . ' PATHs to scan: ' . scan_results
-      let cmd = cmd  . ' ' . scan_results
+      let scan_results = systemlist(scan_cmd)
+      " echo 'Additional ' a:language . ' PATHs to scan: ' . join(scan_results)
+      " let cmd = cmd  . ' ' . scan_results
+      " TODO: is it more correct to pass `-g <glob>` flags here?
+      for glob in scan_results
+        " TODO: apparently this flag doesn't work a <PATH> arg?!?
+        " let cmd = cmd . " -g " . string(glob) . "/*"
+        let cmd = cmd . " " . string(glob)
+      endfor
   endif
 
-  " TODO: is it more correct to pass `-g <glob>` flags here?
-  " for glob in scan_results
-  "   let cmd = cmd . ' -g ' . string(dir)
-  " endfor
-
+  " XXX: always include the cwd!
+  let cmd = cmd . ' ./'
+  " echo 'RG CMD: ' . cmd
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
   let grep_results = s:FilterGrepResults(a:language, grep_results)
