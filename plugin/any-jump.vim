@@ -137,6 +137,10 @@ call s:set_plugin_global_option('any_jump_disable_vcs_ignore', v:false)
 " default is: ['*.tmp', '*.temp']
 call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp'])
 
+" Custom glob scanning command used to dynamically
+" produce PATHs fed into `rg`/`ag`
+call s:set_plugin_global_option('any_jump_glob_scanner', '')
+
 " ----------------------------------------------
 " Public customization methods
 " ----------------------------------------------
