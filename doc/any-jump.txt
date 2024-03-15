@@ -101,6 +101,9 @@ let g:any_jump_window_width_ratio  = 0.6
 let g:any_jump_window_height_ratio = 0.6
 let g:any_jump_window_top_offset   = 4
 
+" Show / hide Help section
+let g:any_jump_show_help_section = 1
+
 " Customize any-jump colors with extending default color scheme:
 let g:any_jump_colors = { "help": "Function" }
 
