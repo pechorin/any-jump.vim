@@ -123,6 +123,9 @@ call s:set_plugin_global_option('any_jump_window_width_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_height_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_top_offset', 2)
 
+" Show / hide Help section (default: 1)
+call s:set_plugin_global_option('any_jump_show_help_section', v:true)
+
 " Remove comments line from search results (default: 1)
 call s:set_plugin_global_option('any_jump_remove_comments_from_results', v:true)
 

@@ -31,6 +31,7 @@ let s:InternalBuffer.MethodsList = [
       \'TryRestoreCursorForItem',
       \'RenderUiUsagesList',
       \'RenderUi',
+      \'HelpSection',
       \'StartUiTransaction',
       \'EndUiTransaction',
       \'GrepResultToItems',
@@ -650,17 +651,23 @@ fu! s:InternalBuffer.RenderUi() dict abort
     call self.RenderUiUsagesList(self.usages_grep_results, self.len() + 1)
   endif
 
-  call self.AddLine([ self.CreateItem("help_link", "> Help", g:AnyJumpGetColor('heading_text')) ])
+  call self.HelpSection()
+endfu
 
-  let color = g:AnyJumpGetColor('help')
+fu! s:InternalBuffer.HelpSection() abort
+  if g:any_jump_show_help_section
+    call self.AddLine([ self.CreateItem("help_link", "> Help", g:AnyJumpGetColor('heading_text')) ])
 
-  call self.AddLine([ self.CreateItem("help_text", "", color) ])
-  call self.AddLine([ self.CreateItem("help_text", "[o] open               [t] open in tab        [s] open in split   [v] open in vsplit", color) ])
-  call self.AddLine([ self.CreateItem("help_text", "[p/tab] preview file   [b] scroll to first result", color) ])
-  call self.AddLine([ self.CreateItem("help_text", "[a] load more results  [A] load all results", color) ])
-  call self.AddLine([ self.CreateItem("help_text", "[r] show references    [T] group by file", color) ])
-  call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", color) ])
-  call self.AddLine([ self.CreateItem("help_text", "    results ui style", color) ])
+    let color = g:AnyJumpGetColor('help')
+
+    call self.AddLine([ self.CreateItem("help_text", "", color) ])
+    call self.AddLine([ self.CreateItem("help_text", "[o] open               [t] open in tab        [s] open in split   [v] open in vsplit", color) ])
+    call self.AddLine([ self.CreateItem("help_text", "[p/tab] preview file   [b] scroll to first result", color) ])
+    call self.AddLine([ self.CreateItem("help_text", "[a] load more results  [A] load all results", color) ])
+    call self.AddLine([ self.CreateItem("help_text", "[r] show references    [T] group by file", color) ])
+    call self.AddLine([ self.CreateItem("help_text", "[L] toggle search                             [esc/q] exit", color) ])
+    call self.AddLine([ self.CreateItem("help_text", "    results ui style", color) ])
+  endif
 endfu
 
 fu! s:InternalBuffer.RemoveGarbagedLines() dict abort
