@@ -118,10 +118,11 @@ call s:set_plugin_global_option('any_jump_search_prefered_engine', 'rg')
 " Disable default keybindings for commands
 call s:set_plugin_global_option('any_jump_disable_default_keybindings', v:false)
 
-" Any-jump window size & position options
+" Any-jump window options
 call s:set_plugin_global_option('any_jump_window_width_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_height_ratio', str2float('0.6'))
 call s:set_plugin_global_option('any_jump_window_top_offset', 2)
+call s:set_plugin_global_option('any_jump_window_border', 'none')
 
 " Show / hide Help section (default: 1)
 call s:set_plugin_global_option('any_jump_show_help_section', v:true)
@@ -205,6 +206,7 @@ fu! s:CreateNvimUi(internal_buffer) abort
   let width      = float2nr(&columns * g:any_jump_window_width_ratio)
   let horizontal = float2nr((&columns - width) / 2)
   let vertical   = g:any_jump_window_top_offset
+  let border     = g:any_jump_window_border
 
   let opts = {
         \ 'relative': 'editor',
@@ -213,6 +215,7 @@ fu! s:CreateNvimUi(internal_buffer) abort
         \ 'width': width,
         \ 'height': height,
         \ 'style': 'minimal',
+        \ 'border': border,
         \ }
 
   let winid = nvim_open_win(buf, v:true, opts)
