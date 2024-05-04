@@ -112,10 +112,11 @@ let g:any_jump_search_prefered_engine = 'rg'
 " - 'filename_last'
 let g:any_jump_results_ui_style = 'filename_first'
 
-" Any-jump window size & position options
+" Any-jump window options
 let g:any_jump_window_width_ratio  = 0.6
 let g:any_jump_window_height_ratio = 0.6
 let g:any_jump_window_top_offset   = 4
+let g:any_jump_window_border       = 'none' " currently only supported in Neovim
 
 " Show / hide Help section
 let g:any_jump_show_help_section = 1
