@@ -460,6 +460,7 @@ fu! g:AnyJumpHandleOpen(...) abort
       endif
 
       " open new file
+      let action_item.data.path = substitute(action_item.data.path, '\\', '/', 'g')
       execute 'edit ' . action_item.data.path . '|:' . action_item.data.line_number
       if g:any_jump_center_screen_after_jump == v:true
         execute 'norm! zz'
