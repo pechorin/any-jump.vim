@@ -1,8 +1,8 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.8.1)
-      public_suffix (>= 2.0.2, < 6.0)
+    addressable (2.9.0)
+      public_suffix (>= 2.0.2, < 8.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
     ffi (1.15.5)
@@ -22,7 +22,7 @@ GEM
       ffi-compiler (~> 1.0)
       rake (~> 13.0)
     matrix (0.4.2)
-    public_suffix (5.0.0)
+    public_suffix (6.0.2)
     rake (13.0.6)
     rdf (3.2.9)
       link_header (~> 0.0, >= 0.0.8)
@@ -35,6 +35,7 @@ GEM
 
 PLATFORMS
   x86_64-darwin-21
+  x86_64-linux
 
 DEPENDENCIES
   http
