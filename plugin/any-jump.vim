@@ -144,6 +144,8 @@ call s:set_plugin_global_option('any_jump_ignored_files', ['*.tmp', '*.temp'])
 " (default: false)
 call s:set_plugin_global_option('any_jump_center_screen_after_jump', v:false)
 
+call s:set_plugin_global_option('any_jump_glob_scanner', '')
+
 " ----------------------------------------------
 " Public customization methods
 " ----------------------------------------------

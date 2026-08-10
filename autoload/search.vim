@@ -328,6 +328,18 @@ fu! s:RunRgDefinitionSearch(language, patterns) abort
   let cmd = s:rg_base_cmd . ' -t ' . rg_ft
   let cmd = cmd . s:GetRgIgnoreSpecifier()
   let cmd = cmd . ' ' . a:patterns
+  let scan_cmd = g:any_jump_glob_scanner
+  if strlen(scan_cmd)
+      let scan_results = systemlist(scan_cmd)
+      " echo 'Additional ' a:language . ' PATHs to scan: ' . join(scan_results)
+      " let cmd = cmd  . ' ' . scan_results
+      " TODO: is it more correct to pass `-g <glob>` flags here?
+      for glob in scan_results
+        " TODO: apparently this flag doesn't work a <PATH> arg?!?
+        " let cmd = cmd . " -g " . string(glob) . "/*"
+        let cmd = cmd . " " . string(glob)
+      endfor
+  endif
 
   let raw_results  = system(cmd)
   let grep_results = s:ParseRgResults(raw_results)
